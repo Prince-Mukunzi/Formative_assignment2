@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: AppSpacing.verticalGapLg,
           ),
           _buildReportsList(),
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          const SliverToBoxAdapter(child: SizedBox(height: 130)),
         ],
       ),
     );

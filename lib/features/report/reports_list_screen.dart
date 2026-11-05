@@ -53,7 +53,7 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
             ),
           ),
           _buildList(),
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          const SliverToBoxAdapter(child: SizedBox(height: 130)),
         ],
       ),
     );
