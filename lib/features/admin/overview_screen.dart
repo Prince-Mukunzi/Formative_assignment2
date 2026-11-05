@@ -7,8 +7,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/accountability.dart';
 import '../../models/department.dart';
+import '../../models/report.dart';
 import '../../models/report_status.dart';
-import '../../models/sla.dart';
 import '../../providers/clock_provider.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
@@ -18,7 +18,9 @@ import '../../widgets/banner_stat.dart';
 import '../../widgets/gradient_banner.dart';
 import '../../widgets/menu_row.dart';
 import '../../widgets/motion/pressable.dart';
+import '../../widgets/progress_ring.dart';
 import '../../widgets/section_title.dart';
+import '../../widgets/tinted_icon.dart';
 import 'locations_sheet.dart';
 import 'team_sheet.dart';
 
@@ -33,9 +35,6 @@ class OverviewScreen extends ConsumerWidget {
     final locations = ref.watch(locationsProvider);
     final unowned = reports
         .where((r) => r.isOpen && departments.ownerOf(r) == null)
-        .length;
-    final overdue = reports
-        .where((r) => r.slaStateAt(now) == SlaState.overdue)
         .length;
     return SafeArea(
       bottom: false,
@@ -59,24 +58,7 @@ class OverviewScreen extends ConsumerWidget {
               ],
             ),
             AppSpacing.verticalGapLg,
-            GradientBanner(
-              gradient: AppColors.navy,
-              child: Row(
-                children: [
-                  BannerStat(
-                    value: reports.where((r) => r.isOpen).length,
-                    label: 'Open',
-                  ),
-                  BannerStat(value: overdue, label: 'Overdue'),
-                  BannerStat(
-                    value: reports
-                        .where((r) => r.status == ReportStatus.resolved)
-                        .length,
-                    label: 'Resolved',
-                  ),
-                ],
-              ),
-            ),
+            _HealthBanner(reports: reports, now: now),
             if (unowned > 0) ...[
               AppSpacing.verticalGapMd,
               AppCard(
@@ -117,6 +99,82 @@ class OverviewScreen extends ConsumerWidget {
   }
 }
 
+class _HealthBanner extends StatelessWidget {
+  final List<Report> reports;
+  final DateTime now;
+
+  const _HealthBanner({required this.reports, required this.now});
+
+  @override
+  Widget build(BuildContext context) {
+    final reading = PressureReading.of(reports, now);
+    final counted = reports.where((r) => r.status != ReportStatus.declined);
+    final resolved = counted
+        .where((r) => r.status == ReportStatus.resolved)
+        .length;
+    final total = counted.length;
+    return GradientBanner(
+      gradient: reading.overdue > 0 ? AppColors.signature : AppColors.navy,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              ProgressRing(progress: total == 0 ? 0 : resolved / total),
+              AppSpacing.horizontalGapLg,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Resolved',
+                      style: AppTextStyles.heading3.copyWith(
+                        color: AppColors.textOnPrimary,
+                      ),
+                    ),
+                    Text(
+                      '$resolved of $total reports',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.onPrimaryMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.verticalGapLg,
+          const Divider(height: 1, color: AppColors.onPrimaryFaint),
+          AppSpacing.verticalGapLg,
+          Row(
+            children: [
+              BannerStat(
+                icon: HugeIcons.strokeRoundedTask01,
+                value: reports.where((r) => r.isOpen).length,
+                label: 'Open',
+              ),
+              BannerStat(
+                icon: HugeIcons.strokeRoundedAlert02,
+                value: reading.overdue,
+                label: 'Overdue',
+              ),
+              BannerStat(
+                icon: HugeIcons.strokeRoundedClock01,
+                value: reading.dueWithin24h,
+                label: 'Due today',
+              ),
+              BannerStat(
+                icon: HugeIcons.strokeRoundedUserGroup,
+                value: reading.waitingStudents,
+                label: 'Waiting',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TeamRow extends StatelessWidget {
   final DepartmentScore score;
   final VoidCallback onTap;
@@ -129,9 +187,11 @@ class _TeamRow extends StatelessWidget {
       onTap: onTap,
       scale: 0.98,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(
           children: [
+            TintedIcon(icon: score.department.icon, size: 36),
+            AppSpacing.horizontalGapMd,
             Expanded(
               child: Text(
                 score.department.label,

@@ -119,12 +119,18 @@ class ProfileScreen extends ConsumerWidget {
         (r) => r.reportedBy == MockData.currentStudentId,
       );
       return [
-        BannerStat(value: mine.length, label: 'Reports'),
         BannerStat(
+          icon: HugeIcons.strokeRoundedTask01,
+          value: mine.length,
+          label: 'Reports',
+        ),
+        BannerStat(
+          icon: HugeIcons.strokeRoundedCheckmarkCircle02,
           value: mine.where((r) => r.status == ReportStatus.resolved).length,
           label: 'Resolved',
         ),
         BannerStat(
+          icon: HugeIcons.strokeRoundedThumbsUp,
           value: mine.fold(0, (sum, r) => sum + r.upvotes),
           label: 'Upvotes',
         ),
@@ -134,11 +140,17 @@ class ProfileScreen extends ConsumerWidget {
     final owned = ref.watch(departmentReportsProvider(department.id));
     return [
       BannerStat(
+        icon: HugeIcons.strokeRoundedCheckmarkCircle02,
         value: owned.where((r) => r.status == ReportStatus.resolved).length,
         label: 'Resolved',
       ),
-      BannerStat(value: owned.where((r) => r.isOpen).length, label: 'Open'),
       BannerStat(
+        icon: HugeIcons.strokeRoundedTask01,
+        value: owned.where((r) => r.isOpen).length,
+        label: 'Open',
+      ),
+      BannerStat(
+        icon: HugeIcons.strokeRoundedAlert02,
         value: owned.where((r) => r.slaStateAt(now) == SlaState.overdue).length,
         label: 'Overdue',
       ),
