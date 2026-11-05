@@ -10,6 +10,7 @@ import 'providers/settings_provider.dart';
 import 'providers/sync_provider.dart';
 import 'services/firebase_setup.dart';
 import 'services/local_store.dart';
+import 'widgets/notice_banner.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,10 +54,11 @@ class AluBugBountyApp extends ConsumerWidget {
       theme: AppTheme.light,
       routerConfig: ref.watch(routerProvider),
       builder: (context, child) {
-        if (!reduceMotion) return child!;
+        final app = Stack(children: [child!, const NoticeLayer()]);
+        if (!reduceMotion) return app;
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: child!,
+          child: app,
         );
       },
     );

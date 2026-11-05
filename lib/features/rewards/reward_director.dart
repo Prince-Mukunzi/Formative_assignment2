@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../models/app_settings.dart';
 import '../../models/game.dart';
+import '../../models/notice.dart';
 import '../../providers/game_provider.dart';
+import '../../providers/notices_provider.dart';
 import '../../providers/settings_provider.dart';
 import 'reward_overlay.dart';
 
@@ -39,10 +42,27 @@ class _RewardDirectorState extends ConsumerState<RewardDirector> {
       if (moment.deservesCelebration &&
           ref.read(settingsProvider).celebrations) {
         await RewardOverlay.show(context, moment);
+      } else if (moment.gained > 0) {
+        ref.read(noticesProvider.notifier).post(_xpNotice(moment));
       }
       if (mounted) ref.read(gameProvider.notifier).acknowledge(moment);
     }
     _busy = false;
+  }
+
+  // With celebrations off, or for small wins, XP still gets a quiet heads-up.
+  Notice _xpNotice(RewardMoment moment) {
+    final prize = moment.prizes.lastOrNull;
+    final rank = moment.rankUp;
+    return Notice(
+      topic: NotificationTopic.prizes,
+      title: '+${moment.gained} XP',
+      body: prize != null
+          ? 'Prize unlocked: ${prize.label}'
+          : rank != null
+          ? 'You reached ${rank.label}'
+          : moment.events.map((event) => event.reason.label).toSet().join(', '),
+    );
   }
 
   @override
