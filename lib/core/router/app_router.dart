@@ -20,6 +20,7 @@ import '../../models/session.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/sync_provider.dart';
+import '../utils/app_motion_prefs.dart';
 
 abstract final class AppRoutes {
   static const loading = '/loading';
@@ -36,12 +37,18 @@ abstract final class AppRoutes {
   static const admin = '/admin';
 }
 
-Page<void> _fadeIn(Widget child) => CustomTransitionPage(
-  child: child,
-  transitionDuration: const Duration(milliseconds: 260),
-  transitionsBuilder: (_, animation, _, child) =>
-      FadeTransition(opacity: animation, child: child),
-);
+Page<void> _fadeIn(Widget child) => AppMotionPrefs.reduced
+    ? NoTransitionPage(child: child)
+    : CustomTransitionPage(
+        child: child,
+        transitionDuration: const Duration(milliseconds: 260),
+        transitionsBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
+      );
+
+Page<void> _push(Widget child) => AppMotionPrefs.reduced
+    ? NoTransitionPage(child: child)
+    : CupertinoPage(child: child);
 
 final routerProvider = Provider<GoRouter>((ref) {
   final gateChanges = ValueNotifier(0);
@@ -108,18 +115,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'report/new',
-            pageBuilder: (_, _) =>
-                const CupertinoPage(child: CreateReportScreen()),
+            pageBuilder: (_, _) => _push(const CreateReportScreen()),
           ),
           GoRoute(
             path: 'report/:id/edit',
-            pageBuilder: (_, state) => CupertinoPage(
-              child: CreateReportScreen(reportId: state.pathParameters['id']),
-            ),
+            pageBuilder: (_, state) =>
+                _push(CreateReportScreen(reportId: state.pathParameters['id'])),
           ),
           GoRoute(
             path: 'progress',
-            pageBuilder: (_, _) => const CupertinoPage(child: ProgressScreen()),
+            pageBuilder: (_, _) => _push(const ProgressScreen()),
           ),
         ],
       ),
@@ -133,7 +138,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'triage',
-            pageBuilder: (_, _) => const CupertinoPage(child: TriageScreen()),
+            pageBuilder: (_, _) => _push(const TriageScreen()),
           ),
         ],
       ),

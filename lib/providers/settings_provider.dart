@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/utils/app_haptics.dart';
+import '../core/utils/app_motion_prefs.dart';
 import '../models/app_settings.dart';
 import '../services/settings_service.dart';
 import 'session_provider.dart';
@@ -14,12 +15,14 @@ class SettingsNotifier extends Notifier<AppSettings> {
   AppSettings build() {
     final settings = ref.watch(settingsServiceProvider).load();
     AppHaptics.enabled = settings.haptics;
+    AppMotionPrefs.reduced = settings.reduceMotion;
     return settings;
   }
 
   void _set(AppSettings next) {
     state = next;
     AppHaptics.enabled = next.haptics;
+    AppMotionPrefs.reduced = next.reduceMotion;
     ref.read(settingsServiceProvider).save(next);
   }
 
