@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/game.dart';
 import '../models/session.dart';
 import '../services/game_service.dart';
-import 'auth_provider.dart';
-import 'reports_provider.dart';
 import 'session_provider.dart';
 import 'sync_provider.dart';
 
@@ -17,7 +15,6 @@ class GameNotifier extends Notifier<GameState> {
   final _predicted = <String, XpEvent>{};
   final _withdrawn = <String>{};
   final _seenKeys = <String>{};
-  Set<String> _celebrated = const {};
 
   @override
   GameState build() {
@@ -27,13 +24,8 @@ class GameNotifier extends Notifier<GameState> {
     _server = const [];
     final uid = ref.watch(sessionUidProvider);
     if (uid == null || ref.read(sessionProvider) is! StudentSession) {
-      return const GameState(ledger: [], celebrated: {});
+      return const GameState(ledger: []);
     }
-    _celebrated = ref.read(currentPersonProvider)?.celebrated ?? const {};
-    ref.listen(currentPersonProvider, (_, person) {
-      _celebrated = {..._celebrated, ...?person?.celebrated};
-      _publish();
-    });
     follow(ref, ref.watch(gameServiceProvider).watchLedger(uid), Feed.ledger, (
       events,
     ) {
@@ -41,7 +33,7 @@ class GameNotifier extends Notifier<GameState> {
       _catchUpSeen();
       _publish();
     });
-    return const GameState(ledger: [], celebrated: {});
+    return const GameState(ledger: []);
   }
 
   bool _isWithdrawn(String key) =>
@@ -56,7 +48,6 @@ class GameNotifier extends Notifier<GameState> {
           if (!_isWithdrawn(event.key))
             _seenKeys.contains(event.key) ? event.markSeen() : event,
       ],
-      celebrated: GameState.badgesNamed(_celebrated),
     );
   }
 
@@ -96,14 +87,6 @@ class GameNotifier extends Notifier<GameState> {
     if (uid == null) return;
     _seenKeys.addAll(moment.events.map((event) => event.key));
     _catchUpSeen();
-    final badges = moment.badges.map((badge) => badge.name);
-    if (badges.isNotEmpty) {
-      _celebrated = {..._celebrated, ...badges};
-      send(
-        ref,
-        ref.read(profileServiceProvider).saveCelebrated(uid, _celebrated),
-      );
-    }
     _publish();
   }
 }
@@ -112,19 +95,8 @@ final gameProvider = NotifierProvider<GameNotifier, GameState>(
   GameNotifier.new,
 );
 
-final gameStatsProvider = Provider<GameStats>((ref) {
-  return statsFor(
-    ref.watch(gameProvider),
-    ref.watch(reportsProvider),
-    ref.watch(sessionUidProvider) ?? '',
-  );
-});
-
 final pendingRewardProvider = Provider<RewardMoment?>((ref) {
-  return RewardMoment.pending(
-    ref.watch(gameProvider),
-    ref.watch(gameStatsProvider),
-  );
+  return RewardMoment.pending(ref.watch(gameProvider));
 });
 
 final leaderboardProvider = StreamProvider.autoDispose<List<LeaderEntry>>(

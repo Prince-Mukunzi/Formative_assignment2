@@ -14,7 +14,6 @@ class Person {
   final PersonRole role;
   final String? departmentId;
   final bool suspended;
-  final Set<String> celebrated;
 
   const Person({
     required this.id,
@@ -23,7 +22,6 @@ class Person {
     required this.role,
     this.departmentId,
     this.suspended = false,
-    this.celebrated = const {},
   });
 
   factory Person.fromMap(String id, Map<String, dynamic> map) => Person(
@@ -33,8 +31,5 @@ class Person {
     role: PersonRole.values.byName(map['role'] as String),
     departmentId: map['departmentId'] as String?,
     suspended: map['suspended'] as bool,
-    celebrated: {
-      for (final badge in map['celebrated'] as List<dynamic>) badge as String,
-    },
   );
 }

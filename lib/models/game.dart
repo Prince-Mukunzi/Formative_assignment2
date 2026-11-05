@@ -92,68 +92,10 @@ enum Prize {
   }
 }
 
-class GameStats {
-  final int filed;
-  final int resolved;
-  final int mostUpvotes;
-  final int nudgesSent;
-  final int fixesChecked;
-
-  const GameStats({
-    required this.filed,
-    required this.resolved,
-    required this.mostUpvotes,
-    required this.nudgesSent,
-    required this.fixesChecked,
-  });
-}
-
-enum BadgeKind {
-  firstCatch(
-    'First Catch',
-    'File your first report',
-    HugeIcons.strokeRoundedBug01,
-  ),
-  fixedIt(
-    'Fixed It',
-    'Get a report resolved',
-    HugeIcons.strokeRoundedCheckmarkBadge01,
-  ),
-  closer(
-    'The Closer',
-    'Check a fix after it lands',
-    HugeIcons.strokeRoundedTick02,
-  ),
-  watchdog(
-    'Watchdog',
-    'Follow up on reports 3 times',
-    HugeIcons.strokeRoundedNotification01,
-  ),
-  crowdFavourite(
-    'Crowd Favourite',
-    'Reach 25 upvotes on a report',
-    HugeIcons.strokeRoundedThumbsUp,
-  );
-
-  const BadgeKind(this.label, this.hint, this.icon);
-  final String label;
-  final String hint;
-  final IconData icon;
-
-  bool isEarned(GameStats stats) => switch (this) {
-    firstCatch => stats.filed >= 1,
-    fixedIt => stats.resolved >= 1,
-    closer => stats.fixesChecked >= 1,
-    watchdog => stats.nudgesSent >= 3,
-    crowdFavourite => stats.mostUpvotes >= 25,
-  };
-}
-
 class GameState {
   final List<XpEvent> ledger;
-  final Set<BadgeKind> celebrated;
 
-  const GameState({required this.ledger, required this.celebrated});
+  const GameState({required this.ledger});
 
   int get xp => ledger.fold(0, (sum, event) => sum + event.reason.xp);
 
@@ -163,7 +105,7 @@ class GameState {
   // report can never be farmed for repeat XP.
   GameState award(XpEvent event) {
     if (ledger.any((existing) => existing.key == event.key)) return this;
-    return GameState(ledger: [...ledger, event], celebrated: celebrated);
+    return GameState(ledger: [...ledger, event]);
   }
 
   GameState revoke(String reportId) => GameState(
@@ -171,45 +113,20 @@ class GameState {
       for (final event in ledger)
         if (!event.key.split(':').skip(1).contains(reportId)) event,
     ],
-    celebrated: celebrated,
   );
 
-  GameState seen(Set<BadgeKind> badges) => GameState(
-    ledger: [for (final event in ledger) event.markSeen()],
-    celebrated: {...celebrated, ...badges},
-  );
 
-  // Profiles may still name badges that no longer exist.
-  static Set<BadgeKind> badgesNamed(Iterable<String> names) => {
-    for (final badge in BadgeKind.values)
-      if (names.contains(badge.name)) badge,
-  };
-}
-
-GameStats statsFor(GameState game, Iterable<Report> reports, String studentId) {
-  final mine = reports.where((r) => r.reportedBy == studentId).toList();
-  int count(XpReason reason) =>
-      game.ledger.where((event) => event.reason == reason).length;
-  return GameStats(
-    filed: mine.length,
-    resolved: count(XpReason.reportResolved),
-    mostUpvotes: mine.fold(0, (top, r) => r.upvotes > top ? r.upvotes : top),
-    nudgesSent: count(XpReason.nudgeSent),
-    fixesChecked: count(XpReason.fixChecked),
-  );
 }
 
 class RewardMoment {
   final List<XpEvent> events;
   final int xpBefore;
   final int xpAfter;
-  final List<BadgeKind> badges;
 
   const RewardMoment({
     required this.events,
     required this.xpBefore,
     required this.xpAfter,
-    required this.badges,
   });
 
   int get gained => xpAfter - xpBefore;
@@ -227,22 +144,16 @@ class RewardMoment {
   bool get deservesCelebration =>
       rankUp != null ||
       prizes.isNotEmpty ||
-      badges.isNotEmpty ||
       events.any((event) => event.reason.isMajor);
 
-  static RewardMoment? pending(GameState game, GameStats stats) {
+  static RewardMoment? pending(GameState game) {
     final events = game.unseen.toList();
-    final badges = [
-      for (final badge in BadgeKind.values)
-        if (badge.isEarned(stats) && !game.celebrated.contains(badge)) badge,
-    ];
-    if (events.isEmpty && badges.isEmpty) return null;
+    if (events.isEmpty) return null;
     final gained = events.fold(0, (sum, event) => sum + event.reason.xp);
     return RewardMoment(
       events: events,
       xpBefore: game.xp - gained,
       xpAfter: game.xp,
-      badges: badges,
     );
   }
 }

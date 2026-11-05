@@ -18,25 +18,69 @@ class TeamPodium extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Podium(
+      entries: [
+        for (final score in top)
+          PodiumEntry(
+            id: score.department.id,
+            label: score.department.label,
+            caption: '${score.points} pts',
+            icon: score.department.icon,
+            highlighted: score.department.id == highlight?.id,
+          ),
+      ],
+    );
+  }
+}
+
+class PodiumEntry {
+  final String id;
+  final String label;
+  final String caption;
+  final IconData? icon;
+  final bool highlighted;
+
+  const PodiumEntry({
+    required this.id,
+    required this.label,
+    required this.caption,
+    this.icon,
+    this.highlighted = false,
+  });
+}
+
+/// Top three on stepped blocks. [compact] shrinks it to sit under a card.
+class Podium extends StatelessWidget {
+  final List<PodiumEntry> entries;
+  final bool compact;
+
+  const Podium({super.key, required this.entries, this.compact = false});
+
+  static const _compactScale = 0.5;
+  static const _compactWidth = 92.0;
+
+  @override
+  Widget build(BuildContext context) {
     Widget step(int place) {
-      final score = top[place - 1];
-      return Expanded(
-        child: _Step(
-          key: ValueKey(score.department.id),
-          place: place,
-          score: score,
-          highlighted: score.department.id == highlight?.id,
-        ),
+      final block = _Step(
+        key: ValueKey(entries[place - 1].id),
+        place: place,
+        entry: entries[place - 1],
+        scale: compact ? _compactScale : 1,
       );
+      return compact
+          ? SizedBox(width: _compactWidth, child: block)
+          : Expanded(child: block);
     }
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.end,
       spacing: AppSpacing.xs,
       children: [
-        if (top.length > 1) step(2),
-        if (top.isNotEmpty) step(1),
-        if (top.length > 2) step(3),
+        if (entries.length > 1) step(2),
+        if (entries.isNotEmpty) step(1),
+        if (entries.length > 2) step(3),
       ],
     );
   }
@@ -44,14 +88,14 @@ class TeamPodium extends StatelessWidget {
 
 class _Step extends StatelessWidget {
   final int place;
-  final DepartmentScore score;
-  final bool highlighted;
+  final PodiumEntry entry;
+  final double scale;
 
   const _Step({
     super.key,
     required this.place,
-    required this.score,
-    required this.highlighted,
+    required this.entry,
+    required this.scale,
   });
 
   static const _heights = [150.0, 112.0, 84.0];
@@ -60,11 +104,14 @@ class _Step extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final first = place == 1;
-    final height = _heights[place - 1];
+    final height = _heights[place - 1] * scale;
     final delay = Duration(milliseconds: _delays[place - 1]);
-    final labelStyle = highlighted
-        ? AppTextStyles.labelMedium.copyWith(color: AppColors.brand)
-        : AppTextStyles.labelMedium;
+    final small = scale < 1;
+    final highlighted = entry.highlighted;
+    final labelStyle =
+        (small ? AppTextStyles.labelSmall : AppTextStyles.labelMedium).copyWith(
+          color: highlighted ? AppColors.brand : null,
+        );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -74,9 +121,9 @@ class _Step extends StatelessWidget {
             spring: AppSprings.slam,
             fromScale: 0.2,
             offsetY: -24,
-            child: const Icon(
+            child: Icon(
               HugeIcons.strokeRoundedCrown,
-              size: 30,
+              size: 30 * scale,
               color: AppColors.brand,
             ),
           ),
@@ -87,19 +134,20 @@ class _Step extends StatelessWidget {
           fromScale: 0.5,
           offsetY: 24,
           child: _Avatar(
-            icon: score.department.icon,
-            size: first ? 68 : 54,
+            icon: entry.icon,
+            initial: entry.label.isEmpty ? '?' : entry.label[0].toUpperCase(),
+            size: (first ? 68 : 54) * (small ? 0.75 : 1),
             highlighted: highlighted,
           ),
         ),
         AppSpacing.verticalGapSm,
         Text(
-          score.department.label,
+          entry.label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: labelStyle,
         ),
-        Text('${score.points} pts', style: AppTextStyles.bodySmall),
+        Text(entry.caption, style: AppTextStyles.bodySmall),
         AppSpacing.verticalGapSm,
         SpringValue(
           value: 1,
@@ -124,9 +172,8 @@ class _Step extends StatelessWidget {
             child: Center(
               child: Text(
                 '$place',
-                style: AppTextStyles.display.copyWith(
-                  color: AppColors.textOnPrimary,
-                ),
+                style: (small ? AppTextStyles.heading2 : AppTextStyles.display)
+                    .copyWith(color: AppColors.textOnPrimary),
               ),
             ),
           ),
@@ -137,34 +184,40 @@ class _Step extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String initial;
   final double size;
   final bool highlighted;
 
   const _Avatar({
     required this.icon,
+    required this.initial,
     required this.size,
     required this.highlighted,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = highlighted ? AppColors.brand : AppColors.primary;
+    final icon = this.icon;
     return Container(
       width: size,
       height: size,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: AppColors.surface,
-        border: Border.all(
-          color: highlighted ? AppColors.brand : AppColors.primary,
-          width: 2.5,
-        ),
+        border: Border.all(color: color, width: 2.5),
       ),
-      child: Icon(
-        icon,
-        size: size * 0.46,
-        color: highlighted ? AppColors.brand : AppColors.primary,
-      ),
+      child: icon != null
+          ? Icon(icon, size: size * 0.46, color: color)
+          : Text(
+              initial,
+              style: AppTextStyles.heading2.copyWith(
+                color: color,
+                fontSize: size * 0.42,
+              ),
+            ),
     );
   }
 }

@@ -83,7 +83,7 @@ void main() {
   });
 
   group('XP', () {
-    const empty = GameState(ledger: [], celebrated: {});
+    const empty = GameState(ledger: []);
     XpEvent event(String key, XpReason reason) =>
         XpEvent(key: key, reason: reason, at: _now);
 
@@ -101,20 +101,8 @@ void main() {
       expect(Rank.scout.progressAt(275), 0.5);
     });
 
-    test('profiles naming a retired badge still load', () {
-      expect(GameState.badgesNamed(['firstCatch', 'onFire']), {
-        BadgeKind.firstCatch,
-      });
-    });
 
     test('a pending moment reports rank-ups and wants a celebration', () {
-      const stats = GameStats(
-        filed: 1,
-        resolved: 0,
-        mostUpvotes: 0,
-        nudgesSent: 0,
-        fixesChecked: 0,
-      );
       final game = GameState(
         ledger: [
           for (final (i, reason) in const [
@@ -127,9 +115,8 @@ void main() {
           ].indexed)
             XpEvent(key: 'old$i', reason: reason, at: _now, seen: true),
         ],
-        celebrated: const {BadgeKind.firstCatch},
       ).award(event('new', XpReason.nudgeSent));
-      final moment = RewardMoment.pending(game, stats)!;
+      final moment = RewardMoment.pending(game)!;
       expect(moment.gained, XpReason.nudgeSent.xp);
       expect(moment.rankUp, Rank.scout);
       expect(moment.deservesCelebration, isTrue);
@@ -144,15 +131,8 @@ void main() {
     });
 
     test('a lone upvote stays a micro reward', () {
-      const stats = GameStats(
-        filed: 0,
-        resolved: 0,
-        mostUpvotes: 0,
-        nudgesSent: 0,
-        fixesChecked: 0,
-      );
       final game = empty.award(event('k', XpReason.upvoteGiven));
-      expect(RewardMoment.pending(game, stats)!.deservesCelebration, isFalse);
+      expect(RewardMoment.pending(game)!.deservesCelebration, isFalse);
     });
 
     test('pending XP shrinks as a report advances', () {
@@ -168,19 +148,6 @@ void main() {
       );
     });
 
-    test('reopening a report does not revoke the fixed badge', () {
-      final game = const GameState(ledger: [], celebrated: {}).award(
-        XpEvent(
-          key: 'reportResolved:r',
-          reason: XpReason.reportResolved,
-          at: _now,
-        ),
-      );
-      final stats = statsFor(game, [
-        _report(status: ReportStatus.inProgress, reopenCount: 1),
-      ], 'me');
-      expect(BadgeKind.fixedIt.isEarned(stats), isTrue);
-    });
   });
 
   group('Accountability', () {
@@ -241,7 +208,6 @@ void main() {
         events: [],
         xpBefore: 990,
         xpAfter: 2500,
-        badges: [],
       );
       expect(moment.prizes, [Prize.cafeVoucher, Prize.tShirt]);
       expect(moment.deservesCelebration, isTrue);

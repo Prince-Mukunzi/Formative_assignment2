@@ -177,7 +177,7 @@ class _RewardOverlayState extends State<RewardOverlay>
                         color: AppColors.onPrimaryMuted,
                       ),
                     ),
-                  if (moment.badges.isNotEmpty || moment.prizes.isNotEmpty) ...[
+                  if (moment.prizes.isNotEmpty) ...[
                     AppSpacing.verticalGapXl,
                     _buildUnlocks(),
                   ],
@@ -225,7 +225,6 @@ class _RewardOverlayState extends State<RewardOverlay>
     final unlocks = [
       for (final prize in moment.prizes)
         (icon: prize.icon, label: 'Prize unlocked: ${prize.label}'),
-      for (final badge in moment.badges) (icon: badge.icon, label: badge.label),
     ];
     return Column(
       children: [

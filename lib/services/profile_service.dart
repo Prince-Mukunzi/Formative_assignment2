@@ -42,9 +42,6 @@ class ProfileService {
   Future<void> moveToDepartment(String uid, String departmentId) =>
       _users.doc(uid).update({'departmentId': departmentId});
 
-  Future<void> saveCelebrated(String uid, Set<String> badges) =>
-      _users.doc(uid).update({'celebrated': badges.toList()});
-
   Future<void> invite({
     required String email,
     required PersonRole role,
