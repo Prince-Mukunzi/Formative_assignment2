@@ -7,15 +7,18 @@ import 'firestore_decoding.dart';
 class ReportService {
   final FirebaseFirestore _db;
 
-  ReportService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
+  ReportService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> get _reports =>
       _db.collection('reports');
 
   String newId() => _reports.doc().id;
 
-  Stream<List<Report>> watchAll() =>
-      _reports.orderBy('createdAt', descending: true).snapshots().map(
+  Stream<List<Report>> watchAll() => _reports
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map(
         (snapshot) => [
           for (final doc in snapshot.docs) ?decodeOrSkip(doc, Report.fromMap),
         ],
@@ -85,7 +88,10 @@ class ReportService {
       'updatedBy': uid,
     });
     if (on) {
-      batch.set(upvote, {'uid': uid, 'createdAt': FieldValue.serverTimestamp()});
+      batch.set(upvote, {
+        'uid': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
     } else {
       batch.delete(upvote);
     }

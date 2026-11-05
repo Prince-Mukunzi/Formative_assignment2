@@ -20,7 +20,6 @@ Future<void> setUpFirebase() async {
   await FirebaseAuth.instance.useAuthEmulator(_emulatorHost, 9099);
   FirebaseFirestore.instance.useFirestoreEmulator(_emulatorHost, 8080);
   await FirebaseStorage.instance.useStorageEmulator(_emulatorHost, 9199);
-  FirebaseFunctions.instanceFor(
-    region: functionsRegion,
-  ).useFunctionsEmulator(_emulatorHost, 5001);
+  FirebaseFunctions.instanceFor(region: functionsRegion)
+      .useFunctionsEmulator(_emulatorHost, 5001);
 }

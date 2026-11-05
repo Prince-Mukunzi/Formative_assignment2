@@ -50,9 +50,7 @@ abstract final class AppSheet {
                       TintedIcon(icon: icon),
                       AppSpacing.horizontalGapMd,
                     ],
-                    Expanded(
-                      child: Text(title, style: AppTextStyles.heading2),
-                    ),
+                    Expanded(child: Text(title, style: AppTextStyles.heading2)),
                   ],
                 ),
                 AppSpacing.verticalGapLg,

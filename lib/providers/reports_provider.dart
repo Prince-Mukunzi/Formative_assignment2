@@ -41,9 +41,7 @@ class ReportsNotifier extends Notifier<List<Report>> {
 
   void _publish() => state = [
     for (final report in _reports)
-      _upvoted.contains(report.id)
-          ? report.copyWith(hasUpvoted: true)
-          : report,
+      _upvoted.contains(report.id) ? report.copyWith(hasUpvoted: true) : report,
   ];
 
   ReportService get _service => ref.read(reportServiceProvider);
@@ -66,11 +64,7 @@ class ReportsNotifier extends Notifier<List<Report>> {
     if (imagePath.isEmpty || imagePath.startsWith('http')) return imagePath;
     return ref
         .read(storageServiceProvider)
-        .uploadReportImage(
-          uid: _uid,
-          reportId: reportId,
-          localPath: imagePath,
-        );
+        .uploadReportImage(uid: _uid, reportId: reportId, localPath: imagePath);
   }
 
   Future<void> create({

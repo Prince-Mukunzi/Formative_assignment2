@@ -15,10 +15,13 @@ class DirectoryService {
   DocumentReference<Map<String, dynamic>> get _locations =>
       _db.doc('config/locations');
 
-  Stream<List<Department>> watchDepartments() =>
-      _departments.orderBy('label').snapshots().map(
+  Stream<List<Department>> watchDepartments() => _departments
+      .orderBy('label')
+      .snapshots()
+      .map(
         (snapshot) => [
-          for (final doc in snapshot.docs) ?decodeOrSkip(doc, Department.fromMap),
+          for (final doc in snapshot.docs)
+            ?decodeOrSkip(doc, Department.fromMap),
         ],
       );
 

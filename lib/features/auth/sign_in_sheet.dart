@@ -229,7 +229,9 @@ class _SignInSheetState extends ConsumerState<SignInSheet> {
               label: 'Continue with Google',
               icon: HugeIcons.strokeRoundedGoogle,
               isFilled: false,
-              onTap: _busy ? null : () => _run((auth) => auth.signInWithGoogle()),
+              onTap: _busy
+                  ? null
+                  : () => _run((auth) => auth.signInWithGoogle()),
             ),
             AppSpacing.verticalGapLg,
             Row(

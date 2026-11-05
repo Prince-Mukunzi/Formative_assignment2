@@ -15,13 +15,11 @@ class GameService {
   CollectionReference<Map<String, dynamic>> _events(String uid) =>
       _db.collection('users/$uid/xpEvents');
 
-  Stream<List<XpEvent>> watchLedger(String uid) => _events(uid)
-      .snapshots()
-      .map(
-        (snapshot) => [
-          for (final doc in snapshot.docs) ?decodeOrSkip(doc, XpEvent.fromMap),
-        ],
-      );
+  Stream<List<XpEvent>> watchLedger(String uid) => _events(uid).snapshots().map(
+    (snapshot) => [
+      for (final doc in snapshot.docs) ?decodeOrSkip(doc, XpEvent.fromMap),
+    ],
+  );
 
   Future<void> markSeen(String uid, Iterable<String> keys) {
     final batch = _db.batch();

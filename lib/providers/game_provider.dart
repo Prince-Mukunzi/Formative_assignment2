@@ -73,7 +73,9 @@ class GameNotifier extends Notifier<GameState> {
   }
 
   void forget(String reportId) {
-    _predicted.removeWhere((key, _) => key.split(':').skip(1).contains(reportId));
+    _predicted.removeWhere(
+      (key, _) => key.split(':').skip(1).contains(reportId),
+    );
     _publish();
   }
 

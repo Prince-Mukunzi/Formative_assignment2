@@ -134,7 +134,11 @@ class _SlideToConfirmState extends State<SlideToConfirm>
       height: _height,
       decoration: BoxDecoration(
         color: widget.tone == SlideTone.brand
-            ? Color.lerp(AppColors.chipBackground, AppColors.brandTint, progress)
+            ? Color.lerp(
+                AppColors.chipBackground,
+                AppColors.brandTint,
+                progress,
+              )
             : AppColors.chipBackground,
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),

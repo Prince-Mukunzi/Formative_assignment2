@@ -114,8 +114,6 @@ class GameState {
         if (!event.key.split(':').skip(1).contains(reportId)) event,
     ],
   );
-
-
 }
 
 class RewardMoment {

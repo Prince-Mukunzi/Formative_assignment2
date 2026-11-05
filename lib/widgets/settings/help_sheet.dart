@@ -49,8 +49,7 @@ abstract final class HelpSheet {
       ),
       (
         question: 'A report belongs to another team',
-        answer:
-            'Open it and move it. The other team sees it straight away.',
+        answer: 'Open it and move it. The other team sees it straight away.',
       ),
     ],
     AdminSession() => const [

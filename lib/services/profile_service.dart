@@ -22,16 +22,18 @@ class ProfileService {
       .map((doc) => doc.exists ? _decode(doc) : null);
 
   Stream<List<Person>> watchAll() => _users.snapshots().map(
-    (snapshot) => [
-      for (final doc in snapshot.docs) ?_decode(doc),
-    ],
+    (snapshot) => [for (final doc in snapshot.docs) ?_decode(doc)],
   );
 
   Person? _decode(DocumentSnapshot<Map<String, dynamic>> doc) {
     try {
       return Person.fromMap(doc.id, doc.data()!);
     } on Object catch (error) {
-      developer.log('Skipped malformed user ${doc.id}', error: error, level: 900);
+      developer.log(
+        'Skipped malformed user ${doc.id}',
+        error: error,
+        level: 900,
+      );
       return null;
     }
   }
