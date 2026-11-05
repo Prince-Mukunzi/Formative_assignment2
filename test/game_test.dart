@@ -136,6 +136,14 @@ void main() {
       expect(moment.deservesCelebration, isTrue);
     });
 
+    test('revoking a report removes only the XP scoped to it', () {
+      final game = empty
+          .award(event('reportFiled:r1', XpReason.reportFiled))
+          .award(event('nudgeSent:r1:2026-11-5', XpReason.nudgeSent))
+          .award(event('reportFiled:r10', XpReason.reportFiled));
+      expect(game.revoke('r1').ledger.map((e) => e.key), ['reportFiled:r10']);
+    });
+
     test('a lone upvote stays a micro reward', () {
       const stats = GameStats(
         filed: 0,

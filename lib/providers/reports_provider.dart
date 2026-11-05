@@ -67,8 +67,40 @@ class ReportsNotifier extends Notifier<List<Report>> {
     );
     _set([report, ...state]);
     _game.award(XpReason.reportFiled, report.id);
-    if (imageUrl.isNotEmpty) _game.award(XpReason.photoAdded, report.id);
-    if (description.length >= minDetailLength) {
+    _creditEvidence(report);
+  }
+
+  void edit(
+    String id, {
+    required String title,
+    required String description,
+    required String location,
+    required ReportCategory category,
+    required String imageUrl,
+  }) {
+    final report = _update(
+      id,
+      (r) => r.copyWith(
+        title: title,
+        description: description,
+        location: location,
+        category: category,
+        imageUrl: imageUrl,
+      ),
+    );
+    _creditEvidence(report);
+  }
+
+  void withdraw(String id) {
+    _game.revoke(id);
+    delete(id);
+  }
+
+  void _creditEvidence(Report report) {
+    if (report.imageUrl.isNotEmpty) {
+      _game.award(XpReason.photoAdded, report.id);
+    }
+    if (report.description.length >= minDetailLength) {
       _game.award(XpReason.detailAdded, report.id);
     }
   }

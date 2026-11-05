@@ -177,6 +177,14 @@ class GameState {
     return GameState(ledger: [...ledger, event], celebrated: celebrated);
   }
 
+  GameState revoke(String reportId) => GameState(
+    ledger: [
+      for (final event in ledger)
+        if (!event.key.split(':').skip(1).contains(reportId)) event,
+    ],
+    celebrated: celebrated,
+  );
+
   GameState seen(Set<BadgeKind> badges) => GameState(
     ledger: [for (final event in ledger) event.markSeen()],
     celebrated: {...celebrated, ...badges},

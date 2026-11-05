@@ -57,6 +57,9 @@ class Report {
       status == ReportStatus.awaitingApproval ||
       status == ReportStatus.inProgress;
 
+  // Once a team has approved it they are working from what was reported.
+  bool get reporterCanChange => status == ReportStatus.awaitingApproval;
+
   bool get awaitsVerification =>
       status == ReportStatus.resolved && verifiedAt == null;
 
@@ -93,6 +96,11 @@ class Report {
   );
 
   Report copyWith({
+    String? title,
+    String? description,
+    String? imageUrl,
+    ReportCategory? category,
+    String? location,
     ReportStatus? status,
     int? upvotes,
     bool? hasUpvoted,
@@ -106,13 +114,13 @@ class Report {
   }) {
     return Report(
       id: id,
-      title: title,
-      description: description,
-      imageUrl: imageUrl,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
       status: status ?? this.status,
-      category: category,
+      category: category ?? this.category,
       upvotes: upvotes ?? this.upvotes,
-      location: location,
+      location: location ?? this.location,
       reportedBy: reportedBy,
       reportedByName: reportedByName,
       createdAt: createdAt,

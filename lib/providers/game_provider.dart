@@ -24,6 +24,8 @@ class GameNotifier extends Notifier<GameState> {
     return reason.xp;
   }
 
+  void revoke(String reportId) => _update(state.revoke(reportId));
+
   void acknowledge(RewardMoment moment) {
     _update(state.seen(moment.badges.toSet()));
   }

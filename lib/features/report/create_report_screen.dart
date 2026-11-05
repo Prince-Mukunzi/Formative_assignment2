@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
+import '../../models/report.dart';
 import '../../models/report_category.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
@@ -19,11 +18,14 @@ import '../../widgets/motion/kick_controller.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/shake.dart';
+import '../../widgets/report_image.dart';
 import '../../widgets/wheel_picker.dart';
 import '../../core/utils/app_haptics.dart';
 
 class CreateReportScreen extends ConsumerStatefulWidget {
-  const CreateReportScreen({super.key});
+  final String? reportId;
+
+  const CreateReportScreen({super.key, this.reportId});
 
   @override
   ConsumerState<CreateReportScreen> createState() => _CreateReportScreenState();
@@ -50,6 +52,8 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
   int _shake = 0;
   late int _shownBounty = _bounty;
 
+  bool get _isEditing => widget.reportId != null;
+
   String get _location => _isOtherLocation
       ? _locationController.text.trim()
       : _presetLocation ?? '';
@@ -70,7 +74,24 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
     super.initState();
     _presetLocation = ref.read(locationsProvider).firstOrNull;
     _isOtherLocation = _presetLocation == null;
+    final id = widget.reportId;
+    final report = id == null ? null : ref.read(reportByIdProvider(id));
+    if (report != null) _prefill(report);
     _descriptionController.addListener(_refreshBounty);
+  }
+
+  void _prefill(Report report) {
+    _category = report.category;
+    _titleController.text = report.title;
+    _descriptionController.text = report.description;
+    _imagePath = report.imageUrl;
+    if (ref.read(locationsProvider).contains(report.location)) {
+      _presetLocation = report.location;
+      _isOtherLocation = false;
+    } else {
+      _isOtherLocation = true;
+      _locationController.text = report.location;
+    }
   }
 
   void _refreshBounty() {
@@ -147,16 +168,29 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
   void _submit() {
     final category = _category;
     if (category == null) return;
+    final title = _titleController.text.trim();
+    final description = _descriptionController.text.trim();
+    final reports = ref.read(reportsProvider.notifier);
+    final id = widget.reportId;
     Navigator.of(context).pop();
-    ref
-        .read(reportsProvider.notifier)
-        .create(
-          title: _titleController.text.trim(),
-          description: _descriptionController.text.trim(),
-          location: _location,
-          category: category,
-          imageUrl: _imagePath,
-        );
+    if (id == null) {
+      reports.create(
+        title: title,
+        description: description,
+        location: _location,
+        category: category,
+        imageUrl: _imagePath,
+      );
+    } else {
+      reports.edit(
+        id,
+        title: title,
+        description: description,
+        location: _location,
+        category: category,
+        imageUrl: _imagePath,
+      );
+    }
   }
 
   Future<void> _pickImage() async {
@@ -243,12 +277,16 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
                   ),
                   _Step(
                     question: 'Add a photo',
-                    child: _PhotoTile(path: _imagePath, onTap: _pickImage),
+                    child: _PhotoTile(
+                      path: _imagePath,
+                      icon: _category?.icon ?? HugeIcons.strokeRoundedCamera01,
+                      onTap: _pickImage,
+                    ),
                   ),
                 ],
               ),
             ),
-            if (_step > 0)
+            if (_step > 0 || _isEditing)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl,
@@ -259,7 +297,11 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
                 child: SizedBox(
                   width: double.infinity,
                   child: AppButton(
-                    label: _step == _lastStep ? 'Submit' : 'Next',
+                    label: _step < _lastStep
+                        ? 'Next'
+                        : _isEditing
+                        ? 'Save'
+                        : 'Submit',
                     onTap: _next,
                   ),
                 ),
@@ -291,21 +333,23 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
           Expanded(
             child: _StepBar(step: _step, count: _lastStep + 1),
           ),
-          AppSpacing.horizontalGapLg,
-          AnimatedBuilder(
-            animation: _xpKick,
-            builder: (_, child) =>
-                Transform.scale(scale: _xpKick.value, child: child),
-            child: RollingNumber(
-              value: _shownBounty,
-              prefix: '+',
-              suffix: ' XP',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.brand,
-                fontWeight: FontWeight.w600,
+          if (!_isEditing) ...[
+            AppSpacing.horizontalGapLg,
+            AnimatedBuilder(
+              animation: _xpKick,
+              builder: (_, child) =>
+                  Transform.scale(scale: _xpKick.value, child: child),
+              child: RollingNumber(
+                value: _shownBounty,
+                prefix: '+',
+                suffix: ' XP',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.brand,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -504,9 +548,14 @@ class _LocationList extends StatelessWidget {
 
 class _PhotoTile extends StatelessWidget {
   final String path;
+  final IconData icon;
   final VoidCallback onTap;
 
-  const _PhotoTile({required this.path, required this.onTap});
+  const _PhotoTile({
+    required this.path,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -522,7 +571,7 @@ class _PhotoTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
           child: path.isNotEmpty
-              ? Image.file(File(path), fit: BoxFit.cover)
+              ? ReportImage.path(path, icon: icon)
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

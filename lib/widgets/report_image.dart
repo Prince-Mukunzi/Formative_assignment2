@@ -7,22 +7,20 @@ import '../core/theme/app_colors.dart';
 import '../models/report.dart';
 
 class ReportImage extends StatelessWidget {
-  final Report report;
+  final String url;
+  final IconData icon;
 
-  const ReportImage({super.key, required this.report});
+  ReportImage({super.key, required Report report})
+    : url = report.imageUrl,
+      icon = report.category.icon;
+
+  const ReportImage.path(this.url, {super.key, required this.icon});
 
   @override
   Widget build(BuildContext context) {
-    final url = report.imageUrl;
     final fallback = ColoredBox(
       color: AppColors.chipBackground,
-      child: Center(
-        child: Icon(
-          report.category.icon,
-          size: 36,
-          color: AppColors.textTertiary,
-        ),
-      ),
+      child: Center(child: Icon(icon, size: 36, color: AppColors.textTertiary)),
     );
     if (url.isEmpty) return fallback;
     if (!url.startsWith('http')) {

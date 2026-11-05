@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../core/mock_data.dart';
+import '../core/router/app_router.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
@@ -237,45 +239,75 @@ class _Body extends StatelessWidget {
   Widget _value(String text) => Text(text, style: AppTextStyles.labelMedium);
 }
 
+Future<bool> _confirmDelete(BuildContext context, {String? message}) async {
+  final confirmed = await showCupertinoDialog<bool>(
+    context: context,
+    builder: (dialogContext) => CupertinoAlertDialog(
+      title: const Text('Delete this report?'),
+      content: message == null ? null : Text(message),
+      actions: [
+        CupertinoDialogAction(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: const Text('Cancel'),
+        ),
+        CupertinoDialogAction(
+          isDestructiveAction: true,
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: const Text('Delete'),
+        ),
+      ],
+    ),
+  );
+  return confirmed ?? false;
+}
+
+class _QuietAction extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  const _QuietAction({
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = this.icon;
+    return Pressable(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: color),
+              AppSpacing.horizontalGapXs,
+            ],
+            Text(
+              label,
+              style: AppTextStyles.labelMedium.copyWith(color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AdminActions extends ConsumerWidget {
   final Report report;
 
   const _AdminActions({required this.report});
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showCupertinoDialog<bool>(
-      context: context,
-      builder: (dialogContext) => CupertinoAlertDialog(
-        title: const Text('Delete this report?'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
+    if (!await _confirmDelete(context) || !context.mounted) return;
     Navigator.of(context).pop();
     ref.read(reportsProvider.notifier).delete(report.id);
-  }
-
-  Widget _quiet(String label, Color color, VoidCallback onTap) {
-    return Pressable(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(color: color),
-        ),
-      ),
-    );
   }
 
   @override
@@ -324,12 +356,16 @@ class _AdminActions extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _quiet(
-              'Reassign',
-              AppColors.textSecondary,
-              () => ReassignSheet.show(context, report),
+            _QuietAction(
+              label: 'Reassign',
+              color: AppColors.textSecondary,
+              onTap: () => ReassignSheet.show(context, report),
             ),
-            _quiet('Delete', AppColors.brand, () => _delete(context, ref)),
+            _QuietAction(
+              label: 'Delete',
+              color: AppColors.brand,
+              onTap: () => _delete(context, ref),
+            ),
           ],
         ),
       ],
@@ -385,8 +421,50 @@ class _StudentActions extends ConsumerWidget {
     if (isMine && report.awaitsVerification) {
       return _VerifyActions(report: report);
     }
+    if (isMine && report.reporterCanChange) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _NudgeAction(report: report),
+          AppSpacing.verticalGapSm,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _QuietAction(
+                icon: HugeIcons.strokeRoundedPencilEdit02,
+                label: 'Edit',
+                color: AppColors.textSecondary,
+                onTap: () => _edit(context),
+              ),
+              _QuietAction(
+                icon: HugeIcons.strokeRoundedDelete02,
+                label: 'Delete',
+                color: AppColors.brand,
+                onTap: () => _delete(context, ref),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
     if (isMine && report.isOpen) return _NudgeAction(report: report);
     return UpvoteButton(report: report, expanded: true);
+  }
+
+  void _edit(BuildContext context) {
+    final router = GoRouter.of(context);
+    Navigator.of(context).pop();
+    router.push(AppRoutes.editReport(report.id));
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await _confirmDelete(
+      context,
+      message: 'You lose the XP this report earned.',
+    );
+    if (!confirmed || !context.mounted) return;
+    Navigator.of(context).pop();
+    ref.read(reportsProvider.notifier).withdraw(report.id);
   }
 }
 

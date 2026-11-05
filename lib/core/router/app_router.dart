@@ -17,6 +17,7 @@ abstract final class AppRoutes {
   static const role = '/role';
   static const student = '/student';
   static const newReport = '/student/report/new';
+  static String editReport(String id) => '/student/report/$id/edit';
   static const progress = '/student/progress';
   static const faculty = '/faculty';
   static const triage = '/faculty/triage';
@@ -63,6 +64,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'report/new',
             pageBuilder: (_, _) =>
                 const CupertinoPage(child: CreateReportScreen()),
+          ),
+          GoRoute(
+            path: 'report/:id/edit',
+            pageBuilder: (_, state) => CupertinoPage(
+              child: CreateReportScreen(reportId: state.pathParameters['id']),
+            ),
           ),
           GoRoute(
             path: 'progress',
