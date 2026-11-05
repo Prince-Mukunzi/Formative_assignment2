@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/app_info.dart';
 import '../../core/mock_data.dart';
@@ -21,6 +22,7 @@ import '../../providers/reports_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/motion/pressable.dart';
 import '../../widgets/banner_stat.dart';
 import '../../widgets/game/next_prize_card.dart';
 import '../../widgets/gradient_banner.dart';
@@ -219,7 +221,24 @@ class _Signature extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const TextSpan(text: ' by Mukunzi'),
+                const TextSpan(text: ' by '),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
+                  child: Pressable(
+                    onTap: () => launchUrl(
+                      Uri.https('whoismukunzi.tech'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    child: Text(
+                      'whoismukunzi.tech',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppTextStyles.bodySmall.color,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
