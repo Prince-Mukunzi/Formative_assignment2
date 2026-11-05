@@ -73,7 +73,7 @@ class _GaugePainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = _stroke
         ..strokeCap = StrokeCap.round
-        ..color = AppColors.chipBackground,
+        ..color = AppColors.onPrimaryFaint,
     );
     canvas.drawArc(
       arc,
@@ -87,14 +87,14 @@ class _GaugePainter extends CustomPainter {
         ..shader = const SweepGradient(
           startAngle: math.pi,
           endAngle: math.pi * 2,
-          colors: [AppColors.primary, AppColors.brand],
+          colors: [AppColors.textOnPrimary, AppColors.brand],
         ).createShader(arc),
     );
 
     final tickPaint = Paint()
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 1.5
-      ..color = AppColors.textTertiary;
+      ..color = AppColors.onPrimaryFaint;
     for (var i = 0; i <= _ticks; i++) {
       final major = i % 5 == 0;
       final angle = math.pi + math.pi * i / _ticks;
@@ -115,16 +115,16 @@ class _GaugePainter extends CustomPainter {
       center,
       tip,
       Paint()
-        ..color = AppColors.primaryDark
+        ..color = AppColors.textOnPrimary
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round,
     );
     canvas.drawCircle(
       center,
       hubRadius,
-      Paint()..color = AppColors.primaryDark,
+      Paint()..color = AppColors.textOnPrimary,
     );
-    canvas.drawCircle(center, 3, Paint()..color = AppColors.surface);
+    canvas.drawCircle(center, 3, Paint()..color = AppColors.primaryDark);
   }
 
   @override
