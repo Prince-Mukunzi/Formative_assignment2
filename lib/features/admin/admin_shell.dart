@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../widgets/app_bottom_nav.dart';
+import '../profile/profile_screen.dart';
 import 'overview_screen.dart';
 import 'people_screen.dart';
 import 'reports_screen.dart';
@@ -26,7 +27,12 @@ class _AdminShellState extends State<AdminShell> {
         extendBody: true,
         body: IndexedStack(
           index: _currentIndex,
-          children: const [OverviewScreen(), ReportsScreen(), PeopleScreen()],
+          children: const [
+            OverviewScreen(),
+            ReportsScreen(),
+            PeopleScreen(),
+            ProfileScreen(),
+          ],
         ),
         bottomNavigationBar: AppBottomNav(
           currentIndex: _currentIndex,

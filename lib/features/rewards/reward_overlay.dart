@@ -15,6 +15,7 @@ import '../../widgets/motion/confetti.dart';
 import '../../widgets/motion/kick_controller.dart';
 import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/spring_in.dart';
+import '../../core/utils/app_haptics.dart';
 
 class RewardOverlay extends StatefulWidget {
   final RewardMoment moment;
@@ -60,7 +61,7 @@ class _RewardOverlayState extends State<RewardOverlay>
   void initState() {
     super.initState();
     _after(_firstBeat, () {
-      HapticFeedback.mediumImpact();
+      AppHaptics.mediumImpact();
       _emblemKick.kick(8);
       _celebrate();
     });
@@ -89,7 +90,7 @@ class _RewardOverlayState extends State<RewardOverlay>
   }
 
   void _applyRankUp() {
-    HapticFeedback.heavyImpact();
+    AppHaptics.heavyImpact();
     _emblemKick.kick(18);
     _celebrate();
     final after = widget.moment.xpAfter;

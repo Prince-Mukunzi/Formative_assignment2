@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -29,6 +28,7 @@ import 'report_image.dart';
 import 'sla_label.dart';
 import 'status_badge.dart';
 import 'upvote_button.dart';
+import '../core/utils/app_haptics.dart';
 
 class ReportDetailSheet extends ConsumerWidget {
   final String reportId;
@@ -492,7 +492,7 @@ class _NudgeAction extends ConsumerWidget {
               : 'Nudge again in ${(wait.inMinutes + 59) ~/ 60}h',
           onTap: canNudge
               ? () {
-                  HapticFeedback.mediumImpact();
+                  AppHaptics.mediumImpact();
                   final origin = Confetti.centerOf(buttonContext);
                   final xp = ref
                       .read(reportsProvider.notifier)

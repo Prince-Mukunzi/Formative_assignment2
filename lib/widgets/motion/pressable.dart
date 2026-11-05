@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../core/theme/app_motion.dart';
 import 'spring_value.dart';
+import '../../core/utils/app_haptics.dart';
 
 class Pressable extends StatefulWidget {
   final Widget child;
@@ -34,7 +34,7 @@ class _PressableState extends State<Pressable> {
   }
 
   void _handleTap() {
-    if (widget.haptic) HapticFeedback.lightImpact();
+    if (widget.haptic) AppHaptics.lightImpact();
     widget.onTap?.call();
   }
 

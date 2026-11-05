@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -15,6 +14,7 @@ import 'motion/kick_controller.dart';
 import 'motion/pressable.dart';
 import 'motion/rolling_number.dart';
 import 'motion/xp_pop.dart';
+import '../core/utils/app_haptics.dart';
 
 class UpvoteButton extends ConsumerStatefulWidget {
   final Report report;
@@ -44,7 +44,7 @@ class _UpvoteButtonState extends ConsumerState<UpvoteButton>
       return;
     }
     _scale.kick(11);
-    HapticFeedback.mediumImpact();
+    AppHaptics.mediumImpact();
     final origin = Confetti.centerOf(buttonContext);
     Confetti.burst(
       buttonContext,

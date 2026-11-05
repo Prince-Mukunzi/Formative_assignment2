@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/session_provider.dart';
+import 'providers/settings_provider.dart';
 import 'services/local_store.dart';
 
 Future<void> main() async {
@@ -30,11 +31,21 @@ class AluBugBountyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final reduceMotion = ref.watch(
+      settingsProvider.select((settings) => settings.reduceMotion),
+    );
     return MaterialApp.router(
       title: 'ALU Bug Bounty',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) {
+        if (!reduceMotion) return child!;
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        );
+      },
     );
   }
 }

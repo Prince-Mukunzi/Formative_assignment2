@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -14,6 +13,7 @@ import '../../widgets/bare_field.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/shake.dart';
+import '../../core/utils/app_haptics.dart';
 
 class TeamSheet extends ConsumerStatefulWidget {
   final Department? team;
@@ -41,7 +41,7 @@ class _TeamSheetState extends ConsumerState<TeamSheet> {
   void _save() {
     final label = _name.text.trim();
     if (label.isEmpty) {
-      HapticFeedback.heavyImpact();
+      AppHaptics.heavyImpact();
       setState(() => _shake++);
       return;
     }

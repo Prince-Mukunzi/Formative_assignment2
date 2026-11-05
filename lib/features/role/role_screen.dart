@@ -14,9 +14,11 @@ import '../../providers/directory_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/motion/pressable.dart';
+import '../../widgets/motion/spring_expand.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/motion/spring_value.dart';
 import '../../widgets/motion/tilt_card.dart';
+import '../../core/utils/app_haptics.dart';
 
 class RoleScreen extends ConsumerStatefulWidget {
   const RoleScreen({super.key});
@@ -33,7 +35,7 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
 
   void _enter(Session session, Offset origin) {
     if (_revealOrigin != null) return;
-    HapticFeedback.mediumImpact();
+    AppHaptics.mediumImpact();
     setState(() => _revealOrigin = origin);
     Future.delayed(_revealDuration, () {
       if (mounted) ref.read(sessionProvider.notifier).signIn(session);
@@ -71,7 +73,7 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                 spring: AppSprings.slam,
                 fromScale: 0.4,
                 offsetY: 0,
-                child: AppLogo(onDark: true, height: 44),
+                child: AppLogo(onDark: true),
               ),
               AppSpacing.verticalGapXxl,
               SpringIn(
@@ -200,18 +202,7 @@ class _RoleCard extends StatelessWidget {
               ),
             ),
             if (expansion != null)
-              SpringValue(
-                value: isOpen ? 1 : 0,
-                spring: AppSprings.snappy,
-                builder: (_, t, child) => ClipRect(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    heightFactor: math.max(t, 0),
-                    child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
-                  ),
-                ),
-                child: expansion,
-              ),
+              SpringExpand(open: isOpen, child: expansion!),
           ],
         ),
       ),

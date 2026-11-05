@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/game.dart';
 import '../../providers/game_provider.dart';
+import '../../providers/settings_provider.dart';
 import 'reward_overlay.dart';
 
 /// Turns pending XP into feedback. Also catches rewards earned while away,
@@ -35,7 +36,8 @@ class _RewardDirectorState extends ConsumerState<RewardDirector> {
     if (!mounted) return;
     final RewardMoment? moment = ref.read(pendingRewardProvider);
     if (moment != null) {
-      if (moment.deservesCelebration) {
+      if (moment.deservesCelebration &&
+          ref.read(settingsProvider).celebrations) {
         await RewardOverlay.show(context, moment);
       }
       if (mounted) ref.read(gameProvider.notifier).acknowledge(moment);

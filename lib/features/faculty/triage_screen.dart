@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -20,6 +19,7 @@ import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_image.dart';
 import '../../widgets/sla_label.dart';
+import '../../core/utils/app_haptics.dart';
 
 class TriageScreen extends ConsumerStatefulWidget {
   const TriageScreen({super.key});
@@ -72,7 +72,7 @@ class _TriageScreenState extends ConsumerState<TriageScreen>
     final past = _x.value.abs() > _width * _commitFraction;
     if (past != _pastThreshold) {
       _pastThreshold = past;
-      HapticFeedback.selectionClick();
+      AppHaptics.selectionClick();
     }
   }
 
@@ -110,7 +110,7 @@ class _TriageScreenState extends ConsumerState<TriageScreen>
 
   void _fly(double direction, Offset velocity) {
     setState(() => _flying = true);
-    HapticFeedback.mediumImpact();
+    AppHaptics.mediumImpact();
     final report = _deck[_index];
     _spring(_y, _y.value + velocity.dy * 0.15, velocity.dy, _flySpring);
     _spring(_x, direction * _width * 1.5, velocity.dx, _flySpring).whenComplete(
@@ -135,7 +135,7 @@ class _TriageScreenState extends ConsumerState<TriageScreen>
   }
 
   void _celebrateClear() {
-    HapticFeedback.heavyImpact();
+    AppHaptics.heavyImpact();
     final size = MediaQuery.sizeOf(context);
     Confetti.burst(
       context,

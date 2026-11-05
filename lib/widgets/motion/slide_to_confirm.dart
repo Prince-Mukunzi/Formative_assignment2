@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/app_haptics.dart';
 
 class SlideToConfirm extends StatefulWidget {
   final String label;
@@ -54,7 +54,7 @@ class _SlideToConfirmState extends State<SlideToConfirm>
     final detent = (_progress * _detents).floor();
     if (detent != _lastDetent) {
       _lastDetent = detent;
-      HapticFeedback.selectionClick();
+      AppHaptics.selectionClick();
     }
   }
 
@@ -72,7 +72,7 @@ class _SlideToConfirmState extends State<SlideToConfirm>
 
   void _confirm(double velocity) {
     setState(() => _confirmed = true);
-    HapticFeedback.heavyImpact();
+    AppHaptics.heavyImpact();
     _springTo(_travel, velocity, AppSprings.snappy).whenComplete(() {
       if (mounted) widget.onConfirmed();
     });

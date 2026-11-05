@@ -46,6 +46,7 @@ class AppBottomNav extends StatelessWidget {
     AppNavItem(HugeIcons.strokeRoundedDashboardSquare01, 'Overview'),
     AppNavItem(HugeIcons.strokeRoundedTask01, 'Reports'),
     AppNavItem(HugeIcons.strokeRoundedUserGroup, 'People'),
+    AppNavItem(HugeIcons.strokeRoundedUserCircle, 'Profile'),
   ];
 
   @override
@@ -76,6 +77,7 @@ class AppBottomNav extends StatelessWidget {
                     icon: items[i].icon,
                     label: items[i].label,
                     isSelected: currentIndex == i,
+                    inset: items.length > 3 ? AppSpacing.md : AppSpacing.lg,
                     onTap: () => onTap(i),
                   ),
                 ],
@@ -95,8 +97,10 @@ class _NavItem extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final double inset;
 
   const _NavItem({
+    required this.inset,
     required this.icon,
     required this.label,
     required this.isSelected,
@@ -120,7 +124,7 @@ class _NavItem extends StatelessWidget {
           );
           return Container(
             padding: EdgeInsets.symmetric(
-              horizontal: 16 + 2 * clamped,
+              horizontal: inset + 2 * clamped,
               vertical: 18,
             ),
             decoration: BoxDecoration(

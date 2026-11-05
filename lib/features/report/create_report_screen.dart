@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,6 +19,7 @@ import '../../widgets/motion/kick_controller.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/shake.dart';
+import '../../core/utils/app_haptics.dart';
 
 class CreateReportScreen extends ConsumerStatefulWidget {
   const CreateReportScreen({super.key});
@@ -74,7 +74,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
     final bounty = _bounty;
     if (bounty == _shownBounty) return;
     if (bounty > _shownBounty) {
-      HapticFeedback.mediumImpact();
+      AppHaptics.mediumImpact();
       _xpKick.kick(6);
     }
     setState(() => _shownBounty = bounty);
@@ -102,7 +102,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
   }
 
   void _pickCategory(ReportCategory category) {
-    HapticFeedback.selectionClick();
+    AppHaptics.selectionClick();
     setState(() => _category = category);
     Future.delayed(const Duration(milliseconds: 160), () {
       if (mounted && _step == 0) _goTo(1);
@@ -110,7 +110,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
   }
 
   void _pickLocation(String location) {
-    HapticFeedback.selectionClick();
+    AppHaptics.selectionClick();
     setState(() {
       _presetLocation = location;
       _isOtherLocation = false;
@@ -121,7 +121,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
   }
 
   void _pickOtherLocation() {
-    HapticFeedback.selectionClick();
+    AppHaptics.selectionClick();
     setState(() => _isOtherLocation = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _locationFocus.requestFocus();
@@ -135,7 +135,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
       _ => false,
     };
     if (missing) {
-      HapticFeedback.heavyImpact();
+      AppHaptics.heavyImpact();
       setState(() => _shake++);
       return;
     }
