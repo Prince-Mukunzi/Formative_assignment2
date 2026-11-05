@@ -1,3 +1,4 @@
+import '../models/game.dart';
 import '../models/report.dart';
 import '../models/report_status.dart';
 import '../models/report_category.dart';
@@ -6,7 +7,7 @@ abstract final class MockData {
   static const _sinkImage =
       'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=600&q=80';
   static const _electricImage =
-      'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&q=80';
+      'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80';
   static const _waterImage =
       'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=80';
   static const _facilityImage =
@@ -23,7 +24,7 @@ abstract final class MockData {
       category: ReportCategory.water,
       upvotes: 12,
       location: 'Block C, Rm 204',
-      reportedBy: 'user1',
+      reportedBy: currentStudentId,
       reportedByName: 'Prince M.',
       createdAt: DateTime.now().subtract(const Duration(hours: 2)),
     ),
@@ -39,7 +40,9 @@ abstract final class MockData {
       location: 'East Wing, Floor 3',
       reportedBy: 'user2',
       reportedByName: 'Alice K.',
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+      createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      approvedAt: DateTime.now().subtract(const Duration(days: 3, hours: 2)),
+      nudges: 2,
     ),
     Report(
       id: '3',
@@ -53,7 +56,9 @@ abstract final class MockData {
       location: 'Dorm B, All Floors',
       reportedBy: 'user3',
       reportedByName: 'John D.',
-      createdAt: DateTime.now().subtract(const Duration(hours: 8)),
+      createdAt: DateTime.now().subtract(const Duration(hours: 50)),
+      approvedAt: DateTime.now().subtract(const Duration(hours: 49)),
+      nudges: 1,
     ),
     Report(
       id: '4',
@@ -67,7 +72,9 @@ abstract final class MockData {
       location: 'Science Block, Lab 2',
       reportedBy: 'user4',
       reportedByName: 'Sarah W.',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      approvedAt: DateTime.now().subtract(const Duration(days: 3)),
+      resolvedAt: DateTime.now().subtract(const Duration(days: 1)),
     ),
     Report(
       id: '5',
@@ -95,7 +102,9 @@ abstract final class MockData {
       location: 'Main Hall, Staircase',
       reportedBy: 'user6',
       reportedByName: 'Tom B.',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      createdAt: DateTime.now().subtract(const Duration(days: 5)),
+      approvedAt: DateTime.now().subtract(const Duration(days: 5)),
+      resolvedAt: DateTime.now().subtract(const Duration(days: 2)),
     ),
     Report(
       id: '7',
@@ -109,9 +118,118 @@ abstract final class MockData {
       location: 'Library, Floor 2',
       reportedBy: 'user7',
       reportedByName: 'Mike R.',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      createdAt: DateTime.now().subtract(const Duration(hours: 30)),
+    ),
+    Report(
+      id: '8',
+      title: 'Sockets Sparking at Desks',
+      description:
+          'Two of the desk sockets spark when you plug in a charger. Nobody wants to be the next one to try.',
+      imageUrl: _electricImage,
+      status: ReportStatus.inProgress,
+      category: ReportCategory.electricity,
+      upvotes: 9,
+      location: 'Library, Floor 1',
+      reportedBy: currentStudentId,
+      reportedByName: 'Prince M.',
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      approvedAt: DateTime.now().subtract(const Duration(hours: 40)),
+    ),
+    Report(
+      id: '9',
+      title: 'Clogged Shower Drain',
+      description:
+          'The drain backs up within a minute. The whole bathroom floods if you take longer than that.',
+      imageUrl: _sinkImage,
+      status: ReportStatus.resolved,
+      category: ReportCategory.water,
+      upvotes: 14,
+      location: 'Dorm A, Floor 2',
+      reportedBy: currentStudentId,
+      reportedByName: 'Prince M.',
+      createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      approvedAt: DateTime.now().subtract(const Duration(days: 4)),
+      resolvedAt: DateTime.now().subtract(const Duration(hours: 3)),
+    ),
+    Report(
+      id: '10',
+      title: 'Ceiling Tile About to Fall',
+      description:
+          'Hanging by one corner right above the main walkway. It moves whenever the door slams.',
+      imageUrl: _facilityImage,
+      status: ReportStatus.inProgress,
+      category: ReportCategory.facilities,
+      upvotes: 27,
+      location: 'Main Hall, Entrance',
+      reportedBy: 'user8',
+      reportedByName: 'Nadia O.',
+      createdAt: DateTime.now().subtract(const Duration(days: 3, hours: 6)),
+      approvedAt: DateTime.now().subtract(const Duration(days: 3)),
+    ),
+    Report(
+      id: '11',
+      title: 'Hot Water Out Since Monday',
+      description:
+          'Cold showers only on the whole west side. The boiler room has been locked and nobody knows why.',
+      imageUrl: _waterImage,
+      status: ReportStatus.awaitingApproval,
+      category: ReportCategory.water,
+      upvotes: 19,
+      location: 'Dorm C, West Wing',
+      reportedBy: 'user9',
+      reportedByName: 'Eric T.',
+      createdAt: DateTime.now().subtract(const Duration(hours: 16)),
+    ),
+    Report(
+      id: '12',
+      title: 'Projector Keeps Cutting Out',
+      description:
+          'Loses power every ten minutes mid-lecture. The breaker in the room trips along with it.',
+      imageUrl: _electricImage,
+      status: ReportStatus.awaitingApproval,
+      category: ReportCategory.electricity,
+      upvotes: 11,
+      location: 'Block B, Rm 12',
+      reportedBy: 'user10',
+      reportedByName: 'Lina M.',
+      createdAt: DateTime.now().subtract(const Duration(hours: 18)),
     ),
   ];
 
   static const String userName = 'Prince';
+  static const String currentStudentId = 'user1';
+  static const String currentStudentName = 'Prince M.';
+
+  static const leaderboardPeers = [
+    (name: 'Alice K.', xp: 420),
+    (name: 'John D.', xp: 285),
+    (name: 'Nadia O.', xp: 190),
+    (name: 'Sarah W.', xp: 95),
+    (name: 'Grace L.', xp: 60),
+  ];
+
+  // Leaves the student 10 XP short of Scout and one active day short of the
+  // streak badge, so the first action in a fresh install shows a full reward.
+  static GameState get initialGame {
+    final now = DateTime.now();
+    XpEvent event(String key, XpReason reason, int daysAgo) => XpEvent(
+          key: key,
+          reason: reason,
+          at: now.subtract(Duration(days: daysAgo)),
+          seen: true,
+        );
+    return GameState(
+      ledger: [
+        event('reportFiled:9', XpReason.reportFiled, 4),
+        event('photoAdded:9', XpReason.photoAdded, 4),
+        event('reportApproved:9', XpReason.reportApproved, 4),
+        event('reportResolved:9', XpReason.reportResolved, 2),
+        event('reportFiled:8', XpReason.reportFiled, 2),
+        event('photoAdded:8', XpReason.photoAdded, 2),
+        event('reportApproved:8', XpReason.reportApproved, 2),
+        event('reportFiled:1', XpReason.reportFiled, 1),
+      ],
+      celebrated: const {BadgeKind.firstCatch, BadgeKind.fixedIt},
+    );
+  }
 }

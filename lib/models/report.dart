@@ -1,7 +1,10 @@
+import 'department.dart';
 import 'report_status.dart';
 import 'report_category.dart';
 
 class Report {
+  static const nudgeCooldown = Duration(hours: 24);
+
   final String id;
   final String title;
   final String description;
@@ -14,6 +17,12 @@ class Report {
   final String reportedByName;
   final DateTime createdAt;
   final bool hasUpvoted;
+  final DateTime? approvedAt;
+  final DateTime? resolvedAt;
+  final DateTime? verifiedAt;
+  final DateTime? lastNudgedAt;
+  final int nudges;
+  final int reopenCount;
 
   const Report({
     required this.id,
@@ -28,39 +37,96 @@ class Report {
     required this.reportedByName,
     required this.createdAt,
     this.hasUpvoted = false,
+    this.approvedAt,
+    this.resolvedAt,
+    this.verifiedAt,
+    this.lastNudgedAt,
+    this.nudges = 0,
+    this.reopenCount = 0,
   });
 
+  Department get department => Department.forCategory(category);
+
+  // The reporter plus everyone who backed the report.
+  int get affectedStudents => upvotes + 1;
+
+  String get affectedLabel => affectedStudents == 1
+      ? '1 student affected'
+      : '$affectedStudents students affected';
+
+  bool get isOpen =>
+      status == ReportStatus.awaitingApproval ||
+      status == ReportStatus.inProgress;
+
+  bool get awaitsVerification =>
+      status == ReportStatus.resolved && verifiedAt == null;
+
+  bool canNudgeAt(DateTime now) {
+    final last = lastNudgedAt;
+    return isOpen && (last == null || now.difference(last) >= nudgeCooldown);
+  }
+
+  Report upvoteToggled() => copyWith(
+        hasUpvoted: !hasUpvoted,
+        upvotes: upvotes + (hasUpvoted ? -1 : 1),
+      );
+
+  Report nudged(DateTime now) =>
+      copyWith(nudges: nudges + 1, lastNudgedAt: now);
+
+  Report approved(DateTime now) =>
+      copyWith(status: ReportStatus.inProgress, approvedAt: now);
+
+  Report declined() => copyWith(status: ReportStatus.declined);
+
+  Report resolved(DateTime now) =>
+      copyWith(status: ReportStatus.resolved, resolvedAt: () => now);
+
+  Report verified(DateTime now) => copyWith(verifiedAt: () => now);
+
+  // Restarts the clock from now on the shorter reopen window, see SlaPolicy.
+  Report reopened(DateTime now) => copyWith(
+        status: ReportStatus.inProgress,
+        approvedAt: now,
+        resolvedAt: () => null,
+        verifiedAt: () => null,
+        reopenCount: reopenCount + 1,
+      );
+
   Report copyWith({
-    String? id,
-    String? title,
-    String? description,
-    String? imageUrl,
     ReportStatus? status,
-    ReportCategory? category,
     int? upvotes,
-    String? location,
-    String? reportedBy,
-    String? reportedByName,
-    DateTime? createdAt,
     bool? hasUpvoted,
+    DateTime? approvedAt,
+    DateTime? Function()? resolvedAt,
+    DateTime? Function()? verifiedAt,
+    DateTime? lastNudgedAt,
+    int? nudges,
+    int? reopenCount,
   }) {
     return Report(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      imageUrl: imageUrl ?? this.imageUrl,
+      id: id,
+      title: title,
+      description: description,
+      imageUrl: imageUrl,
       status: status ?? this.status,
-      category: category ?? this.category,
+      category: category,
       upvotes: upvotes ?? this.upvotes,
-      location: location ?? this.location,
-      reportedBy: reportedBy ?? this.reportedBy,
-      reportedByName: reportedByName ?? this.reportedByName,
-      createdAt: createdAt ?? this.createdAt,
+      location: location,
+      reportedBy: reportedBy,
+      reportedByName: reportedByName,
+      createdAt: createdAt,
       hasUpvoted: hasUpvoted ?? this.hasUpvoted,
+      approvedAt: approvedAt ?? this.approvedAt,
+      resolvedAt: resolvedAt != null ? resolvedAt() : this.resolvedAt,
+      verifiedAt: verifiedAt != null ? verifiedAt() : this.verifiedAt,
+      lastNudgedAt: lastNudgedAt ?? this.lastNudgedAt,
+      nudges: nudges ?? this.nudges,
+      reopenCount: reopenCount ?? this.reopenCount,
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, Object?> toMap() {
     return {
       'id': id,
       'title': title,
@@ -73,10 +139,22 @@ class Report {
       'reportedBy': reportedBy,
       'reportedByName': reportedByName,
       'createdAt': createdAt.millisecondsSinceEpoch,
+      'hasUpvoted': hasUpvoted,
+      'approvedAt': approvedAt?.millisecondsSinceEpoch,
+      'resolvedAt': resolvedAt?.millisecondsSinceEpoch,
+      'verifiedAt': verifiedAt?.millisecondsSinceEpoch,
+      'lastNudgedAt': lastNudgedAt?.millisecondsSinceEpoch,
+      'nudges': nudges,
+      'reopenCount': reopenCount,
     };
   }
 
   factory Report.fromMap(Map<String, dynamic> map) {
+    DateTime? optionalDate(String key) {
+      final value = map[key] as int?;
+      return value == null ? null : DateTime.fromMillisecondsSinceEpoch(value);
+    }
+
     return Report(
       id: map['id'] as String,
       title: map['title'] as String,
@@ -88,8 +166,14 @@ class Report {
       location: map['location'] as String,
       reportedBy: map['reportedBy'] as String,
       reportedByName: map['reportedByName'] as String,
-      createdAt:
-          DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
+      hasUpvoted: map['hasUpvoted'] as bool,
+      approvedAt: optionalDate('approvedAt'),
+      resolvedAt: optionalDate('resolvedAt'),
+      verifiedAt: optionalDate('verifiedAt'),
+      lastNudgedAt: optionalDate('lastNudgedAt'),
+      nudges: map['nudges'] as int,
+      reopenCount: map['reopenCount'] as int,
     );
   }
 }
