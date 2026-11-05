@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/mock_data.dart';
 import '../../models/report.dart';
 import '../../models/report_status.dart';
 import '../../models/report_category.dart';
@@ -48,13 +45,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
       .join();
 
-  String get _greetingText {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning,';
-    if (hour < 17) return 'Good afternoon,';
-    return 'Good evening,';
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -69,8 +59,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   AppSpacing.verticalGapLg,
                   const AppLogo(),
-                  AppSpacing.verticalGapLg,
-                  _buildGreeting(),
                   AppSpacing.verticalGapLg,
                   HunterCard(onTap: () => context.push(AppRoutes.progress)),
                   AppSpacing.verticalGapXl,
@@ -93,19 +81,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
     );
-  }
-
-  Widget _buildGreeting() {
-    return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_greetingText, style: AppTextStyles.subtitle),
-            Text(MockData.userName, style: AppTextStyles.heading1),
-          ],
-        )
-        .animate()
-        .fadeIn(duration: 400.ms)
-        .slideY(begin: -0.1, end: 0, duration: 400.ms);
   }
 
   Widget _buildActiveFilters() {
