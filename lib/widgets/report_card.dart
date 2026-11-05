@@ -84,6 +84,8 @@ class ReportCard extends StatelessWidget {
   Widget _buildMeta() {
     return Row(
       children: [
+        Icon(report.category.icon, size: 14, color: AppColors.textSecondary),
+        AppSpacing.horizontalGapXs,
         Text(report.category.label, style: AppTextStyles.bodySmall),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),

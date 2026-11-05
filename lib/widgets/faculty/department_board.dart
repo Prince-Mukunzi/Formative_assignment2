@@ -9,6 +9,7 @@ import '../../models/department.dart';
 import '../../providers/reports_provider.dart';
 import '../motion/rolling_number.dart';
 import '../spring_rank_list.dart';
+import '../tinted_icon.dart';
 
 class DepartmentBoard extends ConsumerWidget {
   final Department? highlight;
@@ -61,6 +62,8 @@ class _Row extends StatelessWidget {
             style: style.copyWith(color: AppColors.textTertiary),
           ),
         ),
+        TintedIcon(icon: score.department.icon, size: 36),
+        AppSpacing.horizontalGapMd,
         Expanded(child: Text(score.department.label, style: style)),
         if (score.overdue > 0) ...[
           Text(

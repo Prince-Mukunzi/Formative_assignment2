@@ -195,21 +195,36 @@ class _Body extends StatelessWidget {
             BountyTrack(report: report),
           ],
           AppSpacing.verticalGapLg,
-          _InfoRow(label: 'Location', child: _value(report.location)),
+          _InfoRow(
+            icon: HugeIcons.strokeRoundedLocation01,
+            label: 'Location',
+            child: _value(report.location),
+          ),
           if (report.isOpen)
             _InfoRow(
+              icon: HugeIcons.strokeRoundedClock01,
               label: 'Deadline',
               child: SlaLabel(report: report, style: AppTextStyles.labelMedium),
             ),
           if (isStaff) ...[
-            _InfoRow(label: 'Team', child: _value(team)),
-            _InfoRow(label: 'Reporter', child: _value(report.reportedByName)),
             _InfoRow(
+              icon: HugeIcons.strokeRoundedUserGroup,
+              label: 'Team',
+              child: _value(team),
+            ),
+            _InfoRow(
+              icon: HugeIcons.strokeRoundedUser,
+              label: 'Reporter',
+              child: _value(report.reportedByName),
+            ),
+            _InfoRow(
+              icon: HugeIcons.strokeRoundedUserMultiple,
               label: 'Affected',
               child: _value('${report.affectedStudents}'),
             ),
             if (report.reopenCount > 0)
               _InfoRow(
+                icon: HugeIcons.strokeRoundedRepeat,
                 label: 'Reopened',
                 child: _value('${report.reopenCount}'),
               ),
@@ -357,10 +372,15 @@ class _AdminActions extends ConsumerWidget {
 }
 
 class _InfoRow extends StatelessWidget {
+  final IconData icon;
   final String label;
   final Widget child;
 
-  const _InfoRow({required this.label, required this.child});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -370,12 +390,15 @@ class _InfoRow extends StatelessWidget {
         border: Border(top: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
+          Icon(icon, size: 18, color: AppColors.textTertiary),
+          AppSpacing.horizontalGapSm,
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           child,

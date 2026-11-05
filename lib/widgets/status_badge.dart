@@ -20,12 +20,19 @@ class StatusBadge extends StatelessWidget {
         color: status.backgroundColor,
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),
-      child: Text(
-        status.label,
-        style: AppTextStyles.bodySmall.copyWith(
-          color: status.color,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(status.icon, size: 14, color: status.color),
+          AppSpacing.horizontalGapXs,
+          Text(
+            status.label,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: status.color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

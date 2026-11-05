@@ -98,6 +98,7 @@ class _TeamSheetState extends ConsumerState<TeamSheet> {
                   SizedBox(
                     height: 40,
                     child: CategoryChip(
+                      icon: category.icon,
                       label: category.label,
                       isSelected: _categories.contains(category),
                       onTap: () => setState(() {

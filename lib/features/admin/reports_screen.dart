@@ -12,6 +12,7 @@ import '../../widgets/app_card.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/report_detail_sheet.dart';
 import '../../widgets/sla_label.dart';
+import '../../widgets/tinted_icon.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -102,6 +103,8 @@ class _ReportRow extends StatelessWidget {
         onTap: () => ReportDetailSheet.show(context, report),
         child: Row(
           children: [
+            TintedIcon(icon: report.category.icon),
+            AppSpacing.horizontalGapMd,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -155,6 +155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               itemBuilder: (context, index) {
                 final category = ReportCategory.values[index];
                 return CategoryChip(
+                  icon: category.icon,
                   label: category.label,
                   isSelected: _filter.category == category,
                   onTap: () => setState(
