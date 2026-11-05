@@ -28,6 +28,7 @@ import '../../widgets/game/next_prize_card.dart';
 import '../../widgets/gradient_banner.dart';
 import '../../widgets/menu_row.dart';
 import '../../widgets/section_title.dart';
+import '../../widgets/settings/help_sheet.dart';
 import '../../widgets/settings/notifications_row.dart';
 import '../../widgets/settings/toggle_row.dart';
 
@@ -112,9 +113,10 @@ class ProfileScreen extends ConsumerWidget {
                     value: settings.celebrations,
                     onChanged: notifier.setCelebrations,
                   ),
-                const MenuRow(
+                MenuRow(
                   icon: HugeIcons.strokeRoundedHelpCircle,
                   label: 'Help',
+                  onTap: () => HelpSheet.show(context, session),
                 ),
               ],
             ),
