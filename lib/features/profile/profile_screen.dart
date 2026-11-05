@@ -231,7 +231,7 @@ class _Signature extends StatelessWidget {
                       mode: LaunchMode.externalApplication,
                     ),
                     child: Text(
-                      'whoismukunzi.tech',
+                      'Mukunzi',
                       style: AppTextStyles.bodySmall.copyWith(
                         decoration: TextDecoration.underline,
                         decorationColor: AppTextStyles.bodySmall.color,
