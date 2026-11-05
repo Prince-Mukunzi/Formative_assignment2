@@ -6,7 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/accountability.dart';
 import '../app_card.dart';
-import '../motion/rolling_number.dart';
+import '../stat_tile.dart';
 import 'pressure_gauge.dart';
 
 class PressureCard extends StatelessWidget {
@@ -19,6 +19,7 @@ class PressureCard extends StatelessWidget {
     final level = reading.level;
     final alarming =
         level == PressureLevel.high || level == PressureLevel.critical;
+    final overdue = reading.overdue > 0;
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
@@ -36,60 +37,31 @@ class PressureCard extends StatelessWidget {
           AppSpacing.verticalGapLg,
           Row(
             children: [
-              _Stat(
-                icon: HugeIcons.strokeRoundedAlert02,
-                value: reading.overdue,
-                label: 'Overdue',
-                alarming: reading.overdue > 0,
+              Expanded(
+                child: StatTile(
+                  icon: HugeIcons.strokeRoundedAlert02,
+                  value: reading.overdue,
+                  label: 'Overdue',
+                  iconColor: overdue ? AppColors.brand : AppColors.primary,
+                  valueColor: overdue ? AppColors.brand : AppColors.textPrimary,
+                ),
               ),
-              _Stat(
-                icon: HugeIcons.strokeRoundedClock01,
-                value: reading.dueWithin24h,
-                label: 'Due today',
+              Expanded(
+                child: StatTile(
+                  icon: HugeIcons.strokeRoundedClock01,
+                  value: reading.dueWithin24h,
+                  label: 'Due today',
+                ),
               ),
-              _Stat(
-                icon: HugeIcons.strokeRoundedUserGroup,
-                value: reading.waitingStudents,
-                label: 'Waiting',
+              Expanded(
+                child: StatTile(
+                  icon: HugeIcons.strokeRoundedUserGroup,
+                  value: reading.waitingStudents,
+                  label: 'Waiting',
+                ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  final IconData icon;
-  final int value;
-  final String label;
-  final bool alarming;
-
-  const _Stat({
-    required this.icon,
-    required this.value,
-    required this.label,
-    this.alarming = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = alarming ? AppColors.brand : AppColors.textPrimary;
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            size: 18,
-            color: alarming ? AppColors.brand : AppColors.primary,
-          ),
-          AppSpacing.verticalGapXs,
-          RollingNumber(
-            value: value,
-            style: AppTextStyles.heading3.copyWith(color: color),
-          ),
-          Text(label, style: AppTextStyles.bodySmall),
         ],
       ),
     );

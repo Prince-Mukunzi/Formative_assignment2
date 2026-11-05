@@ -160,6 +160,11 @@ class _HealthBanner extends StatelessWidget {
                 value: reading.overdue,
                 label: 'Overdue',
               ),
+            ],
+          ),
+          AppSpacing.verticalGapLg,
+          Row(
+            children: [
               BannerStat(
                 icon: HugeIcons.strokeRoundedClock01,
                 value: reading.dueWithin24h,
