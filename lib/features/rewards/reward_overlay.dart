@@ -46,6 +46,7 @@ class _RewardOverlayState extends State<RewardOverlay>
   static const _firstBeat = Duration(milliseconds: 260);
   static const _barFill = Duration(milliseconds: 650);
   static const _rankBeat = Duration(milliseconds: 1250);
+  static const _autoClose = Duration(seconds: 5);
 
   final _timers = <Timer>[];
   late final _emblemKick = KickController(
@@ -74,6 +75,15 @@ class _RewardOverlayState extends State<RewardOverlay>
       });
     });
     if (moment.rankUp != null) _after(_rankBeat, _applyRankUp);
+    _after(_autoClose, _close);
+  }
+
+  // The route stays mounted while it fades out, so a second close here would
+  // pop the screen underneath.
+  void _close() {
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      Navigator.of(context).pop();
+    }
   }
 
   void _after(Duration delay, VoidCallback action) {
@@ -177,7 +187,7 @@ class _RewardOverlayState extends State<RewardOverlay>
                     child: AppButton(
                       label: 'Keep hunting',
                       isInverse: true,
-                      onTap: () => Navigator.of(context).pop(),
+                      onTap: _close,
                     ),
                   ),
                 ],
