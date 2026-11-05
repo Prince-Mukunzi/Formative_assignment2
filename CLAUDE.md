@@ -5,6 +5,12 @@
 - **Navigation:** GoRouter with typed routes
 - **Platform priority:** iOS first — test on iOS simulator before Android
 
+## Backend / Services
+- **Auth:** Firebase Authentication — email/password and Google Sign-In
+- **Database:** Cloud Firestore — all reads/writes go through service classes in `lib/services/`, never direct Firestore calls from widgets
+- **Storage:** Firebase Storage — used for image uploads (bug report photos). Upload via `StorageService`, store the download URL in Firestore
+- **Providers:** Expose auth state, Firestore queries, and storage operations as Riverpod providers. Keep Firebase imports out of UI code
+
 ## UI / Design System
 - **Icons:** HugeIcons (`hugeicons` package) — never use Material Icons or Cupertino Icons
 - **Colors & Typography:** Use `Theme.of(context)` and the app's `AppColors` / `AppTextStyles` constants — never inline `Color(0x...)` or `TextStyle(...)` literals
