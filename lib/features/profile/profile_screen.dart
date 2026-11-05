@@ -1,51 +1,134 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/mock_data.dart';
+import '../../models/department.dart';
+import '../../models/game.dart';
+import '../../models/report.dart';
+import '../../models/report_status.dart';
+import '../../models/session.dart';
+import '../../models/sla.dart';
+import '../../providers/clock_provider.dart';
+import '../../providers/game_provider.dart';
+import '../../providers/reports_provider.dart';
+import '../../providers/session_provider.dart';
+import '../../widgets/motion/pressable.dart';
+import '../../widgets/motion/rolling_number.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   static const _headerHeight = 230.0;
   static const _statsOverlap = 44.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(sessionProvider);
+    final department = session is FacultySession ? session.department : null;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: SingleChildScrollView(
         padding: EdgeInsets.zero,
         child: Column(
           children: [
-            _buildHeader(context),
+            _buildHeader(context, ref, department),
             Transform.translate(
               offset: const Offset(0, -_statsOverlap),
               child: Padding(
                 padding: AppSpacing.screenPadding,
                 child: Column(
                   children: [
-                    _buildStatsCard(),
+                    _buildStatsCard(_stats(ref, department)),
                     AppSpacing.verticalGapXxl,
-                    _buildMenuCard(),
+                    _buildMenuCard(context, isFaculty: department != null),
                     AppSpacing.verticalGapXxl,
-                    _buildLogoutButton(),
+                    _buildLogoutButton(ref),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 60),
+            const SizedBox(height: AppSpacing.navClearance),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  List<_StatTile> _stats(WidgetRef ref, Department? department) {
+    final reports = ref.watch(reportsProvider);
+    if (department == null) {
+      final mine = reports.where(
+        (r) => r.reportedBy == MockData.currentStudentId,
+      );
+      return [
+        _StatTile(
+          count: mine.length,
+          label: 'Reports',
+          icon: HugeIcons.strokeRoundedTask01,
+          color: AppColors.accent,
+          background: AppColors.accentLight,
+        ),
+        _StatTile(
+          count: mine.where((r) => r.status == ReportStatus.resolved).length,
+          label: 'Resolved',
+          icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+          color: AppColors.resolved,
+          background: AppColors.resolvedLight,
+        ),
+        _StatTile(
+          count: mine.fold(0, (sum, r) => sum + r.upvotes),
+          label: 'Upvotes',
+          icon: HugeIcons.strokeRoundedThumbsUp,
+          color: AppColors.inProgress,
+          background: AppColors.inProgressLight,
+        ),
+      ];
+    }
+    final now = ref.watch(minuteProvider);
+    final List<Report> owned =
+        reports.where((r) => r.department == department).toList();
+    return [
+      _StatTile(
+        count: owned.where((r) => r.status == ReportStatus.resolved).length,
+        label: 'Resolved',
+        icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+        color: AppColors.resolved,
+        background: AppColors.resolvedLight,
+      ),
+      _StatTile(
+        count: owned.where((r) => r.isOpen).length,
+        label: 'Open',
+        icon: HugeIcons.strokeRoundedTask01,
+        color: AppColors.accent,
+        background: AppColors.accentLight,
+      ),
+      _StatTile(
+        count: owned.where((r) => r.slaStateAt(now) == SlaState.overdue).length,
+        label: 'Overdue',
+        icon: HugeIcons.strokeRoundedAlarmClock,
+        color: AppColors.overdue,
+        background: AppColors.overdueLight,
+      ),
+    ];
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    WidgetRef ref,
+    Department? department,
+  ) {
+    final xp = ref.watch(gameProvider.select((game) => game.xp));
+    final subtitle = department == null
+        ? '${Rank.forXp(xp).label}, $xp XP'
+        : 'Faculty';
     final top = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
@@ -61,17 +144,19 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildAvatar(),
+          _buildAvatar(department),
           AppSpacing.verticalGapMd,
           Text(
-            '${MockData.userName} Mukunzi',
+            department == null
+                ? '${MockData.userName} Mukunzi'
+                : '${department.label} team',
             style: AppTextStyles.heading2.copyWith(
               color: AppColors.textOnPrimary,
             ),
           ),
           AppSpacing.verticalGapXs,
           Text(
-            'p.niyomugab@alustudent.com',
+            subtitle,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textOnPrimary.withValues(alpha: 0.7),
             ),
@@ -82,7 +167,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(Department? department) {
     return Container(
       width: 84,
       height: 84,
@@ -93,13 +178,15 @@ class ProfileScreen extends StatelessWidget {
         boxShadow: AppShadows.floating,
       ),
       child: Center(
-        child: Text(
-          'PM',
-          style: AppTextStyles.heading1.copyWith(
-            color: AppColors.primary,
-            fontSize: 30,
-          ),
-        ),
+        child: department == null
+            ? Text(
+                'PM',
+                style: AppTextStyles.heading1.copyWith(
+                  color: AppColors.primary,
+                  fontSize: 30,
+                ),
+              )
+            : Icon(department.icon, size: 34, color: AppColors.primary),
       ),
     )
         .animate()
@@ -107,7 +194,7 @@ class ProfileScreen extends StatelessWidget {
         .scale(begin: const Offset(0.8, 0.8), duration: 400.ms);
   }
 
-  Widget _buildStatsCard() {
+  Widget _buildStatsCard(List<_StatTile> tiles) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
       decoration: BoxDecoration(
@@ -115,32 +202,14 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: AppShadows.card,
       ),
-      child: const IntrinsicHeight(
+      child: IntrinsicHeight(
         child: Row(
           children: [
-            _StatTile(
-              count: 8,
-              label: 'Reports',
-              icon: HugeIcons.strokeRoundedTask01,
-              color: AppColors.accent,
-              background: AppColors.accentLight,
-            ),
-            VerticalDivider(width: 1, color: AppColors.divider),
-            _StatTile(
-              count: 5,
-              label: 'Resolved',
-              icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-              color: AppColors.resolved,
-              background: AppColors.resolvedLight,
-            ),
-            VerticalDivider(width: 1, color: AppColors.divider),
-            _StatTile(
-              count: 42,
-              label: 'Upvotes',
-              icon: HugeIcons.strokeRoundedThumbsUp,
-              color: AppColors.inProgress,
-              background: AppColors.inProgressLight,
-            ),
+            for (var i = 0; i < tiles.length; i++) ...[
+              if (i > 0)
+                const VerticalDivider(width: 1, color: AppColors.divider),
+              tiles[i],
+            ],
           ],
         ),
       ),
@@ -150,32 +219,40 @@ class ProfileScreen extends StatelessWidget {
         .slideY(begin: 0.08, end: 0, duration: 400.ms);
   }
 
-  Widget _buildMenuCard() {
+  Widget _buildMenuCard(BuildContext context, {required bool isFaculty}) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: AppShadows.card,
       ),
-      child: const Column(
+      child: Column(
         children: [
-          _MenuItem(
+          if (!isFaculty) ...[
+            _MenuItem(
+              icon: HugeIcons.strokeRoundedAward01,
+              label: 'Progress and badges',
+              onTap: () => context.push(AppRoutes.progress),
+            ),
+            const _MenuDivider(),
+          ],
+          const _MenuItem(
             icon: HugeIcons.strokeRoundedNotification02,
             label: 'Notifications',
             badge: 3,
           ),
-          _MenuDivider(),
-          _MenuItem(
+          const _MenuDivider(),
+          const _MenuItem(
             icon: HugeIcons.strokeRoundedSettings01,
             label: 'Settings',
           ),
-          _MenuDivider(),
-          _MenuItem(
+          const _MenuDivider(),
+          const _MenuItem(
             icon: HugeIcons.strokeRoundedInformationCircle,
             label: 'About',
           ),
-          _MenuDivider(),
-          _MenuItem(
+          const _MenuDivider(),
+          const _MenuItem(
             icon: HugeIcons.strokeRoundedCustomerService01,
             label: 'Help & Support',
           ),
@@ -187,10 +264,9 @@ class ProfileScreen extends StatelessWidget {
         .slideY(begin: 0.05, end: 0, duration: 400.ms);
   }
 
-  Widget _buildLogoutButton() {
-    return GestureDetector(
-      onTap: () {},
-      behavior: HitTestBehavior.opaque,
+  Widget _buildLogoutButton(WidgetRef ref) {
+    return Pressable(
+      onTap: () => ref.read(sessionProvider.notifier).signOut(),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -208,7 +284,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             AppSpacing.horizontalGapSm,
             Text(
-              'Sign Out',
+              'Sign out and switch role',
               style: AppTextStyles.labelMedium.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.w600,
@@ -250,7 +326,7 @@ class _StatTile extends StatelessWidget {
             child: Icon(icon, size: 18, color: color),
           ),
           AppSpacing.verticalGapSm,
-          Text('$count', style: AppTextStyles.statNumber),
+          RollingNumber(value: count, style: AppTextStyles.statNumber),
           Text(label, style: AppTextStyles.statLabel),
         ],
       ),
@@ -262,14 +338,20 @@ class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final int? badge;
+  final VoidCallback? onTap;
 
-  const _MenuItem({required this.icon, required this.label, this.badge});
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    this.badge,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
-      behavior: HitTestBehavior.opaque,
+    return Pressable(
+      onTap: onTap ?? () {},
+      scale: 0.98,
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/shell/app_shell.dart';
+import 'providers/session_provider.dart';
+import 'services/local_store.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -11,19 +15,25 @@ void main() {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const AluBugBountyApp());
+  final prefs = await SharedPreferences.getInstance();
+  runApp(
+    ProviderScope(
+      overrides: [localStoreProvider.overrideWithValue(LocalStore(prefs))],
+      child: const AluBugBountyApp(),
+    ),
+  );
 }
 
-class AluBugBountyApp extends StatelessWidget {
+class AluBugBountyApp extends ConsumerWidget {
   const AluBugBountyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'ALU Bug Bounty',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const AppShell(),
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }

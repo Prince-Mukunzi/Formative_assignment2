@@ -1,26 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_motion.dart';
 import '../core/theme/app_shadows.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
+import 'motion/pressable.dart';
+import 'motion/spring_value.dart';
+
+class AppNavItem {
+  final IconData icon;
+  final String label;
+
+  const AppNavItem(this.icon, this.label);
+}
 
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
-  final VoidCallback onCreateReport;
+  final List<AppNavItem> items;
+  final Widget action;
 
   const AppBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
-    required this.onCreateReport,
+    required this.items,
+    required this.action,
   });
 
-  static const _items = [
-    (icon: HugeIcons.strokeRoundedHome01, label: 'Home'),
-    (icon: HugeIcons.strokeRoundedFolder01, label: 'My reports'),
-    (icon: HugeIcons.strokeRoundedUserCircle, label: 'Profile'),
+  static const studentItems = [
+    AppNavItem(HugeIcons.strokeRoundedHome01, 'Home'),
+    AppNavItem(HugeIcons.strokeRoundedFolder01, 'My reports'),
+    AppNavItem(HugeIcons.strokeRoundedUserCircle, 'Profile'),
+  ];
+
+  static const facultyItems = [
+    AppNavItem(HugeIcons.strokeRoundedTask01, 'Queue'),
+    AppNavItem(HugeIcons.strokeRoundedRanking, 'Board'),
+    AppNavItem(HugeIcons.strokeRoundedUserCircle, 'Profile'),
   ];
 
   @override
@@ -45,11 +63,11 @@ class AppBottomNav extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                for (var i = 0; i < _items.length; i++) ...[
+                for (var i = 0; i < items.length; i++) ...[
                   if (i > 0) const SizedBox(width: 2),
                   _NavItem(
-                    icon: _items[i].icon,
-                    label: _items[i].label,
+                    icon: items[i].icon,
+                    label: items[i].label,
                     isSelected: currentIndex == i,
                     onTap: () => onTap(i),
                   ),
@@ -58,7 +76,7 @@ class AppBottomNav extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          _CreateButton(onTap: onCreateReport),
+          action,
         ],
       ),
     );
@@ -80,74 +98,99 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 18 : 16,
-          vertical: 12,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: isSelected
-                  ? AppColors.textOnPrimary
-                  : AppColors.textTertiary,
+      scale: 0.92,
+      child: SpringValue(
+        value: isSelected ? 1 : 0,
+        spring: AppSprings.bouncy,
+        builder: (_, t, _) {
+          final clamped = t.clamp(0.0, 1.0);
+          final iconColor = Color.lerp(
+            AppColors.textTertiary,
+            AppColors.textOnPrimary,
+            clamped,
+          );
+          return Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: 16 + 2 * clamped,
+              vertical: 14,
             ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: isSelected
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Text(
-                        label,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textOnPrimary,
-                          fontWeight: FontWeight.w600,
+            decoration: BoxDecoration(
+              color: Color.lerp(
+                AppColors.surface,
+                AppColors.primary,
+                clamped,
+              ),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Transform.scale(
+                  scale: 1 + (t - clamped) * 2,
+                  child: Icon(icon, size: 22, color: iconColor),
+                ),
+                ClipRect(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: t < 0 ? 0 : t,
+                    heightFactor: 1,
+                    child: Opacity(
+                      opacity: clamped,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: AppSpacing.sm),
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.textOnPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    )
-                  : const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-class _CreateButton extends StatelessWidget {
+class NavActionButton extends StatelessWidget {
+  final IconData icon;
   final VoidCallback onTap;
+  final int badge;
 
-  const _CreateButton({required this.onTap});
+  const NavActionButton({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    this.badge = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
-          boxShadow: AppShadows.floating,
-        ),
-        child: const Icon(
-          HugeIcons.strokeRoundedAdd01,
-          size: 24,
-          color: AppColors.primary,
+      scale: 0.88,
+      child: Badge(
+        isLabelVisible: badge > 0,
+        label: Text('$badge'),
+        backgroundColor: AppColors.overdue,
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            shape: BoxShape.circle,
+            boxShadow: AppShadows.floating,
+          ),
+          child: Icon(icon, size: 24, color: AppColors.primary),
         ),
       ),
     );
