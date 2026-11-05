@@ -5,7 +5,7 @@ import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
 import '../core/utils/time_format.dart';
 import '../models/report.dart';
-import 'motion/pressable.dart';
+import 'app_card.dart';
 import 'report_image.dart';
 import 'sla_label.dart';
 import 'status_badge.dart';
@@ -21,58 +21,62 @@ class ReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final footer = this.footer;
-    return Pressable(
+    return AppCard(
       onTap: onTap,
-      scale: 0.98,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildImage(),
-          AppSpacing.verticalGapMd,
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: AppSpacing.cardPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      report.title,
-                      style: AppTextStyles.labelLarge,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            report.title,
+                            style: AppTextStyles.labelLarge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          AppSpacing.verticalGapXs,
+                          _buildMeta(),
+                        ],
+                      ),
                     ),
-                    AppSpacing.verticalGapXs,
-                    _buildMeta(),
+                    AppSpacing.horizontalGapMd,
+                    UpvoteButton(report: report),
                   ],
                 ),
-              ),
-              AppSpacing.horizontalGapMd,
-              UpvoteButton(report: report),
-            ],
+                if (footer != null) ...[AppSpacing.verticalGapMd, footer],
+              ],
+            ),
           ),
-          if (footer != null) ...[AppSpacing.verticalGapMd, footer],
         ],
       ),
     );
   }
 
   Widget _buildImage() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      child: SizedBox(
-        height: 180,
-        width: double.infinity,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            ReportImage(report: report),
-            Positioned(
-              top: AppSpacing.md,
-              left: AppSpacing.md,
-              child: StatusBadge(status: report.status),
-            ),
-          ],
-        ),
+    return SizedBox(
+      height: 170,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ReportImage(report: report),
+          Positioned(
+            top: AppSpacing.md,
+            left: AppSpacing.md,
+            child: StatusBadge(status: report.status),
+          ),
+        ],
       ),
     );
   }

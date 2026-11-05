@@ -10,6 +10,7 @@ import '../../models/report.dart';
 import '../../models/report_status.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/game/bounty_track.dart';
+import '../../widgets/gradient_banner.dart';
 import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_card.dart';
@@ -50,17 +51,30 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                 children: [
                   AppSpacing.verticalGapLg,
                   Text('My reports', style: AppTextStyles.heading1),
+                  AppSpacing.verticalGapLg,
                   if (pendingXp > 0) ...[
-                    AppSpacing.verticalGapXs,
-                    RollingNumber(
-                      value: pendingXp,
-                      suffix: ' XP waiting',
-                      style: AppTextStyles.subtitle.copyWith(
-                        color: AppColors.brand,
+                    GradientBanner(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RollingNumber(
+                            value: pendingXp,
+                            suffix: ' XP',
+                            style: AppTextStyles.display.copyWith(
+                              color: AppColors.textOnPrimary,
+                            ),
+                          ),
+                          Text(
+                            'Waiting on your reports',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.onPrimaryMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    AppSpacing.verticalGapLg,
                   ],
-                  AppSpacing.verticalGapLg,
                   StatusFilterBar(
                     selected: _statusFilter,
                     onChanged: (status) =>

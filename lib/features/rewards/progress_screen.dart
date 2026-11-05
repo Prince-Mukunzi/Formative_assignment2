@@ -8,11 +8,17 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
 import '../../providers/game_provider.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/faculty/department_board.dart';
 import '../../widgets/game/badge_tile.dart';
+import '../../widgets/game/prize_ladder.dart';
+import '../../widgets/game/rank_emblem.dart';
 import '../../widgets/game/xp_bar.dart';
+import '../../widgets/gradient_banner.dart';
+import '../../widgets/menu_row.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
+import '../../widgets/section_title.dart';
 import '../../widgets/spring_rank_list.dart';
 
 class ProgressScreen extends ConsumerWidget {
@@ -38,18 +44,29 @@ class ProgressScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _Hero(xp: xp, streak: stats.streak),
-            const SizedBox(height: AppSpacing.xxxl),
+            const SectionTitle('Prizes'),
+            PrizeLadder(xp: xp),
+            const SectionTitle('Badges'),
             _Badges(stats: stats),
-            const SizedBox(height: AppSpacing.xxxl),
-            _Leaderboard(xp: xp),
-            const SizedBox(height: AppSpacing.xxl),
-            _LinkRow(
-              label: 'Campus board',
-              onTap: () => _showSheet(context, const DepartmentBoard()),
+            const SectionTitle('Top hunters'),
+            AppCard(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: _Leaderboard(xp: xp),
             ),
-            _LinkRow(
-              label: 'How to earn',
-              onTap: () => _showSheet(context, const _EarnList()),
+            AppSpacing.verticalGapLg,
+            CardList(
+              children: [
+                MenuRow(
+                  icon: HugeIcons.strokeRoundedRanking,
+                  label: 'Campus board',
+                  onTap: () => _showSheet(context, const DepartmentBoard()),
+                ),
+                MenuRow(
+                  icon: HugeIcons.strokeRoundedAward01,
+                  label: 'How to earn',
+                  onTap: () => _showSheet(context, const _EarnList()),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.xxxl),
           ],
@@ -82,86 +99,78 @@ class _Hero extends StatelessWidget {
   Widget build(BuildContext context) {
     final rank = Rank.forXp(xp);
     final next = rank.next;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(rank.label, style: AppTextStyles.subtitle),
-        RollingNumber(value: xp, style: AppTextStyles.display),
-        AppSpacing.verticalGapLg,
-        XpBar(progress: rank.progressAt(xp), from: 0),
-        AppSpacing.verticalGapSm,
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              next == null
-                  ? 'Top rank'
-                  : '${next.threshold - xp} to ${next.label}',
-              style: AppTextStyles.bodySmall,
+    final muted = AppTextStyles.bodySmall.copyWith(
+      color: AppColors.onPrimaryMuted,
+    );
+    return GradientBanner(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              RankEmblem(rank: rank, size: 44),
+              AppSpacing.horizontalGapMd,
+              Text(
+                rank.label,
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: AppColors.textOnPrimary,
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.verticalGapLg,
+          RollingNumber(
+            value: xp,
+            suffix: ' XP',
+            style: AppTextStyles.display.copyWith(
+              color: AppColors.textOnPrimary,
             ),
-            if (streak > 0)
-              Text('$streak day streak', style: AppTextStyles.bodySmall),
-          ],
-        ),
-      ],
+          ),
+          AppSpacing.verticalGapMd,
+          XpBar(
+            progress: rank.progressAt(xp),
+            from: 0,
+            trackColor: AppColors.onPrimaryFaint,
+            fillColor: AppColors.textOnPrimary,
+          ),
+          AppSpacing.verticalGapSm,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                next == null
+                    ? 'Top rank'
+                    : '${next.threshold - xp} to ${next.label}',
+                style: muted,
+              ),
+              if (streak > 0) Text('$streak day streak', style: muted),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _Badges extends StatefulWidget {
+class _Badges extends StatelessWidget {
   final GameStats stats;
 
   const _Badges({required this.stats});
 
   @override
-  State<_Badges> createState() => _BadgesState();
-}
-
-class _BadgesState extends State<_Badges> {
-  BadgeKind? _selected;
-
-  @override
   Widget build(BuildContext context) {
-    final selected = _selected;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return GridView.count(
+      crossAxisCount: 3,
+      shrinkWrap: true,
+      clipBehavior: Clip.none,
+      padding: EdgeInsets.zero,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
+      childAspectRatio: 0.95,
       children: [
-        Text('Badges', style: AppTextStyles.labelLarge),
-        AppSpacing.verticalGapLg,
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            for (final badge in BadgeKind.values)
-              Pressable(
-                onTap: () => setState(
-                  () => _selected = _selected == badge ? null : badge,
-                ),
-                scale: 0.9,
-                child: BadgeTile(
-                  badge: badge,
-                  earned: badge.isEarned(widget.stats),
-                  selected: badge == selected,
-                ),
-              ),
-          ],
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutQuart,
-          alignment: Alignment.topLeft,
-          child: selected == null
-              ? const SizedBox(width: double.infinity)
-              : Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.md),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      '${selected.label}. ${selected.hint}',
-                      style: AppTextStyles.bodySmall,
-                    ),
-                  ),
-                ),
-        ),
+        for (final badge in BadgeKind.values)
+          BadgeTile(badge: badge, earned: badge.isEarned(stats)),
       ],
     );
   }
@@ -185,26 +194,19 @@ class _Leaderboard extends StatelessWidget {
       for (var i = 0; i < entries.length; i++)
         if (i < _shown || i == youAt) i,
     ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Top hunters', style: AppTextStyles.labelLarge),
-        AppSpacing.verticalGapSm,
-        SpringRankList(
-          rowHeight: _rowHeight,
-          rows: [
-            for (final i in visible)
-              (
-                id: entries[i].name,
-                child: _LeaderRow(
-                  place: i + 1,
-                  name: entries[i].name,
-                  xp: entries[i].xp,
-                  isYou: i == youAt,
-                ),
-              ),
-          ],
-        ),
+    return SpringRankList(
+      rowHeight: _rowHeight,
+      rows: [
+        for (final i in visible)
+          (
+            id: entries[i].name,
+            child: _LeaderRow(
+              place: i + 1,
+              name: entries[i].name,
+              xp: entries[i].xp,
+              isYou: i == youAt,
+            ),
+          ),
       ],
     );
   }
@@ -229,53 +231,20 @@ class _LeaderRow extends StatelessWidget {
       color: isYou ? AppColors.brand : AppColors.textPrimary,
       fontWeight: isYou ? FontWeight.w600 : FontWeight.w500,
     );
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              '$place',
-              style: style.copyWith(
-                color: isYou ? AppColors.brand : AppColors.textTertiary,
-              ),
+    return Row(
+      children: [
+        SizedBox(
+          width: 28,
+          child: Text(
+            '$place',
+            style: style.copyWith(
+              color: isYou ? AppColors.brand : AppColors.textTertiary,
             ),
           ),
-          Expanded(child: Text(name, style: style)),
-          Text('$xp', style: style),
-        ],
-      ),
-    );
-  }
-}
-
-class _LinkRow extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _LinkRow({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      scale: 0.98,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Row(
-          children: [
-            Expanded(child: Text(label, style: AppTextStyles.labelMedium)),
-            const Icon(
-              HugeIcons.strokeRoundedArrowRight01,
-              size: 18,
-              color: AppColors.textTertiary,
-            ),
-          ],
         ),
-      ),
+        Expanded(child: Text(name, style: style)),
+        Text('$xp', style: style),
+      ],
     );
   }
 }

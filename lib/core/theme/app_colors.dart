@@ -11,7 +11,7 @@ abstract final class AppColors {
   static const brand = Color(0xFFD00E2C);
   static const brandTint = Color(0x14D00E2C);
 
-  static const background = Color(0xFFFFFFFF);
+  static const background = Color(0xFFF6F7FA);
   static const surface = Color(0xFFFFFFFF);
   static const cardBorder = Color(0x14000000);
   static const divider = Color(0x0D000000);
@@ -28,6 +28,7 @@ abstract final class AppColors {
 
   static const onPrimaryMuted = Color(0xB3FFFFFF);
   static const onPrimaryFaint = Color(0x33FFFFFF);
+  static const onPrimaryWash = Color(0x14FFFFFF);
   static const heroOverlay = Color(0x66000000);
   static const heroOverlayClear = Color(0x00000000);
 

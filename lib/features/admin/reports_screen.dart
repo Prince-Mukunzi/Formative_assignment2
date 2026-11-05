@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/department.dart';
@@ -9,8 +8,8 @@ import '../../models/report.dart';
 import '../../models/report_status.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/category_chip.dart';
-import '../../widgets/motion/pressable.dart';
 import '../../widgets/report_detail_sheet.dart';
 import '../../widgets/sla_label.dart';
 
@@ -97,14 +96,10 @@ class _ReportRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Pressable(
-      onTap: () => ReportDetailSheet.show(context, report),
-      scale: 0.98,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.divider)),
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: AppCard(
+        onTap: () => ReportDetailSheet.show(context, report),
         child: Row(
           children: [
             Expanded(

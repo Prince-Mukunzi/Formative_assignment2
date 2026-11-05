@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/department.dart';
 import '../../providers/reports_provider.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/faculty/department_board.dart';
+import '../../widgets/gradient_banner.dart';
 
 class BoardScreen extends ConsumerWidget {
   final Department department;
@@ -25,20 +28,45 @@ class BoardScreen extends ConsumerWidget {
           children: [
             AppSpacing.verticalGapLg,
             Text('Board', style: AppTextStyles.heading1),
-            AppSpacing.verticalGapXs,
-            Text('Visible to students', style: AppTextStyles.subtitle),
-            const SizedBox(height: AppSpacing.xxxl),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text('$place', style: AppTextStyles.display),
-                AppSpacing.horizontalGapSm,
-                Text('of ${board.length}', style: AppTextStyles.subtitle),
-              ],
+            AppSpacing.verticalGapLg,
+            GradientBanner(
+              gradient: place == 1 ? AppColors.navy : AppColors.signature,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '$place',
+                        style: AppTextStyles.display.copyWith(
+                          color: AppColors.textOnPrimary,
+                        ),
+                      ),
+                      AppSpacing.horizontalGapSm,
+                      Text(
+                        'of ${board.length}',
+                        style: AppTextStyles.subtitle.copyWith(
+                          color: AppColors.onPrimaryMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'Visible to students',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.onPrimaryMuted,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            AppSpacing.verticalGapXl,
-            DepartmentBoard(highlight: department),
+            AppSpacing.verticalGapLg,
+            AppCard(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: DepartmentBoard(highlight: department),
+            ),
             const SizedBox(height: AppSpacing.navClearance),
           ],
         ),

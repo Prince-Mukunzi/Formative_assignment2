@@ -17,8 +17,12 @@ import '../../providers/directory_provider.dart';
 import '../../providers/game_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../providers/session_provider.dart';
-import '../../widgets/motion/pressable.dart';
-import '../../widgets/motion/rolling_number.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/banner_stat.dart';
+import '../../widgets/game/next_prize_card.dart';
+import '../../widgets/gradient_banner.dart';
+import '../../widgets/menu_row.dart';
+import '../../widgets/section_title.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -35,39 +39,71 @@ class ProfileScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppSpacing.verticalGapLg,
-            Text(
-              department?.label ?? '${MockData.userName} Mukunzi',
-              style: AppTextStyles.heading1,
+            GradientBanner(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    department?.label ?? '${MockData.userName} Mukunzi',
+                    style: AppTextStyles.heading1.copyWith(
+                      color: AppColors.textOnPrimary,
+                    ),
+                  ),
+                  Text(
+                    department == null ? Rank.forXp(xp).label : 'Faculty',
+                    style: AppTextStyles.subtitle.copyWith(
+                      color: AppColors.onPrimaryMuted,
+                    ),
+                  ),
+                  AppSpacing.verticalGapXl,
+                  Row(children: _stats(ref, department)),
+                ],
+              ),
             ),
-            AppSpacing.verticalGapXs,
-            Text(
-              department == null ? Rank.forXp(xp).label : 'Faculty',
-              style: AppTextStyles.subtitle,
-            ),
-            const SizedBox(height: AppSpacing.xxxl),
-            Row(children: _stats(ref, department)),
-            const SizedBox(height: AppSpacing.xxxl),
-            if (department == null)
-              _MenuItem(
-                label: 'Progress',
+            if (department == null) ...[
+              const SectionTitle('Next prize'),
+              NextPrizeCard(
+                xp: xp,
                 onTap: () => context.push(AppRoutes.progress),
               ),
-            const _MenuItem(label: 'Notifications'),
-            const _MenuItem(label: 'Settings'),
-            const _MenuItem(label: 'About'),
-            const _MenuItem(label: 'Help'),
-            AppSpacing.verticalGapXl,
-            Pressable(
-              onTap: () => ref.read(sessionProvider.notifier).signOut(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Text(
-                  'Sign out',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.brand,
+            ],
+            AppSpacing.verticalGapLg,
+            CardList(
+              children: [
+                if (department == null)
+                  MenuRow(
+                    icon: HugeIcons.strokeRoundedAward01,
+                    label: 'Progress',
+                    onTap: () => context.push(AppRoutes.progress),
                   ),
+                const MenuRow(
+                  icon: HugeIcons.strokeRoundedNotification01,
+                  label: 'Notifications',
                 ),
-              ),
+                const MenuRow(
+                  icon: HugeIcons.strokeRoundedSettings01,
+                  label: 'Settings',
+                ),
+                const MenuRow(
+                  icon: HugeIcons.strokeRoundedInformationCircle,
+                  label: 'About',
+                ),
+                const MenuRow(
+                  icon: HugeIcons.strokeRoundedHelpCircle,
+                  label: 'Help',
+                ),
+              ],
+            ),
+            AppSpacing.verticalGapLg,
+            CardList(
+              children: [
+                MenuRow(
+                  icon: HugeIcons.strokeRoundedLogout01,
+                  label: 'Sign out',
+                  accent: true,
+                  onTap: () => ref.read(sessionProvider.notifier).signOut(),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.navClearance),
           ],
@@ -76,20 +112,20 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  List<_StatTile> _stats(WidgetRef ref, Department? department) {
+  List<BannerStat> _stats(WidgetRef ref, Department? department) {
     final reports = ref.watch(reportsProvider);
     if (department == null) {
       final mine = reports.where(
         (r) => r.reportedBy == MockData.currentStudentId,
       );
       return [
-        _StatTile(count: mine.length, label: 'Reports'),
-        _StatTile(
-          count: mine.where((r) => r.status == ReportStatus.resolved).length,
+        BannerStat(value: mine.length, label: 'Reports'),
+        BannerStat(
+          value: mine.where((r) => r.status == ReportStatus.resolved).length,
           label: 'Resolved',
         ),
-        _StatTile(
-          count: mine.fold(0, (sum, r) => sum + r.upvotes),
+        BannerStat(
+          value: mine.fold(0, (sum, r) => sum + r.upvotes),
           label: 'Upvotes',
         ),
       ];
@@ -97,66 +133,15 @@ class ProfileScreen extends ConsumerWidget {
     final now = ref.watch(minuteProvider);
     final owned = ref.watch(departmentReportsProvider(department.id));
     return [
-      _StatTile(
-        count: owned.where((r) => r.status == ReportStatus.resolved).length,
+      BannerStat(
+        value: owned.where((r) => r.status == ReportStatus.resolved).length,
         label: 'Resolved',
       ),
-      _StatTile(count: owned.where((r) => r.isOpen).length, label: 'Open'),
-      _StatTile(
-        count: owned.where((r) => r.slaStateAt(now) == SlaState.overdue).length,
+      BannerStat(value: owned.where((r) => r.isOpen).length, label: 'Open'),
+      BannerStat(
+        value: owned.where((r) => r.slaStateAt(now) == SlaState.overdue).length,
         label: 'Overdue',
       ),
     ];
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  final int count;
-  final String label;
-
-  const _StatTile({required this.count, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RollingNumber(value: count, style: AppTextStyles.heading1),
-          Text(label, style: AppTextStyles.bodySmall),
-        ],
-      ),
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  final String label;
-  final VoidCallback? onTap;
-
-  const _MenuItem({required this.label, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap ?? () {},
-      scale: 0.98,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.divider)),
-        ),
-        child: Row(
-          children: [
-            Expanded(child: Text(label, style: AppTextStyles.labelMedium)),
-            const Icon(
-              HugeIcons.strokeRoundedArrowRight01,
-              size: 18,
-              color: AppColors.textTertiary,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

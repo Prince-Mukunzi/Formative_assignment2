@@ -52,34 +52,29 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final weight = highlighted ? FontWeight.w700 : FontWeight.w500;
     final style = AppTextStyles.labelLarge.copyWith(fontWeight: weight);
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              '$place',
-              style: style.copyWith(color: AppColors.textTertiary),
-            ),
+    return Row(
+      children: [
+        SizedBox(
+          width: 28,
+          child: Text(
+            '$place',
+            style: style.copyWith(color: AppColors.textTertiary),
           ),
-          Expanded(child: Text(score.department.label, style: style)),
-          if (score.overdue > 0) ...[
-            Text(
-              '${score.overdue} late',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.brand),
-            ),
-            AppSpacing.horizontalGapLg,
-          ],
-          RollingNumber(
-            value: score.points.abs(),
-            prefix: score.points < 0 ? '-' : '',
-            style: style,
+        ),
+        Expanded(child: Text(score.department.label, style: style)),
+        if (score.overdue > 0) ...[
+          Text(
+            '${score.overdue} late',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.brand),
           ),
+          AppSpacing.horizontalGapLg,
         ],
-      ),
+        RollingNumber(
+          value: score.points.abs(),
+          prefix: score.points < 0 ? '-' : '',
+          style: style,
+        ),
+      ],
     );
   }
 }

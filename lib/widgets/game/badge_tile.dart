@@ -1,40 +1,39 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
+import '../app_card.dart';
+import '../tinted_icon.dart';
 
 class BadgeTile extends StatelessWidget {
   final BadgeKind badge;
   final bool earned;
-  final bool selected;
 
-  const BadgeTile({
-    super.key,
-    required this.badge,
-    required this.earned,
-    this.selected = false,
-  });
+  const BadgeTile({super.key, required this.badge, required this.earned});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: earned ? AppColors.brandTint : AppColors.chipBackground,
-        border: Border.all(
-          color: selected
-              ? (earned ? AppColors.brand : AppColors.textTertiary)
-              : AppColors.heroOverlayClear,
-          width: 1.5,
-        ),
+    return AppCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.lg,
       ),
-      child: Icon(
-        badge.icon,
-        size: 22,
-        color: earned ? AppColors.brand : AppColors.textTertiary,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TintedIcon(icon: badge.icon, accent: earned, muted: !earned),
+          AppSpacing.verticalGapSm,
+          Text(
+            badge.label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: earned ? AppColors.textPrimary : AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/number_format.dart';
 import '../../models/game.dart';
 import '../../providers/game_provider.dart';
-import '../motion/pressable.dart';
+import '../gradient_banner.dart';
 import '../motion/rolling_number.dart';
+import 'rank_emblem.dart';
 import 'xp_bar.dart';
 
 class HunterCard extends ConsumerWidget {
@@ -19,27 +21,50 @@ class HunterCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final xp = ref.watch(gameProvider.select((game) => game.xp));
     final rank = Rank.forXp(xp);
-    return Pressable(
+    final prize = Prize.nextFor(xp);
+    return GradientBanner(
       onTap: onTap,
-      scale: 0.98,
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(rank.label, style: AppTextStyles.labelMedium),
+              RankEmblem(rank: rank, size: 44),
+              AppSpacing.horizontalGapMd,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rank.label,
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.textOnPrimary,
+                      ),
+                    ),
+                    if (prize != null)
+                      Text(
+                        '${formatXp(prize.xp - xp)} to ${prize.label}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.onPrimaryMuted,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
               RollingNumber(
                 value: xp,
                 suffix: ' XP',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.brand,
-                  fontWeight: FontWeight.w600,
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: AppColors.textOnPrimary,
                 ),
               ),
             ],
           ),
-          AppSpacing.verticalGapSm,
-          XpBar(progress: rank.progressAt(xp)),
+          AppSpacing.verticalGapLg,
+          XpBar(
+            progress: prize?.progressAt(xp) ?? 1,
+            trackColor: AppColors.onPrimaryFaint,
+            fillColor: AppColors.textOnPrimary,
+          ),
         ],
       ),
     );

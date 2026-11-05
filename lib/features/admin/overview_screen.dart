@@ -13,8 +13,12 @@ import '../../providers/clock_provider.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../providers/session_provider.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/banner_stat.dart';
+import '../../widgets/gradient_banner.dart';
+import '../../widgets/menu_row.dart';
 import '../../widgets/motion/pressable.dart';
-import '../../widgets/motion/rolling_number.dart';
+import '../../widgets/section_title.dart';
 import 'locations_sheet.dart';
 import 'team_sheet.dart';
 
@@ -54,97 +58,60 @@ class OverviewScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xxxl),
-            Row(
-              children: [
-                _Stat(
-                  value: reports.where((r) => r.isOpen).length,
-                  label: 'Open',
-                ),
-                _Stat(value: overdue, label: 'Overdue', alarming: overdue > 0),
-                _Stat(
-                  value: reports
-                      .where((r) => r.status == ReportStatus.resolved)
-                      .length,
-                  label: 'Resolved',
-                ),
-              ],
+            AppSpacing.verticalGapLg,
+            GradientBanner(
+              gradient: AppColors.navy,
+              child: Row(
+                children: [
+                  BannerStat(
+                    value: reports.where((r) => r.isOpen).length,
+                    label: 'Open',
+                  ),
+                  BannerStat(value: overdue, label: 'Overdue'),
+                  BannerStat(
+                    value: reports
+                        .where((r) => r.status == ReportStatus.resolved)
+                        .length,
+                    label: 'Resolved',
+                  ),
+                ],
+              ),
             ),
             if (unowned > 0) ...[
-              AppSpacing.verticalGapLg,
-              Text(
-                '$unowned with no team',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.brand),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.xxxl),
-            Text('Teams', style: AppTextStyles.labelLarge),
-            AppSpacing.verticalGapSm,
-            for (final score in ref.watch(departmentBoardProvider))
-              _TeamRow(
-                score: score,
-                onTap: () => TeamSheet.show(context, score.department),
-              ),
-            AppSpacing.verticalGapLg,
-            Pressable(
-              onTap: () => LocationsSheet.show(context),
-              scale: 0.98,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text('Locations', style: AppTextStyles.labelLarge),
-                    ),
-                    Text(
-                      '${locations.length}',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    AppSpacing.horizontalGapSm,
-                    const Icon(
-                      HugeIcons.strokeRoundedArrowRight01,
-                      size: 18,
-                      color: AppColors.textTertiary,
-                    ),
-                  ],
+              AppSpacing.verticalGapMd,
+              AppCard(
+                child: Text(
+                  '$unowned with no team',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.brand,
+                  ),
                 ),
               ),
+            ],
+            const SectionTitle('Teams'),
+            CardList(
+              children: [
+                for (final score in ref.watch(departmentBoardProvider))
+                  _TeamRow(
+                    score: score,
+                    onTap: () => TeamSheet.show(context, score.department),
+                  ),
+              ],
+            ),
+            const SectionTitle('Campus'),
+            CardList(
+              children: [
+                MenuRow(
+                  icon: HugeIcons.strokeRoundedLocation01,
+                  label: 'Locations',
+                  value: '${locations.length}',
+                  onTap: () => LocationsSheet.show(context),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.navClearance),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  final int value;
-  final String label;
-  final bool alarming;
-
-  const _Stat({
-    required this.value,
-    required this.label,
-    this.alarming = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RollingNumber(
-            value: value,
-            style: AppTextStyles.heading1.copyWith(
-              color: alarming ? AppColors.brand : AppColors.textPrimary,
-            ),
-          ),
-          Text(label, style: AppTextStyles.bodySmall),
-        ],
       ),
     );
   }
@@ -161,11 +128,8 @@ class _TeamRow extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       scale: 0.98,
-      child: Container(
+      child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.divider)),
-        ),
         child: Row(
           children: [
             Expanded(

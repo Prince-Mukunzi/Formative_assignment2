@@ -445,7 +445,7 @@ class _CategoryTile extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.chipBackground,
+          color: selected ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         child: Column(
@@ -533,7 +533,7 @@ class _LocationPill extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.chipBackground,
+          color: selected ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         ),
         child: Text(
@@ -563,7 +563,7 @@ class _PhotoTile extends StatelessWidget {
         child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: AppColors.chipBackground,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
           child: path.isNotEmpty

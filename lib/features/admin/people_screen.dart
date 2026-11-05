@@ -9,8 +9,8 @@ import '../../models/person.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/category_chip.dart';
-import '../../widgets/motion/pressable.dart';
 
 class PeopleScreen extends ConsumerStatefulWidget {
   const PeopleScreen({super.key});
@@ -71,18 +71,14 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
             ),
             AppSpacing.verticalGapMd,
             for (final person in people)
-              Pressable(
-                onTap: () => _PersonSheet.show(context, person.id),
-                scale: 0.98,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: AppColors.divider),
-                    ),
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: AppCard(
+                  onTap: () => _PersonSheet.show(context, person.id),
                   child: Row(
                     children: [
+                      _Initial(name: person.name),
+                      AppSpacing.horizontalGapMd,
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,6 +102,31 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
               ),
             const SizedBox(height: AppSpacing.navClearance),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Initial extends StatelessWidget {
+  final String name;
+
+  const _Initial({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: AppColors.navy,
+      ),
+      child: Text(
+        name.characters.first,
+        style: AppTextStyles.labelMedium.copyWith(
+          color: AppColors.textOnPrimary,
         ),
       ),
     );
