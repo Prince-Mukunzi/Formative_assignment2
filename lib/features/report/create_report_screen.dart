@@ -1,25 +1,106 @@
+import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../widgets/app_button.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../models/game.dart';
 import '../../models/report_category.dart';
+import '../../providers/reports_provider.dart';
+import '../../widgets/app_button.dart';
+import '../../widgets/motion/pressable.dart';
+import '../../widgets/motion/rolling_number.dart';
+import '../../widgets/motion/shake.dart';
+import '../../widgets/motion/spring_value.dart';
 
-class CreateReportScreen extends StatefulWidget {
+class CreateReportScreen extends ConsumerStatefulWidget {
   const CreateReportScreen({super.key});
 
   @override
-  State<CreateReportScreen> createState() => _CreateReportScreenState();
+  ConsumerState<CreateReportScreen> createState() =>
+      _CreateReportScreenState();
 }
 
-class _CreateReportScreenState extends State<CreateReportScreen> {
+class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   ReportCategory _selectedCategory = ReportCategory.electricity;
-  bool _hasImage = false;
+  String _imagePath = '';
+  int _titleShake = 0;
+  int _locationShake = 0;
+
+  bool get _hasImage => _imagePath.isNotEmpty;
+
+  int get _bounty {
+    final detailed = _descriptionController.text.trim().length >=
+        ReportsNotifier.minDetailLength;
+    return XpReason.reportFiled.xp +
+        (_hasImage ? XpReason.photoAdded.xp : 0) +
+        (detailed ? XpReason.detailAdded.xp : 0);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _descriptionController.addListener(() => setState(() {}));
+  }
+
+  Future<void> _pickImage() async {
+    final source = await showCupertinoModalPopup<ImageSource>(
+      context: context,
+      builder: (sheetContext) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(sheetContext, ImageSource.camera),
+            child: const Text('Take a photo'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(sheetContext, ImageSource.gallery),
+            child: const Text('Choose from gallery'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(sheetContext),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+    if (source == null) return;
+    final XFile? file = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 80,
+      maxWidth: 1600,
+    );
+    if (file != null && mounted) setState(() => _imagePath = file.path);
+  }
+
+  void _submit() {
+    final title = _titleController.text.trim();
+    final location = _locationController.text.trim();
+    if (title.isEmpty || location.isEmpty) {
+      HapticFeedback.heavyImpact();
+      setState(() {
+        if (title.isEmpty) _titleShake++;
+        if (location.isEmpty) _locationShake++;
+      });
+      return;
+    }
+    Navigator.of(context).pop();
+    ref.read(reportsProvider.notifier).create(
+          title: title,
+          description: _descriptionController.text.trim(),
+          location: location,
+          category: _selectedCategory,
+          imageUrl: _imagePath,
+        );
+  }
 
   @override
   void dispose() {
@@ -53,18 +134,30 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             AppSpacing.verticalGapLg,
             _buildImagePicker(),
             AppSpacing.verticalGapXl,
-            _buildField('Title', 'What is the issue?', _titleController),
+            Shake(
+              trigger: _titleShake,
+              child: _buildField(
+                'Title',
+                'What is the issue?',
+                _titleController,
+              ),
+            ),
             AppSpacing.verticalGapLg,
             _buildCategorySelector(),
             AppSpacing.verticalGapLg,
-            _buildField(
-              'Location',
-              'e.g. Building A, Floor 2',
-              _locationController,
+            Shake(
+              trigger: _locationShake,
+              child: _buildField(
+                'Location',
+                'e.g. Building A, Floor 2',
+                _locationController,
+              ),
             ),
             AppSpacing.verticalGapLg,
             _buildDescriptionField(),
-            AppSpacing.verticalGapXxl,
+            AppSpacing.verticalGapXl,
+            _buildBountyMeter(),
+            AppSpacing.verticalGapLg,
             _buildSubmitButton(),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
           ],
@@ -74,14 +167,16 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   }
 
   Widget _buildImagePicker() {
-    return GestureDetector(
-      onTap: () => setState(() => _hasImage = !_hasImage),
+    return Pressable(
+      onTap: _pickImage,
+      scale: 0.98,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         height: 180,
         width: double.infinity,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: _hasImage ? AppColors.accentLight : AppColors.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           border: Border.all(
             color: _hasImage ? AppColors.accent : AppColors.cardBorder,
@@ -89,33 +184,12 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           ),
         ),
         child: _hasImage
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    HugeIcons.strokeRoundedImage02,
-                    size: 48,
-                    color: AppColors.accent,
-                  ),
-                  AppSpacing.verticalGapMd,
-                  Text(
-                    'Image selected',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  AppSpacing.verticalGapXs,
-                  Text(
-                    'Tap to change',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                ],
-              )
+            ? Image.file(File(_imagePath), fit: BoxFit.cover)
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: AppSpacing.cardPadding,
                     decoration: BoxDecoration(
                       color: AppColors.chipBackground,
                       borderRadius:
@@ -129,7 +203,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                   ),
                   AppSpacing.verticalGapMd,
                   Text(
-                    'Add a photo',
+                    'Add a photo  +${XpReason.photoAdded.xp} XP',
                     style: AppTextStyles.labelMedium.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -146,6 +220,66 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         .animate()
         .fadeIn(duration: 300.ms)
         .slideY(begin: 0.05, end: 0, duration: 300.ms);
+  }
+
+  Widget _buildBountyMeter() {
+    final maximum = XpReason.reportFiled.xp +
+        XpReason.photoAdded.xp +
+        XpReason.detailAdded.xp;
+    return Container(
+      padding: AppSpacing.cardPaddingSmall,
+      decoration: BoxDecoration(
+        color: AppColors.rewardLight,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                'Filing bounty',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.rewardDeep,
+                ),
+              ),
+              const Spacer(),
+              RollingNumber(
+                value: _bounty,
+                prefix: '+',
+                suffix: ' XP',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.rewardDeep,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          AppSpacing.verticalGapSm,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            child: SpringValue(
+              value: _bounty / maximum,
+              spring: AppSprings.bouncy,
+              builder: (_, value, _) => LinearProgressIndicator(
+                value: value.clamp(0.0, 1.0),
+                minHeight: 6,
+                backgroundColor: AppColors.surface,
+                color: AppColors.reward,
+              ),
+            ),
+          ),
+          AppSpacing.verticalGapSm,
+          Text(
+            'Earns +${XpReason.reportApproved.xp} more when approved and '
+            '+${XpReason.reportResolved.xp} when fixed.',
+            style: AppTextStyles.bodySmall.copyWith(
+              fontSize: 11,
+              color: AppColors.rewardDeep,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildField(
@@ -184,7 +318,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           runSpacing: AppSpacing.sm,
           children: categories.map((category) {
             final isSelected = _selectedCategory == category;
-            return GestureDetector(
+            return Pressable(
               onTap: () => setState(() => _selectedCategory = category),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -257,7 +391,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       width: double.infinity,
       child: AppButton(
         label: 'Submit Report',
-        onTap: () => Navigator.of(context).pop(),
+        onTap: _submit,
       ),
     )
         .animate()

@@ -121,7 +121,7 @@ class _FilterSheetState extends State<FilterSheet> {
                   () => _filter = _filter.copyWith(status: () => null),
                 ),
               ),
-              for (final status in ReportStatus.values)
+              for (final status in ReportStatus.feedValues)
                 FilterPill(
                   label: status.label,
                   isSelected: _filter.status == status,

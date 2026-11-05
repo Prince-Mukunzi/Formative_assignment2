@@ -1,31 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/mock_data.dart';
 import '../../models/report.dart';
+import '../../models/report_status.dart';
 import '../../models/report_category.dart';
 import '../../models/report_filter.dart';
+import '../../providers/reports_provider.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/filter_sheet.dart';
 import '../../widgets/filter_tag.dart';
+import '../../widgets/game/hunter_card.dart';
+import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_card.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   final ValueChanged<Report>? onReportTap;
 
   const HomeScreen({super.key, this.onReportTap});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   ReportFilter _filter = const ReportFilter();
 
-  List<Report> get _filteredReports => _filter.apply(MockData.reports);
+  List<Report> _feed(List<Report> reports) => _filter.apply(
+        reports.where((r) => r.status != ReportStatus.declined).toList(),
+      );
 
   Future<void> _openFilters() async {
     final result = await FilterSheet.show(context, _filter);
@@ -58,6 +67,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   AppSpacing.verticalGapLg,
                   _buildGreeting(),
+                  AppSpacing.verticalGapLg,
+                  SpringIn(
+                    delay: const Duration(milliseconds: 120),
+                    child: HunterCard(
+                      onTap: () => context.push(AppRoutes.progress),
+                    ),
+                  ),
                   AppSpacing.verticalGapXl,
                   _buildRecentHeader(),
                   _buildActiveFilters(),
@@ -71,7 +87,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: AppSpacing.verticalGapLg,
           ),
           _buildReportsList(),
-          const SliverToBoxAdapter(child: SizedBox(height: 130)),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.navClearance),
+          ),
         ],
       ),
     );
@@ -183,29 +201,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildReportsList() {
-    final reports = _filteredReports;
+    final reports = _feed(ref.watch(reportsProvider));
     return SliverPadding(
       padding: AppSpacing.screenPadding,
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final report = reports[index];
-            return Padding(
+            return SpringIn(
               key: ValueKey(report.id),
-              padding: const EdgeInsets.only(bottom: 16),
-              child: ReportCard(
-                report: report,
-                onTap: () => widget.onReportTap?.call(report),
+              delay: Duration(milliseconds: 60 * index.clamp(0, 5)),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                child: ReportCard(
+                  report: report,
+                  onTap: () => widget.onReportTap?.call(report),
+                ),
               ),
-            )
-                .animate()
-                .fadeIn(duration: 300.ms, delay: (80 * index).ms)
-                .slideY(
-                  begin: 0.05,
-                  end: 0,
-                  duration: 300.ms,
-                  delay: (80 * index).ms,
-                );
+            );
           },
           childCount: reports.length,
         ),
