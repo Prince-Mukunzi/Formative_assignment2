@@ -12,6 +12,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../models/session.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/session_provider.dart';
+import '../../widgets/menu_row.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/motion/spring_value.dart';
@@ -246,49 +247,33 @@ class _DepartmentPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final departments = ref.watch(departmentsProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
         0,
         AppSpacing.xl,
-        AppSpacing.xl,
+        AppSpacing.sm,
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            for (final department in ref.watch(departmentsProvider))
-              Builder(
-                builder: (tileContext) => Pressable(
-                  onTap: () {
-                    final box = tileContext.findRenderObject()! as RenderBox;
-                    onPicked(
-                      FacultySession(department.id),
-                      box.localToGlobal(box.size.center(Offset.zero)),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.md,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.chipBackground,
-                      borderRadius: BorderRadius.circular(
-                        AppSpacing.radiusFull,
-                      ),
-                    ),
-                    child: Text(
-                      department.label,
-                      style: AppTextStyles.labelMedium,
-                    ),
-                  ),
-                ),
+      child: Column(
+        children: [
+          for (final department in departments) ...[
+            const Divider(height: 1, color: AppColors.divider),
+            Builder(
+              builder: (rowContext) => MenuRow(
+                icon: department.icon,
+                label: department.label,
+                onTap: () {
+                  final box = rowContext.findRenderObject()! as RenderBox;
+                  onPicked(
+                    FacultySession(department.id),
+                    box.localToGlobal(box.size.center(Offset.zero)),
+                  );
+                },
               ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -188,9 +188,9 @@ abstract final class MockData {
 
   static const departments = [
     Department(
-      id: 'electrical',
-      label: 'Electrical',
-      categories: {ReportCategory.electricity},
+      id: 'facilities',
+      label: 'Facilities',
+      categories: {ReportCategory.facilities},
     ),
     Department(
       id: 'plumbing',
@@ -198,14 +198,24 @@ abstract final class MockData {
       categories: {ReportCategory.water},
     ),
     Department(
-      id: 'facilities',
-      label: 'Facilities',
-      categories: {
-        ReportCategory.facilities,
-        ReportCategory.furniture,
-        ReportCategory.sanitation,
-        ReportCategory.safety,
-      },
+      id: 'electrical',
+      label: 'Electrical',
+      categories: {ReportCategory.electricity},
+    ),
+    Department(
+      id: 'furniture',
+      label: 'Furniture',
+      categories: {ReportCategory.furniture},
+    ),
+    Department(
+      id: 'sanitation',
+      label: 'Sanitation',
+      categories: {ReportCategory.sanitation},
+    ),
+    Department(
+      id: 'safety',
+      label: 'Safety',
+      categories: {ReportCategory.safety},
     ),
   ];
 
@@ -244,6 +254,24 @@ abstract final class MockData {
       name: 'Joseph K.',
       role: PersonRole.faculty,
       departmentId: 'facilities',
+    ),
+    const Person(
+      id: 'staff4',
+      name: 'Aline M.',
+      role: PersonRole.faculty,
+      departmentId: 'furniture',
+    ),
+    const Person(
+      id: 'staff5',
+      name: 'Patrick H.',
+      role: PersonRole.faculty,
+      departmentId: 'sanitation',
+    ),
+    const Person(
+      id: 'staff6',
+      name: 'Diane I.',
+      role: PersonRole.faculty,
+      departmentId: 'safety',
     ),
   ];
 

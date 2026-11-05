@@ -1,3 +1,6 @@
+import 'package:flutter/widgets.dart';
+import 'package:hugeicons/hugeicons.dart';
+
 import 'report.dart';
 import 'report_category.dart';
 
@@ -11,6 +14,9 @@ class Department {
     required this.label,
     required this.categories,
   });
+
+  IconData get icon =>
+      categories.firstOrNull?.icon ?? HugeIcons.strokeRoundedUserGroup;
 
   Map<String, Object?> toMap() => {
     'id': id,
