@@ -13,6 +13,7 @@ import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/category_chip.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/filled_field.dart';
 import '../../widgets/team_wheel.dart';
 
@@ -84,6 +85,27 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
               ),
             ),
             AppSpacing.verticalGapMd,
+            if (people.isEmpty)
+              _role == PersonRole.student
+                  ? const EmptyState(
+                      icon: HugeIcons.strokeRoundedMortarboard01,
+                      title: 'No hunters yet',
+                      message:
+                          'Students show up here the moment they sign in with '
+                          'their ALU email. Spread the word.',
+                    )
+                  : EmptyState(
+                      icon: HugeIcons.strokeRoundedTeaching,
+                      title: 'No faculty yet',
+                      message:
+                          'Invite staff by email and give each a team, so '
+                          'reports reach someone who can fix them.',
+                      action: (
+                        label: 'Invite faculty',
+                        icon: HugeIcons.strokeRoundedUserAdd01,
+                        onTap: () => _InviteSheet.show(context),
+                      ),
+                    ),
             for (final person in people)
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),

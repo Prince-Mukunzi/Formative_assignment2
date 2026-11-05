@@ -8,6 +8,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../providers/directory_provider.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/bare_field.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/motion/pressable.dart';
 
 class LocationsSheet extends ConsumerStatefulWidget {
@@ -88,6 +89,14 @@ class _LocationsSheetState extends ConsumerState<LocationsSheet> {
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 children: [
+                  if (locations.isEmpty)
+                    const EmptyState(
+                      icon: HugeIcons.strokeRoundedMapsLocation01,
+                      title: 'Put campus on the map',
+                      message:
+                          'Add buildings and rooms above so students can pin '
+                          'exactly where things break.',
+                    ),
                   for (final location in locations)
                     Container(
                       padding: const EdgeInsets.symmetric(

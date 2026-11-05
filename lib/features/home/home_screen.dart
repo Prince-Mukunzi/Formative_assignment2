@@ -13,6 +13,7 @@ import '../../models/report_filter.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/category_chip.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/filter_sheet.dart';
 import '../../widgets/filter_tag.dart';
 import '../../widgets/game/hunter_card.dart';
@@ -167,6 +168,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildReportsList() {
     final reports = _feed(ref.watch(reportsProvider));
+    if (reports.isEmpty) {
+      return SliverToBoxAdapter(
+        child: _filter.isDefault
+            ? EmptyState(
+                icon: HugeIcons.strokeRoundedSearch02,
+                title: 'No bugs spotted yet',
+                message:
+                    'Campus looks spotless. Spot something off? Be the first '
+                    'hunter to report it and bank the XP.',
+                action: (
+                  label: 'Report an issue',
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  onTap: () => context.push(AppRoutes.newReport),
+                ),
+              )
+            : EmptyState(
+                icon: HugeIcons.strokeRoundedFilterRemove,
+                title: 'Nothing matches',
+                message: 'Loosen the filters to see more of campus.',
+                action: (
+                  label: 'Clear filters',
+                  icon: HugeIcons.strokeRoundedCancel01,
+                  onTap: () => setState(() => _filter = const ReportFilter()),
+                ),
+              ),
+      );
+    }
     return SliverPadding(
       padding: AppSpacing.screenPadding,
       sliver: SliverList(

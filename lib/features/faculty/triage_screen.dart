@@ -14,9 +14,9 @@ import '../../models/report.dart';
 import '../../models/report_status.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/motion/confetti.dart';
 import '../../widgets/motion/pressable.dart';
-import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_image.dart';
 import '../../widgets/sla_label.dart';
 import '../../core/utils/app_haptics.dart';
@@ -399,21 +399,14 @@ class _DeckCleared extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SpringIn(
-        spring: AppSprings.slam,
-        fromScale: 0.5,
-        offsetY: 0,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              HugeIcons.strokeRoundedCheckmarkBadge01,
-              size: 48,
-              color: AppColors.primary,
-            ),
-            AppSpacing.verticalGapLg,
-            Text('All clear', style: AppTextStyles.heading2),
-          ],
+      child: EmptyState(
+        icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+        title: 'All clear',
+        message: 'Every new report has a decision. Nice triage.',
+        action: (
+          label: 'Back to the queue',
+          icon: HugeIcons.strokeRoundedArrowLeft01,
+          onTap: () => Navigator.of(context).pop(),
         ),
       ),
     );

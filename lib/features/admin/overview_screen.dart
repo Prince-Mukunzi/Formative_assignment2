@@ -12,6 +12,7 @@ import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/admin/campus_pulse_card.dart';
 import '../../widgets/menu_row.dart';
 import '../../widgets/motion/pressable.dart';
@@ -47,15 +48,29 @@ class OverviewScreen extends ConsumerWidget {
             AppSpacing.verticalGapLg,
             CampusPulseCard(reports: reports, now: now, unowned: unowned),
             const SectionTitle('Teams'),
-            CardList(
-              children: [
-                for (final score in teams)
-                  _TeamRow(
-                    score: score,
-                    onTap: () => TeamSheet.show(context, score.department),
-                  ),
-              ],
-            ),
+            if (teams.isEmpty)
+              EmptyState(
+                icon: HugeIcons.strokeRoundedUserGroup,
+                title: 'Build your first team',
+                message:
+                    'Teams own categories and fix what students report. Add '
+                    'one to start routing reports.',
+                action: (
+                  label: 'Add a team',
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  onTap: () => TeamSheet.show(context),
+                ),
+              )
+            else
+              CardList(
+                children: [
+                  for (final score in teams)
+                    _TeamRow(
+                      score: score,
+                      onTap: () => TeamSheet.show(context, score.department),
+                    ),
+                ],
+              ),
             const SectionTitle('Campus'),
             CardList(
               children: [

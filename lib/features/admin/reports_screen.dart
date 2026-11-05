@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -11,10 +12,12 @@ import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/category_chip.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/report_detail_sheet.dart';
 import '../../widgets/sla_label.dart';
 import '../../widgets/status_mark.dart';
 import '../../widgets/tinted_icon.dart';
+import 'team_sheet.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -54,6 +57,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           ),
           SliverToBoxAdapter(child: _buildFilters()),
           const SliverToBoxAdapter(child: AppSpacing.verticalGapMd),
+          if (reports.isEmpty) SliverToBoxAdapter(child: _buildEmpty()),
           SliverPadding(
             padding: AppSpacing.screenPadding,
             sliver: SliverList.builder(
@@ -68,6 +72,34 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             child: SizedBox(height: AppSpacing.navClearance),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    final status = _status;
+    if (status == null) {
+      return EmptyState(
+        icon: HugeIcons.strokeRoundedSparkles,
+        title: 'Campus is quiet',
+        message:
+            'No reports yet. Give every category a team so nothing slips '
+            'when the first one lands.',
+        action: (
+          label: 'Add a team',
+          icon: HugeIcons.strokeRoundedAdd01,
+          onTap: () => TeamSheet.show(context),
+        ),
+      );
+    }
+    return EmptyState(
+      icon: HugeIcons.strokeRoundedFilterRemove,
+      title: 'None ${status.label.toLowerCase()}',
+      message: 'Nothing on campus is in this state right now.',
+      action: (
+        label: 'Show all',
+        icon: HugeIcons.strokeRoundedView,
+        onTap: () => setState(() => _status = null),
       ),
     );
   }
