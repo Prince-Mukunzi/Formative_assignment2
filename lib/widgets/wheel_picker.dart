@@ -87,7 +87,7 @@ class _WheelPickerState<T> extends State<WheelPicker<T>> {
             height: _rowHeight,
             decoration: BoxDecoration(
               gradient: AppColors.navy,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
             ),
           ),
           NotificationListener<ScrollEndNotification>(
