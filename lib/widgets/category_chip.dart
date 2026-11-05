@@ -29,7 +29,7 @@ class CategoryChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        alignment: Alignment.center,
+        height: 40,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         decoration: BoxDecoration(
           color: isSelected
@@ -39,6 +39,7 @@ class CategoryChip extends StatelessWidget {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (icon case final icon?) ...[
               Icon(icon, size: 18, color: color),
