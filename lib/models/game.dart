@@ -105,7 +105,6 @@ class GameStats {
   final int mostUpvotes;
   final int nudgesSent;
   final int fixesChecked;
-  final int streak;
 
   const GameStats({
     required this.filed,
@@ -113,7 +112,6 @@ class GameStats {
     required this.mostUpvotes,
     required this.nudgesSent,
     required this.fixesChecked,
-    required this.streak,
   });
 }
 
@@ -142,8 +140,7 @@ enum BadgeKind {
     'Crowd Favourite',
     'Reach 25 upvotes on a report',
     HugeIcons.strokeRoundedThumbsUp,
-  ),
-  onFire('On Fire', 'Stay active 3 days in a row', HugeIcons.strokeRoundedFire);
+  );
 
   const BadgeKind(this.label, this.hint, this.icon);
   final String label;
@@ -156,7 +153,6 @@ enum BadgeKind {
     closer => stats.fixesChecked >= 1,
     watchdog => stats.nudgesSent >= 3,
     crowdFavourite => stats.mostUpvotes >= 25,
-    onFire => stats.streak >= 3,
   };
 }
 
@@ -200,34 +196,15 @@ class GameState {
       for (final item in map['ledger'] as List<dynamic>)
         XpEvent.fromMap(item as Map<String, dynamic>),
     ],
+    // Saved games may still name badges that no longer exist.
     celebrated: {
-      for (final name in map['celebrated'] as List<dynamic>)
-        BadgeKind.values.byName(name as String),
+      for (final badge in BadgeKind.values)
+        if ((map['celebrated'] as List<dynamic>).contains(badge.name)) badge,
     },
   );
 }
 
-int streakDays(Iterable<DateTime> activity, DateTime now) {
-  DateTime dayOf(DateTime t) => DateTime(t.year, t.month, t.day);
-  final days = activity.map(dayOf).toSet();
-  var cursor = dayOf(now);
-  if (!days.contains(cursor)) {
-    cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
-  }
-  var streak = 0;
-  while (days.contains(cursor)) {
-    streak++;
-    cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
-  }
-  return streak;
-}
-
-GameStats statsFor(
-  GameState game,
-  Iterable<Report> reports,
-  String studentId,
-  DateTime now,
-) {
+GameStats statsFor(GameState game, Iterable<Report> reports, String studentId) {
   final mine = reports.where((r) => r.reportedBy == studentId).toList();
   int count(XpReason reason) =>
       game.ledger.where((event) => event.reason == reason).length;
@@ -237,7 +214,6 @@ GameStats statsFor(
     mostUpvotes: mine.fold(0, (top, r) => r.upvotes > top ? r.upvotes : top),
     nudgesSent: count(XpReason.nudgeSent),
     fixesChecked: count(XpReason.fixChecked),
-    streak: streakDays(game.ledger.map((event) => event.at), now),
   );
 }
 

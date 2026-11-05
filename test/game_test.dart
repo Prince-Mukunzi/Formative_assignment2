@@ -100,11 +100,12 @@ void main() {
       expect(Rank.scout.progressAt(275), 0.5);
     });
 
-    test('streak counts back from today or yesterday and stops at a gap', () {
-      DateTime daysAgo(int n) => _now.subtract(Duration(days: n));
-      expect(streakDays([daysAgo(0), daysAgo(1), daysAgo(3)], _now), 2);
-      expect(streakDays([daysAgo(1), daysAgo(2)], _now), 2);
-      expect(streakDays([daysAgo(2)], _now), 0);
+    test('saved games naming a retired badge still load', () {
+      final game = GameState.fromMap({
+        'ledger': <Object?>[],
+        'celebrated': ['firstCatch', 'onFire'],
+      });
+      expect(game.celebrated, {BadgeKind.firstCatch});
     });
 
     test('a pending moment reports rank-ups and wants a celebration', () {
@@ -114,7 +115,6 @@ void main() {
         mostUpvotes: 0,
         nudgesSent: 0,
         fixesChecked: 0,
-        streak: 1,
       );
       final game = GameState(
         ledger: [
@@ -151,7 +151,6 @@ void main() {
         mostUpvotes: 0,
         nudgesSent: 0,
         fixesChecked: 0,
-        streak: 0,
       );
       final game = empty.award(event('k', XpReason.upvoteGiven));
       expect(RewardMoment.pending(game, stats)!.deservesCelebration, isFalse);
@@ -178,12 +177,9 @@ void main() {
           at: _now,
         ),
       );
-      final stats = statsFor(
-        game,
-        [_report(status: ReportStatus.inProgress, reopenCount: 1)],
-        'me',
-        _now,
-      );
+      final stats = statsFor(game, [
+        _report(status: ReportStatus.inProgress, reopenCount: 1),
+      ], 'me');
       expect(BadgeKind.fixedIt.isEarned(stats), isTrue);
     });
   });

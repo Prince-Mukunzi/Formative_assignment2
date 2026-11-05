@@ -45,7 +45,6 @@ final gameStatsProvider = Provider<GameStats>((ref) {
     ref.watch(gameProvider),
     ref.watch(reportsProvider),
     MockData.currentStudentId,
-    DateTime.now(),
   );
 });
 

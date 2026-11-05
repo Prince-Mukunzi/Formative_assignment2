@@ -43,7 +43,7 @@ class ProgressScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Hero(xp: xp, streak: stats.streak),
+            _Hero(xp: xp),
             const SectionTitle('Prizes'),
             PrizeLadder(xp: xp),
             const SectionTitle('Badges'),
@@ -91,17 +91,13 @@ class ProgressScreen extends ConsumerWidget {
 
 class _Hero extends StatelessWidget {
   final int xp;
-  final int streak;
 
-  const _Hero({required this.xp, required this.streak});
+  const _Hero({required this.xp});
 
   @override
   Widget build(BuildContext context) {
     final rank = Rank.forXp(xp);
     final next = rank.next;
-    final muted = AppTextStyles.bodySmall.copyWith(
-      color: AppColors.onPrimaryMuted,
-    );
     return GradientBanner(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,17 +130,13 @@ class _Hero extends StatelessWidget {
             fillColor: AppColors.textOnPrimary,
           ),
           AppSpacing.verticalGapSm,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                next == null
-                    ? 'Top rank'
-                    : '${next.threshold - xp} to ${next.label}',
-                style: muted,
-              ),
-              if (streak > 0) Text('$streak day streak', style: muted),
-            ],
+          Text(
+            next == null
+                ? 'Top rank'
+                : '${next.threshold - xp} to ${next.label}',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.onPrimaryMuted,
+            ),
           ),
         ],
       ),

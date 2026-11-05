@@ -287,8 +287,8 @@ abstract final class MockData {
     (name: 'Grace L.', xp: 60),
   ];
 
-  // Leaves the student 10 XP short of Scout and one active day short of the
-  // streak badge, so the first action in a fresh install shows a full reward.
+  // Leaves the student 10 XP short of Scout, so the first action in a fresh
+  // install shows a full reward.
   static GameState get initialGame {
     final now = DateTime.now();
     XpEvent event(String key, XpReason reason, int daysAgo) => XpEvent(
