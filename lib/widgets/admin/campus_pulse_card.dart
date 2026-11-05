@@ -1,256 +1,154 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../models/accountability.dart';
 import '../../models/report.dart';
 import '../../models/report_status.dart';
 import '../../models/sla.dart';
-import '../banner_stat.dart';
+import '../game/xp_bar.dart';
 import '../gradient_banner.dart';
-import '../motion/pressable.dart';
 import '../motion/rolling_number.dart';
-import '../motion/spring_value.dart';
+import '../status_mark.dart';
 
 class CampusPulseCard extends StatelessWidget {
   final List<Report> reports;
-  final List<DepartmentScore> teams;
   final DateTime now;
-  final ValueChanged<DepartmentScore> onTeamTap;
 
-  const CampusPulseCard({
-    super.key,
-    required this.reports,
-    required this.teams,
-    required this.now,
-    required this.onTeamTap,
-  });
+  const CampusPulseCard({super.key, required this.reports, required this.now});
+
+  int _count(ReportStatus status) =>
+      reports.where((r) => r.status == status).length;
 
   @override
   Widget build(BuildContext context) {
-    final reading = PressureReading.of(reports, now);
-    final counted = reports
-        .where((r) => r.status != ReportStatus.declined)
-        .toList();
-    final open = counted.where((r) => r.isOpen).toList();
-    final resolved = counted.length - open.length;
-    final percent = counted.isEmpty ? 0 : resolved * 100 ~/ counted.length;
-    final calm = open.where((r) => r.slaStateAt(now) != SlaState.overdue);
+    final pending = _count(ReportStatus.awaitingApproval);
+    final active = _count(ReportStatus.inProgress);
+    final resolved = _count(ReportStatus.resolved);
+    final total = pending + active + resolved;
+    final late = reports
+        .where((r) => r.slaStateAt(now) == SlaState.overdue)
+        .length;
+    final muted = AppTextStyles.bodySmall.copyWith(
+      color: AppColors.onPrimaryMuted,
+    );
     return GradientBanner(
       gradient: AppColors.navy,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              RollingNumber(
-                value: percent,
-                suffix: '%',
-                style: AppTextStyles.display.copyWith(
-                  color: AppColors.textOnPrimary,
-                ),
-              ),
-              AppSpacing.horizontalGapLg,
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _mood(reading.overdue, open.length),
-                      style: AppTextStyles.heading3.copyWith(
-                        color: AppColors.textOnPrimary,
-                      ),
-                    ),
-                    Text(
-                      '$resolved of ${counted.length} resolved',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.onPrimaryMuted,
-                      ),
-                    ),
-                  ],
+                child: RollingNumber(
+                  value: pending + active,
+                  suffix: ' open',
+                  style: AppTextStyles.display.copyWith(
+                    color: AppColors.textOnPrimary,
+                  ),
                 ),
               ),
+              if (late > 0) _LatePill(count: late),
             ],
+          ),
+          Text(
+            pending + active == 0 ? 'Nothing waiting' : 'Reports to finish',
+            style: muted,
           ),
           AppSpacing.verticalGapLg,
-          _StatusBar(
-            resolved: resolved,
-            active: calm
-                .where((r) => r.status == ReportStatus.inProgress)
-                .length,
-            pending: calm
-                .where((r) => r.status != ReportStatus.inProgress)
-                .length,
-            overdue: reading.overdue,
+          XpBar(
+            progress: total == 0 ? 0 : resolved / total,
+            from: 0,
+            trackColor: AppColors.onPrimaryFaint,
+            fillColor: AppColors.textOnPrimary,
           ),
-          AppSpacing.verticalGapXl,
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: [
-              for (final team in teams)
-                _TeamOrb(score: team, onTap: () => onTeamTap(team)),
-            ],
-          ),
+          AppSpacing.verticalGapSm,
+          Text('$resolved of $total fixed', style: muted),
           AppSpacing.verticalGapXl,
           Row(
             children: [
-              BannerStat(
-                icon: HugeIcons.strokeRoundedTask01,
-                value: open.length,
-                label: 'Open',
+              _StatusCount(
+                status: ReportStatus.awaitingApproval,
+                value: pending,
               ),
-              BannerStat(
-                icon: HugeIcons.strokeRoundedAlert02,
-                value: reading.overdue,
-                label: 'Overdue',
-              ),
-              BannerStat(
-                icon: HugeIcons.strokeRoundedClock01,
-                value: reading.dueWithin24h,
-                label: 'Due',
-              ),
-              BannerStat(
-                icon: HugeIcons.strokeRoundedUserGroup,
-                value: reading.waitingStudents,
-                label: 'Waiting',
-              ),
+              _StatusCount(status: ReportStatus.inProgress, value: active),
+              _StatusCount(status: ReportStatus.resolved, value: resolved),
             ],
           ),
         ],
       ),
     );
   }
-
-  String _mood(int overdue, int open) {
-    if (overdue == 1) return '1 fire to put out';
-    if (overdue > 1) return '$overdue fires to put out';
-    return open == 0 ? 'All clear' : 'Keep them moving';
-  }
 }
 
-class _StatusBar extends StatelessWidget {
-  final int resolved;
-  final int active;
-  final int pending;
-  final int overdue;
+class _LatePill extends StatelessWidget {
+  final int count;
 
-  const _StatusBar({
-    required this.resolved,
-    required this.active,
-    required this.pending,
-    required this.overdue,
-  });
-
-  static const _height = 10.0;
+  const _LatePill({required this.count});
 
   @override
   Widget build(BuildContext context) {
-    final segments = [
-      (resolved, AppColors.textOnPrimary),
-      (active, AppColors.onPrimaryMuted),
-      (pending, AppColors.onPrimaryFaint),
-      (overdue, AppColors.brand),
-    ].where((segment) => segment.$1 > 0).toList();
-    if (segments.isEmpty) return const SizedBox(height: _height);
-    return SpringValue(
-      value: 1,
-      from: 0,
-      delay: const Duration(milliseconds: 150),
-      spring: AppSprings.soft,
-      builder: (_, t, child) => ClipRect(
-        child: Align(
-          alignment: Alignment.centerLeft,
-          widthFactor: t.clamp(0.0, 1.0),
-          child: child,
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
       ),
-      child: SizedBox(
-        height: _height,
-        child: Row(
-          spacing: AppSpacing.xs,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final (count, color) in segments)
-              Expanded(
-                flex: count,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TeamOrb extends StatelessWidget {
-  final DepartmentScore score;
-  final VoidCallback onTap;
-
-  const _TeamOrb({required this.score, required this.onTap});
-
-  static const _size = 42.0;
-  static const _badgeSize = 18.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final late = score.overdue > 0;
-    final orb = Container(
-      width: _size,
-      height: _size,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: late ? AppColors.brand : AppColors.onPrimaryWash,
-        border: late ? null : Border.all(color: AppColors.onPrimaryFaint),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),
-      child: Icon(
-        score.department.icon,
-        size: 20,
-        color: AppColors.textOnPrimary,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            HugeIcons.strokeRoundedAlert02,
+            size: 14,
+            color: AppColors.brand,
+          ),
+          AppSpacing.horizontalGapXs,
+          Text(
+            '$count late',
+            style: AppTextStyles.labelSmall.copyWith(color: AppColors.brand),
+          ),
+        ],
       ),
     );
-    final pulsing = late && !MediaQuery.disableAnimationsOf(context);
-    return Pressable(
-      onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
+  }
+}
+
+class _StatusCount extends StatelessWidget {
+  final ReportStatus status;
+  final int value;
+
+  const _StatusCount({required this.status, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          pulsing
-              ? orb
-                    .animate(onPlay: (controller) => controller.repeat())
-                    .scaleXY(begin: 1, end: 1.1, duration: 500.ms)
-                    .then()
-                    .scaleXY(begin: 1.1, end: 1, duration: 700.ms)
-              : orb,
-          if (score.open > 0)
-            Positioned(
-              top: -AppSpacing.xs,
-              right: -AppSpacing.xs,
-              child: Container(
-                width: _badgeSize,
-                height: _badgeSize,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.surface,
-                ),
-                child: Text(
-                  '${score.open}',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.primaryDark,
-                  ),
+          RollingNumber(
+            value: value,
+            style: AppTextStyles.heading2.copyWith(
+              color: AppColors.textOnPrimary,
+            ),
+          ),
+          AppSpacing.verticalGapXs,
+          Row(
+            children: [
+              StatusMark(status: status, color: AppColors.onPrimaryMuted),
+              AppSpacing.horizontalGapXs,
+              Text(
+                status.label,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onPrimaryMuted,
                 ),
               ),
-            ),
+            ],
+          ),
         ],
       ),
     );
