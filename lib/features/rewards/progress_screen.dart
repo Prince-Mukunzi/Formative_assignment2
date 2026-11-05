@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import '../../core/mock_data.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
 import '../../providers/game_provider.dart';
+import '../../providers/session_provider.dart';
+import '../../services/game_service.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/faculty/department_board.dart';
 import '../../widgets/game/badge_tile.dart';
@@ -28,6 +29,8 @@ class ProgressScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final xp = ref.watch(gameProvider.select((game) => game.xp));
     final stats = ref.watch(gameStatsProvider);
+    final peers = ref.watch(leaderboardProvider).value ?? const [];
+    final uid = ref.watch(sessionUidProvider) ?? '';
     return Scaffold(
       appBar: AppBar(
         leading: Pressable(
@@ -51,7 +54,7 @@ class ProgressScreen extends ConsumerWidget {
             const SectionTitle('Top hunters'),
             AppCard(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: _Leaderboard(xp: xp),
+              child: _Leaderboard(xp: xp, peers: peers, uid: uid),
             ),
             AppSpacing.verticalGapLg,
             CardList(
@@ -171,8 +174,10 @@ class _Badges extends StatelessWidget {
 
 class _Leaderboard extends StatelessWidget {
   final int xp;
+  final List<LeaderEntry> peers;
+  final String uid;
 
-  const _Leaderboard({required this.xp});
+  const _Leaderboard({required this.xp, required this.peers, required this.uid});
 
   static const _rowHeight = 52.0;
   static const _shown = 3;
@@ -180,9 +185,12 @@ class _Leaderboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entries = [...MockData.leaderboardPeers, (name: _you, xp: xp)]
-      ..sort((a, b) => b.xp.compareTo(a.xp));
-    final youAt = entries.indexWhere((e) => e.name == _you);
+    final entries = [
+      for (final peer in peers)
+        if (peer.uid != uid) peer,
+      (uid: uid, name: _you, xp: xp),
+    ]..sort((a, b) => b.xp.compareTo(a.xp));
+    final youAt = entries.indexWhere((e) => e.uid == uid);
     final visible = [
       for (var i = 0; i < entries.length; i++)
         if (i < _shown || i == youAt) i,
@@ -192,7 +200,7 @@ class _Leaderboard extends StatelessWidget {
       rows: [
         for (final i in visible)
           (
-            id: entries[i].name,
+            id: entries[i].uid,
             child: _LeaderRow(
               place: i + 1,
               name: entries[i].name,

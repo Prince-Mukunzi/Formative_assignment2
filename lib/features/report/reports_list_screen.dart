@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/mock_data.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/report.dart';
 import '../../models/report_status.dart';
 import '../../providers/reports_provider.dart';
+import '../../providers/session_provider.dart';
 import '../../widgets/game/bounty_track.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_card.dart';
@@ -29,7 +29,7 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
   Widget build(BuildContext context) {
     final mine = ref
         .watch(reportsProvider)
-        .where((r) => r.reportedBy == MockData.currentStudentId)
+        .where((r) => r.reportedBy == ref.watch(sessionUidProvider))
         .toList();
     final visible = _statusFilter == null
         ? mine

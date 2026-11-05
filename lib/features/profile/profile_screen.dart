@@ -5,7 +5,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/app_info.dart';
-import '../../core/mock_data.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -19,6 +18,7 @@ import '../../providers/clock_provider.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/game_provider.dart';
 import '../../providers/reports_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/app_card.dart';
@@ -58,7 +58,7 @@ class ProfileScreen extends ConsumerWidget {
                   Text(
                     isAdmin
                         ? 'Admin'
-                        : department?.label ?? '${MockData.userName} Mukunzi',
+                        : department?.label ?? session?.name ?? '',
                     style: AppTextStyles.heading1.copyWith(
                       color: AppColors.textOnPrimary,
                     ),
@@ -125,7 +125,7 @@ class ProfileScreen extends ConsumerWidget {
                   icon: HugeIcons.strokeRoundedLogout01,
                   label: 'Sign out',
                   accent: true,
-                  onTap: () => ref.read(sessionProvider.notifier).signOut(),
+                  onTap: () => ref.read(authGateProvider.notifier).signOut(),
                 ),
               ],
             ),
@@ -160,7 +160,7 @@ class ProfileScreen extends ConsumerWidget {
     final reports = ref.watch(reportsProvider);
     if (department == null) {
       final mine = reports.where(
-        (r) => r.reportedBy == MockData.currentStudentId,
+        (r) => r.reportedBy == ref.watch(sessionUidProvider),
       );
       return [
         BannerStat(

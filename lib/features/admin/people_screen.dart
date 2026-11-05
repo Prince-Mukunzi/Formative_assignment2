@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -11,6 +12,7 @@ import '../../providers/reports_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/category_chip.dart';
+import '../../widgets/filled_field.dart';
 import '../../widgets/team_wheel.dart';
 
 class PeopleScreen extends ConsumerStatefulWidget {
@@ -50,7 +52,17 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppSpacing.verticalGapLg,
-            Text('People', style: AppTextStyles.heading1),
+            Row(
+              children: [
+                Expanded(child: Text('People', style: AppTextStyles.heading1)),
+                AppButton(
+                  label: 'Invite',
+                  icon: HugeIcons.strokeRoundedUserAdd01,
+                  isFilled: false,
+                  onTap: () => _InviteSheet.show(context),
+                ),
+              ],
+            ),
             AppSpacing.verticalGapXl,
             SizedBox(
               height: 40,
@@ -182,6 +194,133 @@ class _PersonSheet extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _InviteSheet extends ConsumerStatefulWidget {
+  const _InviteSheet();
+
+  static void show(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      builder: (_) => const _InviteSheet(),
+    );
+  }
+
+  @override
+  ConsumerState<_InviteSheet> createState() => _InviteSheetState();
+}
+
+class _InviteSheetState extends ConsumerState<_InviteSheet> {
+  final _email = TextEditingController();
+  PersonRole _role = PersonRole.faculty;
+  String? _teamId;
+  bool _sending = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final email = _email.text.trim().toLowerCase();
+    final teamId = _teamId ?? ref.read(departmentsProvider).firstOrNull?.id;
+    if (!email.contains('@')) return setState(() => _error = 'Enter an email.');
+    if (_role == PersonRole.faculty && teamId == null) {
+      return setState(() => _error = 'Create a team first.');
+    }
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(peopleProvider.notifier)
+          .invite(
+            email: email,
+            role: _role,
+            departmentId: _role == PersonRole.faculty ? teamId : null,
+          );
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.of(context).pop();
+      messenger.showSnackBar(
+        SnackBar(content: Text('Invited. Ask them to sign in with $email.')),
+      );
+    } on Object {
+      if (mounted) {
+        setState(() {
+          _sending = false;
+          _error = 'The invite did not save. Try again.';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final error = _error;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.xxl,
+        AppSpacing.xl,
+        MediaQuery.viewInsetsOf(context).bottom +
+            MediaQuery.paddingOf(context).bottom +
+            AppSpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Invite', style: AppTextStyles.heading2),
+          AppSpacing.verticalGapXl,
+          FilledField(
+            controller: _email,
+            hint: 'Their email',
+            icon: HugeIcons.strokeRoundedMail01,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          AppSpacing.verticalGapMd,
+          Row(
+            children: [
+              for (final role in const [PersonRole.faculty, PersonRole.admin])
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
+                  child: CategoryChip(
+                    label: role.label,
+                    isSelected: _role == role,
+                    onTap: () => setState(() => _role = role),
+                  ),
+                ),
+            ],
+          ),
+          if (_role == PersonRole.faculty) ...[
+            AppSpacing.verticalGapMd,
+            TeamWheel(
+              selectedId: _teamId,
+              onChanged: (id) => setState(() => _teamId = id),
+            ),
+          ],
+          if (error != null) ...[
+            AppSpacing.verticalGapMd,
+            Text(
+              error,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.brand),
+            ),
+          ],
+          AppSpacing.verticalGapXl,
+          AppButton(
+            label: _sending ? 'Sending' : 'Send invite',
+            onTap: _sending ? null : _send,
+          ),
+        ],
       ),
     );
   }

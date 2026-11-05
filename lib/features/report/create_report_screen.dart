@@ -50,6 +50,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
   bool _isOtherLocation = false;
   String _imagePath = '';
   int _shake = 0;
+  bool _submitting = false;
   late int _shownBounty = _bounty;
 
   bool get _isEditing => widget.reportId != null;
@@ -165,16 +166,41 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final category = _category;
-    if (category == null) return;
+    if (category == null || _submitting) return;
     final title = _titleController.text.trim();
     final description = _descriptionController.text.trim();
     final reports = ref.read(reportsProvider.notifier);
     final id = widget.reportId;
-    Navigator.of(context).pop();
+    setState(() => _submitting = true);
+    try {
+      await _save(reports, id, category, title, description);
+      if (mounted) Navigator.of(context).pop();
+    } on Object {
+      if (!mounted) return;
+      AppHaptics.heavyImpact();
+      setState(() {
+        _submitting = false;
+        _shake++;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The photo did not upload. Check your connection.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _save(
+    ReportsNotifier reports,
+    String? id,
+    ReportCategory category,
+    String title,
+    String description,
+  ) async {
     if (id == null) {
-      reports.create(
+      await reports.create(
         title: title,
         description: description,
         location: _location,
@@ -182,7 +208,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
         imageUrl: _imagePath,
       );
     } else {
-      reports.edit(
+      await reports.edit(
         id,
         title: title,
         description: description,
@@ -306,10 +332,12 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
                   child: AppButton(
                     label: _step < _lastStep
                         ? 'Next'
+                        : _submitting
+                        ? 'Uploading'
                         : _isEditing
                         ? 'Save'
                         : 'Submit',
-                    onTap: _next,
+                    onTap: _submitting ? null : _next,
                   ),
                 ),
               ),

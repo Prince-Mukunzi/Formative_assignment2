@@ -68,33 +68,6 @@ class Report {
     return isOpen && (last == null || now.difference(last) >= nudgeCooldown);
   }
 
-  Report upvoteToggled() => copyWith(
-    hasUpvoted: !hasUpvoted,
-    upvotes: upvotes + (hasUpvoted ? -1 : 1),
-  );
-
-  Report nudged(DateTime now) =>
-      copyWith(nudges: nudges + 1, lastNudgedAt: now);
-
-  Report approved(DateTime now) =>
-      copyWith(status: ReportStatus.inProgress, approvedAt: now);
-
-  Report declined() => copyWith(status: ReportStatus.declined);
-
-  Report resolved(DateTime now) =>
-      copyWith(status: ReportStatus.resolved, resolvedAt: () => now);
-
-  Report verified(DateTime now) => copyWith(verifiedAt: () => now);
-
-  // Restarts the clock from now on the shorter reopen window, see SlaPolicy.
-  Report reopened(DateTime now) => copyWith(
-    status: ReportStatus.inProgress,
-    approvedAt: now,
-    resolvedAt: () => null,
-    verifiedAt: () => null,
-    reopenCount: reopenCount + 1,
-  );
-
   Report copyWith({
     String? title,
     String? description,
@@ -135,38 +108,9 @@ class Report {
     );
   }
 
-  Map<String, Object?> toMap() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'imageUrl': imageUrl,
-      'status': status.name,
-      'category': category.name,
-      'upvotes': upvotes,
-      'location': location,
-      'reportedBy': reportedBy,
-      'reportedByName': reportedByName,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'hasUpvoted': hasUpvoted,
-      'approvedAt': approvedAt?.millisecondsSinceEpoch,
-      'resolvedAt': resolvedAt?.millisecondsSinceEpoch,
-      'verifiedAt': verifiedAt?.millisecondsSinceEpoch,
-      'lastNudgedAt': lastNudgedAt?.millisecondsSinceEpoch,
-      'nudges': nudges,
-      'reopenCount': reopenCount,
-      'assignedDepartmentId': assignedDepartmentId,
-    };
-  }
-
-  factory Report.fromMap(Map<String, dynamic> map) {
-    DateTime? optionalDate(String key) {
-      final value = map[key] as int?;
-      return value == null ? null : DateTime.fromMillisecondsSinceEpoch(value);
-    }
-
+  factory Report.fromMap(String id, Map<String, dynamic> map) {
     return Report(
-      id: map['id'] as String,
+      id: id,
       title: map['title'] as String,
       description: map['description'] as String,
       imageUrl: map['imageUrl'] as String,
@@ -176,12 +120,11 @@ class Report {
       location: map['location'] as String,
       reportedBy: map['reportedBy'] as String,
       reportedByName: map['reportedByName'] as String,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
-      hasUpvoted: map['hasUpvoted'] as bool,
-      approvedAt: optionalDate('approvedAt'),
-      resolvedAt: optionalDate('resolvedAt'),
-      verifiedAt: optionalDate('verifiedAt'),
-      lastNudgedAt: optionalDate('lastNudgedAt'),
+      createdAt: map['createdAt'] as DateTime,
+      approvedAt: map['approvedAt'] as DateTime?,
+      resolvedAt: map['resolvedAt'] as DateTime?,
+      verifiedAt: map['verifiedAt'] as DateTime?,
+      lastNudgedAt: map['lastNudgedAt'] as DateTime?,
       nudges: map['nudges'] as int,
       reopenCount: map['reopenCount'] as int,
       assignedDepartmentId: map['assignedDepartmentId'] as String?,

@@ -16,4 +16,20 @@ class LocalStore {
       _prefs.setString(key, jsonEncode(value));
 
   Future<void> remove(String key) => _prefs.remove(key);
+
+  // Data the app kept on the device before it moved to Firestore.
+  static const _legacyKeys = [
+    'session.v1',
+    'reports.v1',
+    'departments.v1',
+    'people.v1',
+    'locations.v1',
+    'game.v1',
+  ];
+
+  Future<void> dropLegacyData() async {
+    for (final key in _legacyKeys) {
+      await _prefs.remove(key);
+    }
+  }
 }

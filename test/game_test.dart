@@ -1,4 +1,3 @@
-import 'package:alu_bug_bounty/core/mock_data.dart';
 import 'package:alu_bug_bounty/models/accountability.dart';
 import 'package:alu_bug_bounty/models/department.dart';
 import 'package:alu_bug_bounty/models/game.dart';
@@ -74,9 +73,11 @@ void main() {
     });
 
     test('reopening restarts on the shorter window', () {
-      final reopened = _report(status: ReportStatus.resolved).reopened(_now);
-      expect(reopened.status, ReportStatus.inProgress);
-      expect(reopened.resolvedAt, isNull);
+      final reopened = _report(
+        status: ReportStatus.inProgress,
+        approvedAt: _now,
+        reopenCount: 1,
+      );
       expect(reopened.deadline, _now.add(SlaPolicy.reopenWindow));
     });
   });
@@ -100,12 +101,10 @@ void main() {
       expect(Rank.scout.progressAt(275), 0.5);
     });
 
-    test('saved games naming a retired badge still load', () {
-      final game = GameState.fromMap({
-        'ledger': <Object?>[],
-        'celebrated': ['firstCatch', 'onFire'],
+    test('profiles naming a retired badge still load', () {
+      expect(GameState.badgesNamed(['firstCatch', 'onFire']), {
+        BadgeKind.firstCatch,
       });
-      expect(game.celebrated, {BadgeKind.firstCatch});
     });
 
     test('a pending moment reports rank-ups and wants a celebration', () {
@@ -210,7 +209,18 @@ void main() {
           ),
         ],
         _now,
-        MockData.departments,
+        const [
+          Department(
+            id: 'plumbing',
+            label: 'Plumbing',
+            categories: {ReportCategory.water},
+          ),
+          Department(
+            id: 'electrical',
+            label: 'Electrical',
+            categories: {ReportCategory.electricity},
+          ),
+        ],
       );
       expect(board.first.department.id, 'electrical');
       expect(board.first.points, 10);

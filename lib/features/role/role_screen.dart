@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,12 +7,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../models/session.dart';
-import '../../providers/directory_provider.dart';
-import '../../providers/session_provider.dart';
+import '../../models/auth_gate.dart';
+import '../../models/person.dart';
+import '../../providers/auth_provider.dart';
+import '../auth/sign_in_sheet.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/motion/pressable.dart';
-import '../../widgets/motion/spring_expand.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/motion/spring_value.dart';
 import '../../widgets/motion/tilt_card.dart';
@@ -30,16 +28,20 @@ class RoleScreen extends ConsumerStatefulWidget {
 class _RoleScreenState extends ConsumerState<RoleScreen> {
   static const _revealDuration = Duration(milliseconds: 520);
 
-  bool _facultyOpen = false;
   Offset? _revealOrigin;
 
-  void _enter(Session session, Offset origin) {
+  Future<void> _open(PersonRole role, BuildContext cardContext) async {
     if (_revealOrigin != null) return;
+    final origin = _centerOf(cardContext);
+    AppHaptics.lightImpact();
+    ref.read(authGateProvider.notifier).clearNotice();
+    final gate = await SignInSheet.show(context, role);
+    if (!mounted || gate == null) return;
+    final notifier = ref.read(authGateProvider.notifier);
+    if (gate is! Ready) return notifier.release();
     AppHaptics.mediumImpact();
     setState(() => _revealOrigin = origin);
-    Future.delayed(_revealDuration, () {
-      if (mounted) ref.read(sessionProvider.notifier).signIn(session);
-    });
+    Future.delayed(_revealDuration, notifier.release);
   }
 
   @override
@@ -60,6 +62,10 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
   }
 
   Widget _buildContent() {
+    final notice = switch (ref.watch(authGateProvider)) {
+      SignedOut(:final notice) => notice,
+      _ => null,
+    };
     return DecoratedBox(
       decoration: const BoxDecoration(gradient: AppColors.navy),
       child: SafeArea(
@@ -95,8 +101,7 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                   builder: (cardContext) => _RoleCard(
                     icon: HugeIcons.strokeRoundedMortarboard01,
                     title: 'Student',
-                    onTap: () =>
-                        _enter(const StudentSession(), _centerOf(cardContext)),
+                    onTap: () => _open(PersonRole.student, cardContext),
                   ),
                 ),
               ),
@@ -105,12 +110,12 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                 delay: const Duration(milliseconds: 340),
                 offsetY: 60,
                 spring: AppSprings.bouncy,
-                child: _RoleCard(
-                  icon: HugeIcons.strokeRoundedTeacher,
-                  title: 'Faculty',
-                  isOpen: _facultyOpen,
-                  onTap: () => setState(() => _facultyOpen = !_facultyOpen),
-                  expansion: _DepartmentPicker(onPicked: _enter),
+                child: Builder(
+                  builder: (cardContext) => _RoleCard(
+                    icon: HugeIcons.strokeRoundedTeacher,
+                    title: 'Faculty',
+                    onTap: () => _open(PersonRole.faculty, cardContext),
+                  ),
                 ),
               ),
               AppSpacing.verticalGapLg,
@@ -122,11 +127,21 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                   builder: (cardContext) => _RoleCard(
                     icon: HugeIcons.strokeRoundedShield01,
                     title: 'Admin',
-                    onTap: () =>
-                        _enter(const AdminSession(), _centerOf(cardContext)),
+                    onTap: () => _open(PersonRole.admin, cardContext),
                   ),
                 ),
               ),
+              if (notice != null) ...[
+                AppSpacing.verticalGapXl,
+                SpringIn(
+                  child: Text(
+                    notice,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textOnPrimary,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -144,15 +159,11 @@ class _RoleCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
-  final bool isOpen;
-  final Widget? expansion;
 
   const _RoleCard({
     required this.icon,
     required this.title,
     required this.onTap,
-    this.isOpen = false,
-    this.expansion,
   });
 
   @override
@@ -184,110 +195,13 @@ class _RoleCard extends StatelessWidget {
                     AppSpacing.horizontalGapLg,
                     Expanded(child: Text(title, style: AppTextStyles.heading3)),
                     AppSpacing.horizontalGapSm,
-                    SpringValue(
-                      value: isOpen ? 1 : 0,
-                      spring: AppSprings.bouncy,
-                      builder: (_, t, child) => Transform.rotate(
-                        angle: t * math.pi / 2,
-                        child: child,
-                      ),
-                      child: const Icon(
-                        HugeIcons.strokeRoundedArrowRight01,
-                        size: 20,
-                        color: AppColors.textTertiary,
-                      ),
+                    const Icon(
+                      HugeIcons.strokeRoundedArrowRight01,
+                      size: 20,
+                      color: AppColors.textTertiary,
                     ),
                   ],
                 ),
-              ),
-            ),
-            if (expansion != null)
-              SpringExpand(open: isOpen, child: expansion!),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DepartmentPicker extends ConsumerWidget {
-  static const _tileHeight = 56.0;
-
-  final void Function(Session session, Offset origin) onPicked;
-
-  const _DepartmentPicker({required this.onPicked});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final departments = ref.watch(departmentsProvider);
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        AppSpacing.lg,
-      ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisExtent: _tileHeight,
-        mainAxisSpacing: AppSpacing.sm,
-        crossAxisSpacing: AppSpacing.sm,
-      ),
-      itemCount: departments.length,
-      itemBuilder: (_, index) {
-        final department = departments[index];
-        return Builder(
-          builder: (tileContext) => _TeamTile(
-            icon: department.icon,
-            label: department.label,
-            onTap: () {
-              final box = tileContext.findRenderObject()! as RenderBox;
-              onPicked(
-                FacultySession(department.id),
-                box.localToGlobal(box.size.center(Offset.zero)),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _TeamTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _TeamTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      scale: 0.96,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.chipBackground,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: AppColors.primary),
-            AppSpacing.horizontalGapSm,
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.labelMedium,
               ),
             ),
           ],

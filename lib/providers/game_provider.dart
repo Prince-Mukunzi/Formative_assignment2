@@ -1,38 +1,110 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/mock_data.dart';
 import '../models/game.dart';
+import '../models/session.dart';
 import '../services/game_service.dart';
+import 'auth_provider.dart';
 import 'reports_provider.dart';
 import 'session_provider.dart';
+import 'sync_provider.dart';
 
-final gameServiceProvider = Provider(
-  (ref) => GameService(ref.watch(localStoreProvider)),
-);
+final gameServiceProvider = Provider((ref) => GameService());
 
+/// The server owns the ledger. Awards the app expects are shown at once as
+/// predictions under the same key, and disappear when the real event lands.
 class GameNotifier extends Notifier<GameState> {
-  @override
-  GameState build() => ref.watch(gameServiceProvider).load();
+  List<XpEvent> _server = const [];
+  final _predicted = <String, XpEvent>{};
+  final _withdrawn = <String>{};
+  final _seenKeys = <String>{};
+  Set<String> _celebrated = const {};
 
-  /// Returns the XP actually granted: 0 when this award was already claimed.
-  int award(XpReason reason, String scope) {
-    final next = state.award(
-      XpEvent(key: '${reason.name}:$scope', reason: reason, at: DateTime.now()),
+  @override
+  GameState build() {
+    _predicted.clear();
+    _withdrawn.clear();
+    _seenKeys.clear();
+    _server = const [];
+    final uid = ref.watch(sessionUidProvider);
+    if (uid == null || ref.read(sessionProvider) is! StudentSession) {
+      return const GameState(ledger: [], celebrated: {});
+    }
+    _celebrated = ref.read(currentPersonProvider)?.celebrated ?? const {};
+    ref.listen(currentPersonProvider, (_, person) {
+      _celebrated = {..._celebrated, ...?person?.celebrated};
+      _publish();
+    });
+    follow(ref, ref.watch(gameServiceProvider).watchLedger(uid), Feed.ledger, (
+      events,
+    ) {
+      _server = events;
+      _catchUpSeen();
+      _publish();
+    });
+    return const GameState(ledger: [], celebrated: {});
+  }
+
+  bool _isWithdrawn(String key) =>
+      key.split(':').skip(1).any(_withdrawn.contains);
+
+  void _publish() {
+    final serverKeys = {for (final event in _server) event.key};
+    _predicted.removeWhere((key, _) => serverKeys.contains(key));
+    state = GameState(
+      ledger: [
+        for (final event in [..._server, ..._predicted.values])
+          if (!_isWithdrawn(event.key))
+            _seenKeys.contains(event.key) ? event.markSeen() : event,
+      ],
+      celebrated: GameState.badgesNamed(_celebrated),
     );
-    if (identical(next, state)) return 0;
-    _update(next);
+  }
+
+  // Events acknowledged while they were still predictions get marked seen
+  // once the server has written them.
+  void _catchUpSeen() {
+    final uid = ref.read(sessionUidProvider);
+    final stale = [
+      for (final event in _server)
+        if (!event.seen && _seenKeys.contains(event.key)) event.key,
+    ];
+    if (uid == null || stale.isEmpty) return;
+    send(ref, ref.read(gameServiceProvider).markSeen(uid, stale));
+  }
+
+  /// Returns the XP expected: 0 when this award was already claimed.
+  int award(XpReason reason, String scope) {
+    final key = '${reason.name}:$scope';
+    if (state.ledger.any((event) => event.key == key)) return 0;
+    _predicted[key] = XpEvent(key: key, reason: reason, at: DateTime.now());
+    _publish();
     return reason.xp;
   }
 
-  void revoke(String reportId) => _update(state.revoke(reportId));
-
-  void acknowledge(RewardMoment moment) {
-    _update(state.seen(moment.badges.toSet()));
+  void forget(String reportId) {
+    _predicted.removeWhere((key, _) => key.split(':').skip(1).contains(reportId));
+    _publish();
   }
 
-  void _update(GameState next) {
-    state = next;
-    ref.read(gameServiceProvider).save(next);
+  void revoke(String reportId) {
+    _withdrawn.add(reportId);
+    _publish();
+  }
+
+  void acknowledge(RewardMoment moment) {
+    final uid = ref.read(sessionUidProvider);
+    if (uid == null) return;
+    _seenKeys.addAll(moment.events.map((event) => event.key));
+    _catchUpSeen();
+    final badges = moment.badges.map((badge) => badge.name);
+    if (badges.isNotEmpty) {
+      _celebrated = {..._celebrated, ...badges};
+      send(
+        ref,
+        ref.read(profileServiceProvider).saveCelebrated(uid, _celebrated),
+      );
+    }
+    _publish();
   }
 }
 
@@ -44,7 +116,7 @@ final gameStatsProvider = Provider<GameStats>((ref) {
   return statsFor(
     ref.watch(gameProvider),
     ref.watch(reportsProvider),
-    MockData.currentStudentId,
+    ref.watch(sessionUidProvider) ?? '',
   );
 });
 
@@ -54,3 +126,7 @@ final pendingRewardProvider = Provider<RewardMoment?>((ref) {
     ref.watch(gameStatsProvider),
   );
 });
+
+final leaderboardProvider = StreamProvider.autoDispose<List<LeaderEntry>>(
+  (ref) => ref.watch(gameServiceProvider).watchLeaderboard(),
+);

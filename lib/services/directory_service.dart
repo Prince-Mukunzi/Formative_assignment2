@@ -1,49 +1,49 @@
-import '../core/mock_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/department.dart';
-import '../models/person.dart';
-import 'local_store.dart';
+import 'firestore_decoding.dart';
 
 class DirectoryService {
-  static const _departmentsKey = 'departments.v1';
-  static const _peopleKey = 'people.v1';
-  static const _locationsKey = 'locations.v1';
+  final FirebaseFirestore _db;
 
-  final LocalStore _store;
+  DirectoryService({FirebaseFirestore? db})
+    : _db = db ?? FirebaseFirestore.instance;
 
-  const DirectoryService(this._store);
+  CollectionReference<Map<String, dynamic>> get _departments =>
+      _db.collection('departments');
 
-  List<Department> loadDepartments() {
-    final raw = _store.read(_departmentsKey);
-    if (raw == null) return MockData.departments;
-    return [
-      for (final item in raw as List<dynamic>)
-        Department.fromMap(item as Map<String, dynamic>),
-    ];
+  DocumentReference<Map<String, dynamic>> get _locations =>
+      _db.doc('config/locations');
+
+  Stream<List<Department>> watchDepartments() =>
+      _departments.orderBy('label').snapshots().map(
+        (snapshot) => [
+          for (final doc in snapshot.docs) ?decodeOrSkip(doc, Department.fromMap),
+        ],
+      );
+
+  Future<void> saveDepartments(List<Department> departments) {
+    final batch = _db.batch();
+    for (final department in departments) {
+      batch.set(_departments.doc(department.id), department.toMap());
+    }
+    return batch.commit();
   }
 
-  Future<void> saveDepartments(List<Department> departments) => _store.write(
-    _departmentsKey,
-    [for (final department in departments) department.toMap()],
+  Future<void> removeDepartment(String id) => _departments.doc(id).delete();
+
+  Stream<List<String>> watchLocations() => _locations.snapshots().map(
+    (doc) => [
+      for (final item in doc.data()?['items'] as List<dynamic>? ?? const [])
+        if (item is String) item,
+    ],
   );
 
-  List<Person> loadPeople() {
-    final raw = _store.read(_peopleKey);
-    if (raw == null) return MockData.people;
-    return [
-      for (final item in raw as List<dynamic>)
-        Person.fromMap(item as Map<String, dynamic>),
-    ];
-  }
+  Future<void> addLocation(String location) => _locations.set({
+    'items': FieldValue.arrayUnion([location]),
+  }, SetOptions(merge: true));
 
-  Future<void> savePeople(List<Person> people) =>
-      _store.write(_peopleKey, [for (final person in people) person.toMap()]);
-
-  List<String> loadLocations() {
-    final raw = _store.read(_locationsKey);
-    if (raw == null) return MockData.locations;
-    return [for (final item in raw as List<dynamic>) item as String];
-  }
-
-  Future<void> saveLocations(List<String> locations) =>
-      _store.write(_locationsKey, locations);
+  Future<void> removeLocation(String location) => _locations.update({
+    'items': FieldValue.arrayRemove([location]),
+  });
 }

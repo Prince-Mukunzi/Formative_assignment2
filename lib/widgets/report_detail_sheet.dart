@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import '../core/mock_data.dart';
 import '../core/router/app_router.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
@@ -58,7 +57,7 @@ class ReportDetailSheet extends ConsumerWidget {
     final session = ref.watch(sessionProvider);
     final isStaff = session is! StudentSession;
     final team = ref.watch(departmentsProvider).ownerOf(report)?.label;
-    final isMine = report.reportedBy == MockData.currentStudentId;
+    final isMine = report.reportedBy == session?.uid;
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.9,

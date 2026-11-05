@@ -19,13 +19,12 @@ class Department {
       categories.firstOrNull?.icon ?? HugeIcons.strokeRoundedUserGroup;
 
   Map<String, Object?> toMap() => {
-    'id': id,
     'label': label,
     'categories': [for (final category in categories) category.name],
   };
 
-  factory Department.fromMap(Map<String, dynamic> map) => Department(
-    id: map['id'] as String,
+  factory Department.fromMap(String id, Map<String, dynamic> map) => Department(
+    id: id,
     label: map['label'] as String,
     categories: {
       for (final name in map['categories'] as List<dynamic>)

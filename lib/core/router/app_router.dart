@@ -4,17 +4,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/admin_shell.dart';
+import '../../features/auth/blocked_screen.dart';
+import '../../features/auth/loading_screen.dart';
+import '../../features/auth/verify_screen.dart';
 import '../../features/faculty/faculty_shell.dart';
 import '../../features/faculty/triage_screen.dart';
 import '../../features/report/create_report_screen.dart';
 import '../../features/rewards/progress_screen.dart';
 import '../../features/role/role_screen.dart';
 import '../../features/shell/app_shell.dart';
+import '../../features/shell/suspended_screen.dart';
+import '../../models/auth_gate.dart';
+import '../../models/department.dart';
 import '../../models/session.dart';
-import '../../providers/session_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/directory_provider.dart';
+import '../../providers/sync_provider.dart';
 
 abstract final class AppRoutes {
+  static const loading = '/loading';
   static const role = '/role';
+  static const verify = '/verify';
+  static const suspended = '/suspended';
+  static const blocked = '/blocked';
   static const student = '/student';
   static const newReport = '/student/report/new';
   static String editReport(String id) => '/student/report/$id/edit';
@@ -32,26 +44,60 @@ Page<void> _fadeIn(Widget child) => CustomTransitionPage(
 );
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final sessionChanges = ValueNotifier(0);
-  ref.listen(sessionProvider, (_, _) => sessionChanges.value++);
-  ref.onDispose(sessionChanges.dispose);
+  final gateChanges = ValueNotifier(0);
+  ref.listen(authGateProvider, (_, _) => gateChanges.value++);
+  ref.listen(dataReadyProvider, (_, _) => gateChanges.value++);
+  ref.listen(departmentsProvider, (_, _) => gateChanges.value++);
+  ref.onDispose(gateChanges.dispose);
+
+  String? only(String location, String target) =>
+      location == target ? null : target;
 
   return GoRouter(
-    initialLocation: AppRoutes.role,
-    refreshListenable: sessionChanges,
+    initialLocation: AppRoutes.loading,
+    refreshListenable: gateChanges,
     redirect: (_, state) {
       final location = state.matchedLocation;
-      return switch (ref.read(sessionProvider)) {
-        null => location == AppRoutes.role ? null : AppRoutes.role,
-        StudentSession() =>
-          location.startsWith(AppRoutes.student) ? null : AppRoutes.student,
-        FacultySession() =>
-          location.startsWith(AppRoutes.faculty) ? null : AppRoutes.faculty,
-        AdminSession() =>
-          location.startsWith(AppRoutes.admin) ? null : AppRoutes.admin,
+      return switch (ref.read(authGateProvider)) {
+        AuthLoading() => only(location, AppRoutes.loading),
+        SignedOut() => only(location, AppRoutes.role),
+        NeedsVerification() => only(location, AppRoutes.verify),
+        Suspended() => only(location, AppRoutes.suspended),
+        Blocked() => only(location, AppRoutes.blocked),
+        Ready() when !ref.read(dataReadyProvider) => only(
+          location,
+          AppRoutes.loading,
+        ),
+        Ready(session: FacultySession(:final departmentId))
+            when ref.read(departmentsProvider).byId(departmentId) == null =>
+          only(location, AppRoutes.blocked),
+        Ready(:final session) => switch (session) {
+          StudentSession() =>
+            location.startsWith(AppRoutes.student) ? null : AppRoutes.student,
+          FacultySession() =>
+            location.startsWith(AppRoutes.faculty) ? null : AppRoutes.faculty,
+          AdminSession() =>
+            location.startsWith(AppRoutes.admin) ? null : AppRoutes.admin,
+        },
       };
     },
     routes: [
+      GoRoute(
+        path: AppRoutes.loading,
+        pageBuilder: (_, _) => _fadeIn(const LoadingScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.verify,
+        pageBuilder: (_, _) => _fadeIn(const VerifyScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.suspended,
+        pageBuilder: (_, _) => _fadeIn(const SuspendedScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.blocked,
+        pageBuilder: (_, _) => _fadeIn(const BlockedScreen()),
+      ),
       GoRoute(
         path: AppRoutes.role,
         pageBuilder: (_, _) => _fadeIn(const RoleScreen()),

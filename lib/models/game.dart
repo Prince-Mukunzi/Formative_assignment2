@@ -35,17 +35,10 @@ class XpEvent {
 
   XpEvent markSeen() => XpEvent(key: key, reason: reason, at: at, seen: true);
 
-  Map<String, Object?> toMap() => {
-    'key': key,
-    'reason': reason.name,
-    'at': at.millisecondsSinceEpoch,
-    'seen': seen,
-  };
-
-  factory XpEvent.fromMap(Map<String, dynamic> map) => XpEvent(
-    key: map['key'] as String,
+  factory XpEvent.fromMap(String key, Map<String, dynamic> map) => XpEvent(
+    key: key,
     reason: XpReason.values.byName(map['reason'] as String),
-    at: DateTime.fromMillisecondsSinceEpoch(map['at'] as int),
+    at: map['at'] as DateTime,
     seen: map['seen'] as bool,
   );
 }
@@ -186,22 +179,11 @@ class GameState {
     celebrated: {...celebrated, ...badges},
   );
 
-  Map<String, Object?> toMap() => {
-    'ledger': [for (final event in ledger) event.toMap()],
-    'celebrated': [for (final badge in celebrated) badge.name],
+  // Profiles may still name badges that no longer exist.
+  static Set<BadgeKind> badgesNamed(Iterable<String> names) => {
+    for (final badge in BadgeKind.values)
+      if (names.contains(badge.name)) badge,
   };
-
-  factory GameState.fromMap(Map<String, dynamic> map) => GameState(
-    ledger: [
-      for (final item in map['ledger'] as List<dynamic>)
-        XpEvent.fromMap(item as Map<String, dynamic>),
-    ],
-    // Saved games may still name badges that no longer exist.
-    celebrated: {
-      for (final badge in BadgeKind.values)
-        if ((map['celebrated'] as List<dynamic>).contains(badge.name)) badge,
-    },
-  );
 }
 
 GameStats statsFor(GameState game, Iterable<Report> reports, String studentId) {
