@@ -49,4 +49,14 @@ abstract final class AppColors {
     colors: [primary, primaryDark],
   );
   static const progress = LinearGradient(colors: [primary, brand]);
+  static const podiumFirst = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [brand, primaryDark],
+  );
+  static const podiumRest = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [primary, primaryDark],
+  );
 }

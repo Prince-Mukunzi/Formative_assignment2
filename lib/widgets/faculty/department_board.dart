@@ -13,8 +13,9 @@ import '../tinted_icon.dart';
 
 class DepartmentBoard extends ConsumerWidget {
   final Department? highlight;
+  final int skip;
 
-  const DepartmentBoard({super.key, this.highlight});
+  const DepartmentBoard({super.key, this.highlight, this.skip = 0});
 
   static const _rowHeight = 60.0;
 
@@ -24,7 +25,7 @@ class DepartmentBoard extends ConsumerWidget {
     return SpringRankList(
       rowHeight: _rowHeight,
       rows: [
-        for (var i = 0; i < board.length; i++)
+        for (var i = skip; i < board.length; i++)
           (
             id: board[i].department.id,
             child: _Row(
