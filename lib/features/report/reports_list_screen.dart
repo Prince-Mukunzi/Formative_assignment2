@@ -5,13 +5,10 @@ import '../../core/mock_data.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../models/game.dart';
 import '../../models/report.dart';
 import '../../models/report_status.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/game/bounty_track.dart';
-import '../../widgets/gradient_banner.dart';
-import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_card.dart';
 import '../../widgets/status_filter_bar.dart';
@@ -34,7 +31,6 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
         .watch(reportsProvider)
         .where((r) => r.reportedBy == MockData.currentStudentId)
         .toList();
-    final pendingXp = mine.fold(0, (sum, r) => sum + pendingXpFor(r));
     final visible = _statusFilter == null
         ? mine
         : mine.where((r) => r.status == _statusFilter).toList();
@@ -52,29 +48,6 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                   AppSpacing.verticalGapLg,
                   Text('My reports', style: AppTextStyles.heading1),
                   AppSpacing.verticalGapLg,
-                  if (pendingXp > 0) ...[
-                    GradientBanner(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          RollingNumber(
-                            value: pendingXp,
-                            suffix: ' XP',
-                            style: AppTextStyles.display.copyWith(
-                              color: AppColors.textOnPrimary,
-                            ),
-                          ),
-                          Text(
-                            'Waiting on your reports',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.onPrimaryMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    AppSpacing.verticalGapLg,
-                  ],
                   StatusFilterBar(
                     selected: _statusFilter,
                     onChanged: (status) =>
