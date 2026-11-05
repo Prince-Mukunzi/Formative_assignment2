@@ -75,9 +75,9 @@ abstract final class AppTheme {
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.textOnPrimary,
             elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(100),
             ),
             textStyle: const TextStyle(
               fontFamily: 'Geist',

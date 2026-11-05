@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_button.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
@@ -254,9 +255,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   Widget _buildSubmitButton() {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Submit Report'),
+      child: AppButton(
+        label: 'Submit Report',
+        onTap: () => Navigator.of(context).pop(),
       ),
     )
         .animate()

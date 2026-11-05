@@ -5,6 +5,7 @@ import '../core/theme/app_text_styles.dart';
 import '../models/report_category.dart';
 import '../models/report_filter.dart';
 import '../models/report_status.dart';
+import 'app_button.dart';
 import 'filter_pill.dart';
 
 class FilterSheet extends StatefulWidget {
@@ -160,9 +161,9 @@ class _FilterSheetState extends State<FilterSheet> {
           AppSpacing.verticalGapSm,
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(_filter),
-              child: const Text('Apply filters'),
+            child: AppButton(
+              label: 'Apply filters',
+              onTap: () => Navigator.of(context).pop(_filter),
             ),
           ),
         ],
