@@ -7,8 +7,10 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/mock_data.dart';
 import '../../models/report.dart';
 import '../../models/report_category.dart';
-import '../../models/report_status.dart';
+import '../../models/report_filter.dart';
 import '../../widgets/category_chip.dart';
+import '../../widgets/filter_sheet.dart';
+import '../../widgets/filter_tag.dart';
 import '../../widgets/report_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,23 +23,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  ReportCategory _selectedCategory = ReportCategory.all;
-  ReportStatus? _statusFilter;
+  ReportFilter _filter = const ReportFilter();
 
-  List<Report> get _filteredReports {
-    var reports = MockData.reports;
-    if (_selectedCategory != ReportCategory.all) {
-      reports = reports
-          .where((r) => r.category == _selectedCategory)
-          .toList();
-    }
-    if (_statusFilter != null) {
-      reports = reports
-          .where((r) => r.status == _statusFilter)
-          .toList();
-    }
-    return reports;
+  List<Report> get _filteredReports => _filter.apply(MockData.reports);
+
+  Future<void> _openFilters() async {
+    final result = await FilterSheet.show(context, _filter);
+    if (result != null) setState(() => _filter = result);
   }
+
+  String _toHashtag(String label) => label
+      .split(' ')
+      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join();
 
   String get _greetingText {
     final hour = DateTime.now().hour;
@@ -61,22 +59,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   AppSpacing.verticalGapLg,
                   _buildGreeting(),
                   AppSpacing.verticalGapXl,
-                  _buildSearchBar(),
-                  AppSpacing.verticalGapLg,
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(child: _buildStatusFilters()),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: AppSpacing.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppSpacing.verticalGapXl,
                   _buildRecentHeader(),
-                  AppSpacing.verticalGapMd,
+                  _buildActiveFilters(),
+                  AppSpacing.verticalGapSm,
                 ],
               ),
             ),
@@ -111,81 +96,65 @@ class _HomeScreenState extends State<HomeScreen> {
         .slideY(begin: -0.1, end: 0, duration: 400.ms);
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.cardBorder, width: 0.5),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            HugeIcons.strokeRoundedSearch01,
-            size: 20,
-            color: AppColors.textTertiary,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            'Search reports...',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textTertiary,
-            ),
-          ),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms, delay: 100.ms);
-  }
-
-  Widget _buildStatusFilters() {
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: AppSpacing.screenPadding,
-        children: [
-          _StatusChip(
-            label: 'All',
-            isSelected: _statusFilter == null,
-            onTap: () => setState(() => _statusFilter = null),
-          ),
-          const SizedBox(width: 8),
-          ...ReportStatus.values.map((status) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _StatusChip(
-                label: status.label,
-                isSelected: _statusFilter == status,
-                onTap: () => setState(() => _statusFilter = status),
-              ),
-            );
-          }),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms, delay: 200.ms);
-  }
-
   Widget _buildRecentHeader() {
+    final count = _filter.advancedCount;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text('Recent Reports', style: AppTextStyles.heading3),
         GestureDetector(
-          onTap: () {},
-          child: Text(
-            'See all',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.accent,
-              fontWeight: FontWeight.w600,
+          onTap: _openFilters,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xs),
+            child: Badge(
+              isLabelVisible: count > 0,
+              label: Text('$count'),
+              backgroundColor: AppColors.accent,
+              child: const Icon(
+                HugeIcons.strokeRoundedFilterHorizontal,
+                size: 22,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildActiveFilters() {
+    final tags = <(String, ReportFilter)>[
+      if (_filter.status != null)
+        (_filter.status!.label, _filter.copyWith(status: () => null)),
+      if (_filter.sort != ReportSort.recent)
+        (_filter.sort.label, _filter.copyWith(sort: ReportSort.recent)),
+      if (_filter.dateLabel != null)
+        (
+          _filter.dateLabel!,
+          _filter.copyWith(datePreset: DatePreset.any, customRange: () => null),
+        ),
+    ];
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      alignment: Alignment.topLeft,
+      child: tags.isEmpty
+          ? const SizedBox(width: double.infinity)
+          : Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Wrap(
+                spacing: AppSpacing.lg,
+                children: [
+                  for (final (label, next) in tags)
+                    FilterTag(
+                      label: _toHashtag(label),
+                      onRemove: () => setState(() => _filter = next),
+                    ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -202,8 +171,9 @@ class _HomeScreenState extends State<HomeScreen> {
           return CategoryChip(
             icon: category.icon,
             label: category.label,
-            isSelected: _selectedCategory == category,
-            onTap: () => setState(() => _selectedCategory = category),
+            isSelected: _filter.category == category,
+            onTap: () =>
+                setState(() => _filter = _filter.copyWith(category: category)),
           );
         },
       ),
@@ -221,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
           (context, index) {
             final report = reports[index];
             return Padding(
+              key: ValueKey(report.id),
               padding: const EdgeInsets.only(bottom: 16),
               child: ReportCard(
                 report: report,
@@ -237,44 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
           },
           childCount: reports.length,
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _StatusChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.cardBorder,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: isSelected ? AppColors.textOnPrimary : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
         ),
       ),
     );
