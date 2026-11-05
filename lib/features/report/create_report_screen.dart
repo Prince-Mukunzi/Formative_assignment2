@@ -12,8 +12,10 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
 import '../../models/report_category.dart';
+import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/bare_field.dart';
 import '../../widgets/motion/kick_controller.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
@@ -41,9 +43,15 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
 
   int _step = 0;
   ReportCategory? _category;
+  String? _presetLocation;
+  bool _isOtherLocation = false;
   String _imagePath = '';
   int _shake = 0;
   late int _shownBounty = _bounty;
+
+  String get _location => _isOtherLocation
+      ? _locationController.text.trim()
+      : _presetLocation ?? '';
 
   bool get _hasImage => _imagePath.isNotEmpty;
 
@@ -82,7 +90,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
     );
     if (!mounted || _step != step) return;
     if (step == 1) _titleFocus.requestFocus();
-    if (step == 2) _locationFocus.requestFocus();
+    if (step == 2 && _isOtherLocation) _locationFocus.requestFocus();
   }
 
   void _back() {
@@ -101,10 +109,29 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
     });
   }
 
+  void _pickLocation(String location) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _presetLocation = location;
+      _isOtherLocation = false;
+    });
+    Future.delayed(const Duration(milliseconds: 160), () {
+      if (mounted && _step == 2) _goTo(3);
+    });
+  }
+
+  void _pickOtherLocation() {
+    HapticFeedback.selectionClick();
+    setState(() => _isOtherLocation = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _locationFocus.requestFocus();
+    });
+  }
+
   void _next() {
     final missing = switch (_step) {
       1 => _titleController.text.trim().isEmpty,
-      2 => _locationController.text.trim().isEmpty,
+      2 => _location.isEmpty,
       _ => false,
     };
     if (missing) {
@@ -128,7 +155,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
         .create(
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
-          location: _locationController.text.trim(),
+          location: _location,
           category: category,
           imageUrl: _imagePath,
         );
@@ -201,13 +228,20 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
                   _Step(question: 'What is wrong?', child: _buildDetails()),
                   _Step(
                     question: 'Where is it?',
-                    child: Shake(
-                      trigger: _step == 2 ? _shake : 0,
-                      child: _BareField(
-                        controller: _locationController,
-                        focusNode: _locationFocus,
-                        hint: 'Block A, Floor 2',
-                        style: AppTextStyles.heading2,
+                    child: _LocationList(
+                      locations: ref.watch(locationsProvider),
+                      selected: _presetLocation,
+                      isOther: _isOtherLocation,
+                      onPicked: _pickLocation,
+                      onOther: _pickOtherLocation,
+                      otherField: Shake(
+                        trigger: _step == 2 ? _shake : 0,
+                        child: BareField(
+                          controller: _locationController,
+                          focusNode: _locationFocus,
+                          hint: 'Type the place',
+                          style: AppTextStyles.heading2,
+                        ),
                       ),
                     ),
                   ),
@@ -287,7 +321,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
       children: [
         Shake(
           trigger: _step == 1 ? _shake : 0,
-          child: _BareField(
+          child: BareField(
             controller: _titleController,
             focusNode: _titleFocus,
             hint: 'Broken sink',
@@ -295,7 +329,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
           ),
         ),
         AppSpacing.verticalGapLg,
-        _BareField(
+        BareField(
           controller: _descriptionController,
           hint: 'More detail  +${XpReason.detailAdded.xp} XP',
           style: AppTextStyles.bodyLarge,
@@ -430,40 +464,84 @@ class _CategoryTile extends StatelessWidget {
   }
 }
 
-class _BareField extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode? focusNode;
-  final String hint;
-  final TextStyle style;
-  final int maxLines;
+class _LocationList extends StatelessWidget {
+  final List<String> locations;
+  final String? selected;
+  final bool isOther;
+  final ValueChanged<String> onPicked;
+  final VoidCallback onOther;
+  final Widget otherField;
 
-  const _BareField({
-    required this.controller,
-    required this.hint,
-    required this.style,
-    this.focusNode,
-    this.maxLines = 1,
+  const _LocationList({
+    required this.locations,
+    required this.selected,
+    required this.isOther,
+    required this.onPicked,
+    required this.onOther,
+    required this.otherField,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      maxLines: maxLines,
-      minLines: 1,
-      style: style,
-      cursorColor: AppColors.brand,
-      textCapitalization: TextCapitalization.sentences,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: style.copyWith(color: AppColors.textTertiary),
-        isCollapsed: true,
-        filled: false,
-        contentPadding: EdgeInsets.zero,
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: InputBorder.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            for (final location in locations)
+              _LocationPill(
+                label: location,
+                selected: !isOther && location == selected,
+                onTap: () => onPicked(location),
+              ),
+            _LocationPill(label: 'Other', selected: isOther, onTap: onOther),
+          ],
+        ),
+        if (isOther)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xxl),
+            child: otherField,
+          ),
+        AppSpacing.verticalGapLg,
+      ],
+    );
+  }
+}
+
+class _LocationPill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LocationPill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      haptic: false,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.chipBackground,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelMedium.copyWith(
+            color: selected ? AppColors.textOnPrimary : AppColors.textPrimary,
+          ),
+        ),
       ),
     );
   }
