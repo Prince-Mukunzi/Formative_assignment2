@@ -22,7 +22,6 @@ class BannerStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           RollingNumber(
             value: value,
@@ -32,6 +31,7 @@ class BannerStat extends StatelessWidget {
           ),
           AppSpacing.verticalGapXs,
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               LabelIcon(icon: icon, color: AppColors.onPrimaryMuted),
               AppSpacing.horizontalGapXs,
