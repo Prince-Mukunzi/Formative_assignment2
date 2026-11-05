@@ -1,0 +1,265 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function userPath(id) {
+      return /databases/$(database)/documents/users/$(id);
+    }
+
+    function me() {
+      return get(userPath(uid())).data;
+    }
+
+    function isActive() {
+      return request.auth != null
+        && exists(userPath(uid()))
+        && me().suspended == false;
+    }
+
+    function hasRole(role) {
+      return isActive() && me().role == role;
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function changedOnly(keys) {
+      return changed().hasOnly(keys);
+    }
+
+    function isCategory(value) {
+      return value in ['facilities', 'water', 'electricity', 'furniture', 'sanitation', 'safety'];
+    }
+
+    function hasValidContent(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 120
+        && data.description is string && data.description.size() <= 2000
+        && data.location is string && data.location.size() > 0 && data.location.size() <= 120
+        && data.imageUrl is string && data.imageUrl.size() <= 2048
+        && isCategory(data.category);
+    }
+
+    match /users/{userId} {
+      // A suspended user still reads their own profile to see why they are blocked.
+      allow read: if request.auth != null && (uid() == userId || isAdmin());
+
+      allow update: if isActive() && uid() == userId
+        && changedOnly(['name', 'celebrated'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.celebrated is list;
+
+      // An admin cannot suspend themselves, so the last admin cannot be locked out by accident.
+      allow update: if isAdmin() && uid() != userId
+        && changedOnly(['suspended', 'departmentId'])
+        && request.resource.data.suspended is bool;
+
+      match /xpEvents/{key} {
+        allow read: if request.auth != null && uid() == userId;
+        allow update: if isActive() && uid() == userId
+          && changedOnly(['seen'])
+          && request.resource.data.seen == true;
+      }
+    }
+
+    match /invites/{email} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.token.email == email);
+      allow delete: if isAdmin();
+      allow create: if isAdmin()
+        && email == email.lower()
+        && request.resource.data.keys().hasOnly(['role', 'departmentId', 'invitedBy', 'createdAt'])
+        && request.resource.data.invitedBy == uid()
+        && request.resource.data.createdAt == request.time
+        && (
+          (request.resource.data.role == 'admin' && !('departmentId' in request.resource.data))
+          || (request.resource.data.role == 'faculty'
+            && request.resource.data.departmentId is string
+            && exists(/databases/$(database)/documents/departments/$(request.resource.data.departmentId)))
+        );
+    }
+
+    match /departments/{departmentId} {
+      allow read: if isActive();
+      allow write: if isAdmin();
+    }
+
+    match /config/locations {
+      allow read: if isActive();
+      allow write: if isAdmin();
+    }
+
+    match /leaderboard/{userId} {
+      allow read: if isActive();
+    }
+
+    match /reports/{reportId} {
+      function next() {
+        return request.resource.data;
+      }
+
+      function upvotePath() {
+        return /databases/$(database)/documents/reports/$(reportId)/upvotes/$(uid());
+      }
+
+      function ownsReport(user) {
+        return user.departmentId != null && (
+          resource.data.assignedDepartmentId != null
+            ? resource.data.assignedDepartmentId == user.departmentId
+            : resource.data.category in get(/databases/$(database)/documents/departments/$(user.departmentId)).data.categories
+        );
+      }
+
+      function isValidUpvote(keys) {
+        return keys.hasOnly(['upvotes', 'updatedBy'])
+          && (
+            (next().upvotes == resource.data.upvotes + 1 && !exists(upvotePath()) && existsAfter(upvotePath()))
+            || (next().upvotes == resource.data.upvotes - 1 && exists(upvotePath()) && !existsAfter(upvotePath()))
+          );
+      }
+
+      function isContentEdit(keys) {
+        return resource.data.status == 'awaitingApproval'
+          && keys.hasOnly(['title', 'description', 'location', 'category', 'imageUrl', 'updatedBy'])
+          && hasValidContent(next());
+      }
+
+      function isNudge(keys) {
+        return resource.data.status in ['awaitingApproval', 'inProgress']
+          && keys.hasOnly(['nudges', 'lastNudgedAt', 'updatedBy'])
+          && next().nudges == resource.data.nudges + 1
+          && next().lastNudgedAt == request.time
+          && (resource.data.lastNudgedAt == null
+            || request.time >= resource.data.lastNudgedAt + duration.value(24, 'h'));
+      }
+
+      function isFixConfirmation(keys) {
+        return resource.data.status == 'resolved'
+          && resource.data.verifiedAt == null
+          && keys.hasOnly(['verifiedAt', 'updatedBy'])
+          && next().verifiedAt == request.time;
+      }
+
+      function isReopen(keys) {
+        return resource.data.status in ['resolved', 'declined']
+          && keys.hasOnly(['status', 'approvedAt', 'resolvedAt', 'verifiedAt', 'reopenCount', 'updatedBy'])
+          && next().status == 'inProgress'
+          && next().approvedAt == request.time
+          && next().resolvedAt == null
+          && next().verifiedAt == null
+          && next().reopenCount == resource.data.reopenCount + 1;
+      }
+
+      function isApproval(keys) {
+        return resource.data.status == 'awaitingApproval'
+          && keys.hasOnly(['status', 'approvedAt', 'updatedBy'])
+          && next().status == 'inProgress'
+          && next().approvedAt == request.time;
+      }
+
+      function isDecline(keys) {
+        return resource.data.status == 'awaitingApproval'
+          && keys.hasOnly(['status', 'updatedBy'])
+          && next().status == 'declined';
+      }
+
+      function isResolution(keys) {
+        return resource.data.status == 'inProgress'
+          && keys.hasOnly(['status', 'resolvedAt', 'updatedBy'])
+          && next().status == 'resolved'
+          && next().resolvedAt == request.time;
+      }
+
+      function isReassignment(keys) {
+        return keys.hasOnly(['assignedDepartmentId', 'updatedBy'])
+          && exists(/databases/$(database)/documents/departments/$(next().assignedDepartmentId));
+      }
+
+      function reporterMayUpdate(keys) {
+        return isContentEdit(keys)
+          || isNudge(keys)
+          || isFixConfirmation(keys)
+          || (resource.data.status == 'resolved' && resource.data.verifiedAt == null && isReopen(keys));
+      }
+
+      function studentMayUpdate(keys) {
+        return isValidUpvote(keys)
+          || (resource.data.reportedBy == uid() && reporterMayUpdate(keys));
+      }
+
+      function staffMayUpdate(keys) {
+        return isApproval(keys)
+          || isDecline(keys)
+          || isResolution(keys)
+          || isReopen(keys)
+          || isReassignment(keys);
+      }
+
+      // Branching on role first keeps each write well under the rules engine's expression limit.
+      function mayUpdate(user, keys) {
+        return user.role == 'student'
+          ? studentMayUpdate(keys)
+          : (user.role == 'admin' || ownsReport(user)) && staffMayUpdate(keys);
+      }
+
+      allow read: if isActive();
+
+      allow create: if hasRole('student')
+        && next().keys().hasOnly([
+          'title', 'description', 'imageUrl', 'status', 'category', 'upvotes', 'location',
+          'reportedBy', 'reportedByName', 'createdAt', 'approvedAt', 'resolvedAt', 'verifiedAt',
+          'lastNudgedAt', 'nudges', 'reopenCount', 'assignedDepartmentId', 'updatedBy'
+        ])
+        && hasValidContent(next())
+        && next().reportedBy == uid()
+        && next().reportedByName == me().name
+        && next().updatedBy == uid()
+        && next().status == 'awaitingApproval'
+        && next().createdAt == request.time
+        && next().upvotes == 0
+        && next().nudges == 0
+        && next().reopenCount == 0
+        && next().approvedAt == null
+        && next().resolvedAt == null
+        && next().verifiedAt == null
+        && next().lastNudgedAt == null
+        && next().assignedDepartmentId == null;
+
+      allow update: if isActive()
+        && next().updatedBy == uid()
+        && mayUpdate(me(), changed());
+
+      allow delete: if isAdmin()
+        || (hasRole('student') && resource.data.reportedBy == uid() && resource.data.status == 'awaitingApproval');
+
+      match /upvotes/{userId} {
+        function reportPath() {
+          return /databases/$(database)/documents/reports/$(reportId);
+        }
+
+        allow create: if hasRole('student') && uid() == userId
+          && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
+          && request.resource.data.uid == uid()
+          && request.resource.data.createdAt == request.time
+          && getAfter(reportPath()).data.upvotes == get(reportPath()).data.upvotes + 1;
+
+        allow delete: if hasRole('student') && uid() == userId
+          && getAfter(reportPath()).data.upvotes == get(reportPath()).data.upvotes - 1;
+      }
+    }
+
+    // Lets a student load which reports they backed. Writes stay on the nested match above.
+    match /{path=**}/upvotes/{userId} {
+      allow read: if isActive();
+    }
+  }
+}
