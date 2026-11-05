@@ -7,9 +7,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/mock_data.dart';
 import '../../models/report.dart';
 import '../../models/report_category.dart';
-import '../../widgets/stat_card.dart';
+import '../../models/report_status.dart';
 import '../../widgets/category_chip.dart';
-import '../../widgets/filter_tag.dart';
 import '../../widgets/report_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -23,7 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   ReportCategory _selectedCategory = ReportCategory.all;
-  final Set<String> _activeFilters = {'Most Impacted', 'This Week', 'Resolved'};
+  ReportStatus? _statusFilter;
 
   List<Report> get _filteredReports {
     var reports = MockData.reports;
@@ -32,7 +31,19 @@ class _HomeScreenState extends State<HomeScreen> {
           .where((r) => r.category == _selectedCategory)
           .toList();
     }
+    if (_statusFilter != null) {
+      reports = reports
+          .where((r) => r.status == _statusFilter)
+          .toList();
+    }
     return reports;
+  }
+
+  String get _greetingText {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning,';
+    if (hour < 17) return 'Good afternoon,';
+    return 'Good evening,';
   }
 
   @override
@@ -50,15 +61,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   AppSpacing.verticalGapLg,
                   _buildGreeting(),
                   AppSpacing.verticalGapXl,
-                  _buildTitle(),
+                  _buildSearchBar(),
                   AppSpacing.verticalGapLg,
-                  _buildStats(),
-                  AppSpacing.verticalGapXl,
                 ],
               ),
             ),
           ),
-          SliverToBoxAdapter(child: _buildCategories()),
+          SliverToBoxAdapter(child: _buildStatusFilters()),
           SliverToBoxAdapter(
             child: Padding(
               padding: AppSpacing.screenPadding,
@@ -66,18 +75,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AppSpacing.verticalGapXl,
-                  _buildReportsHeader(),
+                  _buildRecentHeader(),
                   AppSpacing.verticalGapMd,
-                  _buildFilterTags(),
-                  AppSpacing.verticalGapLg,
                 ],
               ),
             ),
           ),
-          _buildReportsGrid(),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 100),
+          SliverToBoxAdapter(child: _buildCategories()),
+          SliverToBoxAdapter(
+            child: AppSpacing.verticalGapLg,
           ),
+          _buildReportsList(),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
@@ -88,13 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Hey ${MockData.userName}\u{1F44B}\u{1F3FE},',
-          style: AppTextStyles.greeting,
-        ),
-        AppSpacing.verticalGapXs,
-        Text(
-          'Be the first to report an issue',
+          _greetingText,
           style: AppTextStyles.subtitle,
+        ),
+        Text(
+          MockData.userName,
+          style: AppTextStyles.heading1,
         ),
       ],
     )
@@ -103,47 +111,82 @@ class _HomeScreenState extends State<HomeScreen> {
         .slideY(begin: -0.1, end: 0, duration: 400.ms);
   }
 
-  Widget _buildTitle() {
-    return Text(
-      'ALU BUG BOUNTY',
-      style: AppTextStyles.heading2.copyWith(
-        letterSpacing: 1.2,
-        fontWeight: FontWeight.w800,
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.cardBorder, width: 0.5),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            HugeIcons.strokeRoundedSearch01,
+            size: 20,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Search reports...',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ],
       ),
     )
         .animate()
-        .fadeIn(duration: 400.ms, delay: 100.ms)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms);
+        .fadeIn(duration: 400.ms, delay: 100.ms);
   }
 
-  Widget _buildStats() {
-    return Row(
-      children: [
-        StatCard(
-          icon: HugeIcons.strokeRoundedTask01,
-          iconColor: AppColors.active,
-          count: MockData.activeCount,
-          label: 'Active',
-        ),
-        AppSpacing.horizontalGapMd,
-        StatCard(
-          icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-          iconColor: AppColors.resolved,
-          count: MockData.resolvedCount,
-          label: 'Resolved',
-        ),
-        AppSpacing.horizontalGapMd,
-        StatCard(
-          icon: HugeIcons.strokeRoundedLoading03,
-          iconColor: AppColors.inProgress,
-          count: MockData.inProgressCount,
-          label: 'In Progress',
-        ),
-      ],
+  Widget _buildStatusFilters() {
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: AppSpacing.screenPadding,
+        children: [
+          _StatusChip(
+            label: 'All',
+            isSelected: _statusFilter == null,
+            onTap: () => setState(() => _statusFilter = null),
+          ),
+          const SizedBox(width: 8),
+          ...ReportStatus.values.map((status) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _StatusChip(
+                label: status.label,
+                isSelected: _statusFilter == status,
+                onTap: () => setState(() => _statusFilter = status),
+              ),
+            );
+          }),
+        ],
+      ),
     )
         .animate()
-        .fadeIn(duration: 400.ms, delay: 200.ms)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms);
+        .fadeIn(duration: 400.ms, delay: 200.ms);
+  }
+
+  Widget _buildRecentHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text('Recent Reports', style: AppTextStyles.heading3),
+        GestureDetector(
+          onTap: () {},
+          child: Text(
+            'See all',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.accent,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildCategories() {
@@ -152,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: AppSpacing.screenPadding,
-        separatorBuilder: (_, _) => AppSpacing.horizontalGapSm,
+        separatorBuilder: (_, _) => const SizedBox(width: 4),
         itemCount: ReportCategory.values.length,
         itemBuilder: (context, index) {
           final category = ReportCategory.values[index];
@@ -169,68 +212,69 @@ class _HomeScreenState extends State<HomeScreen> {
         .fadeIn(duration: 400.ms, delay: 300.ms);
   }
 
-  Widget _buildReportsHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('Reports', style: AppTextStyles.heading3),
-        GestureDetector(
-          onTap: () {},
-          child: const Icon(
-            HugeIcons.strokeRoundedFilterHorizontal,
-            size: 20,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterTags() {
-    final filters = _activeFilters.toList();
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: filters.map((filter) {
-        return FilterTag(
-          label: filter,
-          onRemove: () => setState(() => _activeFilters.remove(filter)),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildReportsGrid() {
+  Widget _buildReportsList() {
     final reports = _filteredReports;
     return SliverPadding(
       padding: AppSpacing.screenPadding,
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.82,
-        ),
+      sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final report = reports[index];
-            return ReportCard(
-              report: report,
-              onTap: () => widget.onReportTap?.call(report),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ReportCard(
+                report: report,
+                onTap: () => widget.onReportTap?.call(report),
+              ),
             )
                 .animate()
-                .fadeIn(
+                .fadeIn(duration: 300.ms, delay: (80 * index).ms)
+                .slideY(
+                  begin: 0.05,
+                  end: 0,
                   duration: 300.ms,
-                  delay: (100 * (index % 4)).ms,
-                )
-                .scale(
-                  begin: const Offset(0.95, 0.95),
-                  end: const Offset(1, 1),
-                  duration: 300.ms,
-                  delay: (100 * (index % 4)).ms,
+                  delay: (80 * index).ms,
                 );
           },
           childCount: reports.length,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _StatusChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.cardBorder,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: isSelected ? AppColors.textOnPrimary : AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );

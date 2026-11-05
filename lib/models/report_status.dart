@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../core/theme/app_colors.dart';
 
 enum ReportStatus {
@@ -22,8 +23,8 @@ enum ReportStatus {
       };
 
   IconData get icon => switch (this) {
-        awaitingApproval => Icons.access_time_rounded,
-        inProgress => Icons.autorenew_rounded,
-        resolved => Icons.check_circle_outline_rounded,
+        awaitingApproval => HugeIcons.strokeRoundedClock01,
+        inProgress => HugeIcons.strokeRoundedLoading03,
+        resolved => HugeIcons.strokeRoundedCheckmarkCircle02,
       };
 }

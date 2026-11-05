@@ -21,33 +21,32 @@ class CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16 : 8,
+          vertical: isSelected ? 10 : 8,
+        ),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.chipActiveBackground
-              : AppColors.surface,
+          color: isSelected ? AppColors.chipActiveBackground : Colors.transparent,
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: isSelected
-              ? null
-              : Border.all(color: AppColors.cardBorder, width: 0.5),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 16,
+              size: 18,
               color: isSelected
                   ? AppColors.chipActiveText
                   : AppColors.chipInactiveText,
             ),
-            AppSpacing.horizontalGapSm,
+            const SizedBox(width: 6),
             Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(
+              style: AppTextStyles.labelMedium.copyWith(
                 color: isSelected
                     ? AppColors.chipActiveText
                     : AppColors.chipInactiveText,

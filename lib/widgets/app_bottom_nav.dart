@@ -18,8 +18,8 @@ class AppBottomNav extends StatelessWidget {
 
   static const _items = [
     (icon: HugeIcons.strokeRoundedHome01, label: 'Home'),
-    (icon: HugeIcons.strokeRoundedTask01, label: 'Reports'),
-    (icon: HugeIcons.strokeRoundedUser, label: 'Profile'),
+    (icon: HugeIcons.strokeRoundedFolder01, label: 'Reports'),
+    (icon: HugeIcons.strokeRoundedUserCircle, label: 'Profile'),
   ];
 
   @override
@@ -27,18 +27,25 @@ class AppBottomNav extends StatelessWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Padding(
       padding: EdgeInsets.only(
-        bottom: bottomPadding + 10,
+        bottom: bottomPadding + 8,
         top: 8,
-        left: 16,
-        right: 16,
+        left: 20,
+        right: 20,
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: AppColors.chipBackground,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 12,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -85,8 +92,8 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 18 : 14,
-          vertical: 10,
+          horizontal: isSelected ? 18 : 16,
+          vertical: 12,
         ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
@@ -97,7 +104,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 20,
+              size: 22,
               color: isSelected
                   ? AppColors.textOnPrimary
                   : AppColors.textTertiary,
@@ -135,16 +142,23 @@ class _CreateButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: AppColors.chipBackground,
+        width: 52,
+        height: 52,
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 12,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: const Icon(
           HugeIcons.strokeRoundedAdd01,
           size: 24,
-          color: AppColors.textPrimary,
+          color: AppColors.primary,
         ),
       ),
     );

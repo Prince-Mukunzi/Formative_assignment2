@@ -65,13 +65,12 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
             isSelected: _statusFilter == null,
             onTap: () => setState(() => _statusFilter = null),
           ),
-          AppSpacing.horizontalGapSm,
+          const SizedBox(width: 8),
           ...ReportStatus.values.map((status) {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: _StatusChip(
                 label: status.label,
-                color: status.color,
                 isSelected: _statusFilter == status,
                 onTap: () => setState(() => _statusFilter = status),
               ),
@@ -86,18 +85,15 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
     final reports = _filteredReports;
     return SliverPadding(
       padding: AppSpacing.screenPadding,
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.82,
-        ),
+      sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            return ReportCard(
-              report: reports[index],
-              onTap: () => widget.onReportTap?.call(reports[index]),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ReportCard(
+                report: reports[index],
+                onTap: () => widget.onReportTap?.call(reports[index]),
+              ),
             )
                 .animate()
                 .fadeIn(duration: 300.ms, delay: (80 * index).ms);
@@ -111,13 +107,11 @@ class _ReportsListScreenState extends State<ReportsListScreen> {
 
 class _StatusChip extends StatelessWidget {
   final String label;
-  final Color? color;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _StatusChip({
     required this.label,
-    this.color,
     required this.isSelected,
     required this.onTap,
   });
@@ -128,17 +122,13 @@ class _StatusChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (color ?? AppColors.primary)
-              : AppColors.surface,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
           border: Border.all(
-            color: isSelected
-                ? (color ?? AppColors.primary)
-                : AppColors.cardBorder,
-            width: 0.5,
+            color: isSelected ? AppColors.primary : AppColors.cardBorder,
+            width: 1,
           ),
         ),
         child: Text(
@@ -147,7 +137,7 @@ class _StatusChip extends StatelessWidget {
             color: isSelected
                 ? AppColors.textOnPrimary
                 : AppColors.textSecondary,
-            fontSize: 11,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),

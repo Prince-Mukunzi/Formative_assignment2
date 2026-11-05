@@ -8,6 +8,7 @@ abstract final class AppTheme {
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
         fontFamily: 'Geist',
+        splashFactory: NoSplash.splashFactory,
         colorScheme: const ColorScheme.light(
           primary: AppColors.primary,
           secondary: AppColors.accent,
