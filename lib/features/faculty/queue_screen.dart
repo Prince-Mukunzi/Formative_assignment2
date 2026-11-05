@@ -106,6 +106,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
                       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                       child: ReportCard(
                         report: report,
+                        showDeadline: true,
                         onTap: () => widget.onReportTap(report),
                       ),
                     ),

@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
-import '../core/utils/time_format.dart';
 import '../models/report.dart';
 import 'app_card.dart';
+import 'label_icon.dart';
+import 'posted_label.dart';
 import 'report_image.dart';
 import 'sla_label.dart';
 import 'status_badge.dart';
@@ -15,8 +16,15 @@ class ReportCard extends StatelessWidget {
   final Report report;
   final VoidCallback? onTap;
   final Widget? footer;
+  final bool showDeadline;
 
-  const ReportCard({super.key, required this.report, this.onTap, this.footer});
+  const ReportCard({
+    super.key,
+    required this.report,
+    this.onTap,
+    this.footer,
+    this.showDeadline = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +92,7 @@ class ReportCard extends StatelessWidget {
   Widget _buildMeta() {
     return Row(
       children: [
-        Icon(report.category.icon, size: 14, color: AppColors.textSecondary),
+        LabelIcon(icon: report.category.icon, color: AppColors.textSecondary),
         AppSpacing.horizontalGapXs,
         Text(report.category.label, style: AppTextStyles.bodySmall),
         Padding(
@@ -96,12 +104,9 @@ class ReportCard extends StatelessWidget {
             ),
           ),
         ),
-        report.isOpen
+        showDeadline && report.isOpen
             ? SlaLabel(report: report)
-            : Text(
-                shortTimeAgo(report.createdAt),
-                style: AppTextStyles.bodySmall,
-              ),
+            : PostedLabel(posted: report.createdAt),
       ],
     );
   }
