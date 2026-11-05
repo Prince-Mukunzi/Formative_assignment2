@@ -4,8 +4,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../core/theme/app_colors.dart';
-import '../core/theme/app_text_styles.dart';
+import '../core/theme/app_shadows.dart';
 import '../core/theme/app_spacing.dart';
+import '../core/theme/app_text_styles.dart';
 import '../models/report.dart';
 import 'status_badge.dart';
 
@@ -65,30 +66,28 @@ class _ReportDetailSheetState extends State<ReportDetailSheet>
       _hasUpvoted = !_hasUpvoted;
       _upvoteCount += _hasUpvoted ? 1 : -1;
     });
-    if (_hasUpvoted) {
-      _bounceController.forward(from: 0);
-    }
+    if (_hasUpvoted) _bounceController.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Container(
-      constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildHandle(),
           Flexible(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildImage(),
+                  _buildHero(),
                   _buildBody(),
                 ],
               ),
@@ -100,28 +99,10 @@ class _ReportDetailSheetState extends State<ReportDetailSheet>
     );
   }
 
-  Widget _buildHandle() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 6),
-      child: Container(
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: AppColors.cardBorder,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImage() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 220,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      ),
+  Widget _buildHero() {
+    return SizedBox(
+      height: 260,
+      width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -129,110 +110,224 @@ class _ReportDetailSheetState extends State<ReportDetailSheet>
             imageUrl: widget.report.imageUrl,
             fit: BoxFit.cover,
             placeholder: (_, _) => Container(color: AppColors.chipBackground),
-            errorWidget: (_, _, _) => Container(color: AppColors.chipBackground),
+            errorWidget: (_, _, _) =>
+                Container(color: AppColors.chipBackground),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.center,
+                colors: [Color(0x66000000), Color(0x00000000)],
+              ),
+            ),
           ),
           Positioned(
-            top: 12,
-            left: 12,
+            top: AppSpacing.lg,
+            left: AppSpacing.xl,
             child: StatusBadge(status: widget.report.status),
+          ),
+          Positioned(
+            top: AppSpacing.md,
+            right: AppSpacing.lg,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  HugeIcons.strokeRoundedCancel01,
+                  size: 18,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 300.ms);
+    ).animate().fadeIn(duration: 300.ms);
   }
 
   Widget _buildBody() {
+    final report = widget.report;
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.lg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  widget.report.title,
-                  style: AppTextStyles.heading2,
-                ),
-              ),
-              StatusBadge(status: widget.report.status),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
+              Icon(report.category.icon, size: 16, color: AppColors.accent),
+              AppSpacing.horizontalGapXs,
               Text(
-                widget.report.category.label,
+                report.category.label,
                 style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.accent,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 8),
+              AppSpacing.horizontalGapSm,
               Text(
-                '•',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                timeago.format(widget.report.createdAt),
+                timeago.format(report.createdAt),
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textTertiary,
                 ),
               ),
             ],
           ),
-          AppSpacing.verticalGapLg,
+          AppSpacing.verticalGapSm,
+          Text(report.title, style: AppTextStyles.heading2),
+          AppSpacing.verticalGapMd,
           Text(
-            'Description',
-            style: AppTextStyles.labelMedium.copyWith(
+            report.description,
+            style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            widget.report.description,
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
               height: 1.6,
             ),
           ),
-          AppSpacing.verticalGapLg,
-          _buildInfoRow(
-            HugeIcons.strokeRoundedLocation01,
-            'Location',
-            widget.report.location,
-          ),
-          AppSpacing.verticalGapMd,
-          _buildInfoRow(
-            HugeIcons.strokeRoundedUserCircle,
-            'Reported by',
-            widget.report.reportedByName,
+          AppSpacing.verticalGapXl,
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: AppColors.divider),
+            ),
+            child: Column(
+              children: [
+                _InfoRow(
+                  icon: HugeIcons.strokeRoundedLocation01,
+                  label: 'Location',
+                  value: report.location,
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                  child: Divider(height: 1, color: AppColors.divider),
+                ),
+                _InfoRow(
+                  icon: HugeIcons.strokeRoundedUserCircle,
+                  label: 'Reported by',
+                  value: report.reportedByName,
+                ),
+              ],
+            ),
           ),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 300.ms, delay: 100.ms)
-        .slideY(begin: 0.03, end: 0, duration: 300.ms);
+    ).animate().fadeIn(duration: 300.ms, delay: 100.ms).slideY(
+          begin: 0.03,
+          end: 0,
+          duration: 300.ms,
+        );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildActions() {
+    final foreground =
+        _hasUpvoted ? AppColors.textOnPrimary : AppColors.textPrimary;
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        MediaQuery.of(context).padding.bottom + AppSpacing.lg,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: AppShadows.floating,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: _toggleUpvote,
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: _hasUpvoted
+                      ? AppColors.primary
+                      : AppColors.chipBackground,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ScaleTransition(
+                      scale: _bounceAnimation,
+                      child: Icon(
+                        HugeIcons.strokeRoundedThumbsUp,
+                        size: 20,
+                        color: foreground,
+                      ),
+                    ),
+                    AppSpacing.horizontalGapSm,
+                    Text(
+                      _hasUpvoted ? 'Upvoted  $_upvoteCount' : 'Upvote  $_upvoteCount',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          AppSpacing.horizontalGapMd,
+          GestureDetector(
+            onTap: () {},
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: const BoxDecoration(
+                color: AppColors.chipBackground,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                HugeIcons.strokeRoundedShare01,
+                size: 20,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.chipBackground,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: const BoxDecoration(
+            color: AppColors.accentLight,
+            shape: BoxShape.circle,
           ),
           child: Icon(icon, size: 18, color: AppColors.primary),
         ),
-        const SizedBox(width: 12),
+        AppSpacing.horizontalGapMd,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -246,82 +341,6 @@ class _ReportDetailSheetState extends State<ReportDetailSheet>
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildActions() {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
-      ),
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.divider, width: 0.5),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: _toggleUpvote,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: _hasUpvoted ? AppColors.primary : AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(
-                    color: _hasUpvoted ? AppColors.primary : AppColors.cardBorder,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ScaleTransition(
-                      scale: _bounceAnimation,
-                      child: Icon(
-                        HugeIcons.strokeRoundedThumbsUp,
-                        size: 20,
-                        color: _hasUpvoted
-                            ? AppColors.textOnPrimary
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Upvote  $_upvoteCount',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: _hasUpvoted
-                            ? AppColors.textOnPrimary
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.chipBackground,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              child: const Icon(
-                HugeIcons.strokeRoundedShare01,
-                size: 20,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
