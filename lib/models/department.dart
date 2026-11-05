@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import 'report_category.dart';
 
 enum Department {
@@ -12,8 +13,12 @@ enum Department {
   final IconData icon;
 
   static Department forCategory(ReportCategory category) => switch (category) {
-        ReportCategory.electricity => electrical,
-        ReportCategory.water => plumbing,
-        ReportCategory.facilities || ReportCategory.all => facilities,
-      };
+    ReportCategory.electricity => electrical,
+    ReportCategory.water => plumbing,
+    ReportCategory.facilities ||
+    ReportCategory.furniture ||
+    ReportCategory.sanitation ||
+    ReportCategory.safety ||
+    ReportCategory.all => facilities,
+  };
 }

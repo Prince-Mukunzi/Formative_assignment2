@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 
 enum ReportCategory {
   all('All', HugeIcons.strokeRoundedLayers01),
-  electricity('Electricity', HugeIcons.strokeRoundedFlash),
+  facilities('Facilities', HugeIcons.strokeRoundedBuilding06),
   water('Water', HugeIcons.strokeRoundedDroplet),
-  facilities('Facilities', HugeIcons.strokeRoundedBuilding06);
+  electricity('Electricity', HugeIcons.strokeRoundedFlash),
+  furniture('Furniture', HugeIcons.strokeRoundedSofa01),
+  sanitation('Sanitation', HugeIcons.strokeRoundedClean),
+  safety('Safety', HugeIcons.strokeRoundedShield01);
 
   const ReportCategory(this.label, this.icon);
   final String label;

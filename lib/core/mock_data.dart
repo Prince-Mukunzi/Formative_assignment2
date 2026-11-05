@@ -17,8 +17,7 @@ abstract final class MockData {
     Report(
       id: '1',
       title: 'Broken Sink',
-      description:
-          'When You Open The Water Just Don\'t Expect It To Stay In The Sink. Half of it ends up on the floor.',
+      description: 'When You Open The Water Just Don\'t Expect It To Stay In The Sink. Half of it ends up on the floor.',
       imageUrl: _sinkImage,
       status: ReportStatus.awaitingApproval,
       category: ReportCategory.water,
@@ -31,8 +30,7 @@ abstract final class MockData {
     Report(
       id: '2',
       title: 'Lights Flickering Again',
-      description:
-          'The hallway lights have been doing their haunted house impression for a week now. Not fun at 2am.',
+      description: 'The hallway lights have been doing their haunted house impression for a week now. Not fun at 2am.',
       imageUrl: _electricImage,
       status: ReportStatus.inProgress,
       category: ReportCategory.electricity,
@@ -47,8 +45,7 @@ abstract final class MockData {
     Report(
       id: '3',
       title: 'Water Shortage in Dorm',
-      description:
-          'No water pressure above the second floor since yesterday morning. Showers are basically a suggestion at this point.',
+      description: 'No water pressure above the second floor since yesterday morning. Showers are basically a suggestion at this point.',
       imageUrl: _waterImage,
       status: ReportStatus.inProgress,
       category: ReportCategory.water,
@@ -63,8 +60,7 @@ abstract final class MockData {
     Report(
       id: '4',
       title: 'No Electricity in Lab 2',
-      description:
-          'Power has been out since morning. Can\'t charge laptops, can\'t run experiments. Productivity is at zero.',
+      description: 'Power has been out since morning. Can\'t charge laptops, can\'t run experiments. Productivity is at zero.',
       imageUrl: _electricImage,
       status: ReportStatus.resolved,
       category: ReportCategory.electricity,
@@ -79,11 +75,10 @@ abstract final class MockData {
     Report(
       id: '5',
       title: 'Damaged Desk in Room 104',
-      description:
-          'One of the desk legs is barely holding on. It wobbles like it\'s dancing every time you write.',
+      description: 'One of the desk legs is barely holding on. It wobbles like it\'s dancing every time you write.',
       imageUrl: _facilityImage,
       status: ReportStatus.awaitingApproval,
-      category: ReportCategory.facilities,
+      category: ReportCategory.furniture,
       upvotes: 8,
       location: 'Block A, Rm 104',
       reportedBy: 'user5',
@@ -93,8 +88,7 @@ abstract final class MockData {
     Report(
       id: '6',
       title: 'Leaking Roof After Rain',
-      description:
-          'Every time it rains the ceiling near the staircase turns into a waterfall. Someone\'s gonna slip.',
+      description: 'Every time it rains the ceiling near the staircase turns into a waterfall. Someone\'s gonna slip.',
       imageUrl: _waterImage,
       status: ReportStatus.resolved,
       category: ReportCategory.facilities,
@@ -109,11 +103,10 @@ abstract final class MockData {
     Report(
       id: '7',
       title: 'Broken Window Latch',
-      description:
-          'Window won\'t close properly in the study room. Cold air and bugs are having a field day.',
+      description: 'Window won\'t close properly in the study room. Cold air and bugs are having a field day.',
       imageUrl: _facilityImage,
       status: ReportStatus.awaitingApproval,
-      category: ReportCategory.facilities,
+      category: ReportCategory.safety,
       upvotes: 6,
       location: 'Library, Floor 2',
       reportedBy: 'user7',
@@ -123,8 +116,7 @@ abstract final class MockData {
     Report(
       id: '8',
       title: 'Sockets Sparking at Desks',
-      description:
-          'Two of the desk sockets spark when you plug in a charger. Nobody wants to be the next one to try.',
+      description: 'Two of the desk sockets spark when you plug in a charger. Nobody wants to be the next one to try.',
       imageUrl: _electricImage,
       status: ReportStatus.inProgress,
       category: ReportCategory.electricity,
@@ -138,11 +130,10 @@ abstract final class MockData {
     Report(
       id: '9',
       title: 'Clogged Shower Drain',
-      description:
-          'The drain backs up within a minute. The whole bathroom floods if you take longer than that.',
+      description: 'The drain backs up within a minute. The whole bathroom floods if you take longer than that.',
       imageUrl: _sinkImage,
       status: ReportStatus.resolved,
-      category: ReportCategory.water,
+      category: ReportCategory.sanitation,
       upvotes: 14,
       location: 'Dorm A, Floor 2',
       reportedBy: currentStudentId,
@@ -154,11 +145,10 @@ abstract final class MockData {
     Report(
       id: '10',
       title: 'Ceiling Tile About to Fall',
-      description:
-          'Hanging by one corner right above the main walkway. It moves whenever the door slams.',
+      description: 'Hanging by one corner right above the main walkway. It moves whenever the door slams.',
       imageUrl: _facilityImage,
       status: ReportStatus.inProgress,
-      category: ReportCategory.facilities,
+      category: ReportCategory.safety,
       upvotes: 27,
       location: 'Main Hall, Entrance',
       reportedBy: 'user8',
@@ -169,8 +159,7 @@ abstract final class MockData {
     Report(
       id: '11',
       title: 'Hot Water Out Since Monday',
-      description:
-          'Cold showers only on the whole west side. The boiler room has been locked and nobody knows why.',
+      description: 'Cold showers only on the whole west side. The boiler room has been locked and nobody knows why.',
       imageUrl: _waterImage,
       status: ReportStatus.awaitingApproval,
       category: ReportCategory.water,
@@ -183,8 +172,7 @@ abstract final class MockData {
     Report(
       id: '12',
       title: 'Projector Keeps Cutting Out',
-      description:
-          'Loses power every ten minutes mid-lecture. The breaker in the room trips along with it.',
+      description: 'Loses power every ten minutes mid-lecture. The breaker in the room trips along with it.',
       imageUrl: _electricImage,
       status: ReportStatus.awaitingApproval,
       category: ReportCategory.electricity,
@@ -213,11 +201,11 @@ abstract final class MockData {
   static GameState get initialGame {
     final now = DateTime.now();
     XpEvent event(String key, XpReason reason, int daysAgo) => XpEvent(
-          key: key,
-          reason: reason,
-          at: now.subtract(Duration(days: daysAgo)),
-          seen: true,
-        );
+      key: key,
+      reason: reason,
+      at: now.subtract(Duration(days: daysAgo)),
+      seen: true,
+    );
     return GameState(
       ledger: [
         event('reportFiled:9', XpReason.reportFiled, 4),
