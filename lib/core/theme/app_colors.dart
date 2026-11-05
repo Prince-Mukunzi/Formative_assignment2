@@ -36,6 +36,9 @@ abstract final class AppColors {
   static const upvoteActiveIcon = Color(0xFF2563EB);
   static const upvoteText = Color(0xFF6B7280);
 
+  static const error = Color(0xFFEF4444);
+  static const errorLight = Color(0xFFFEE2E2);
+
   static const shadow = Color(0x0A000000);
   static const shadowMedium = Color(0x14000000);
 }

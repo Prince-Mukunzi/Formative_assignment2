@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_shadows.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
 
@@ -18,7 +19,7 @@ class AppBottomNav extends StatelessWidget {
 
   static const _items = [
     (icon: HugeIcons.strokeRoundedHome01, label: 'Home'),
-    (icon: HugeIcons.strokeRoundedFolder01, label: 'Reports'),
+    (icon: HugeIcons.strokeRoundedFolder01, label: 'My reports'),
     (icon: HugeIcons.strokeRoundedUserCircle, label: 'Profile'),
   ];
 
@@ -39,13 +40,7 @@ class AppBottomNav extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.shadow,
-                  blurRadius: 12,
-                  offset: Offset(0, 2),
-                ),
-              ],
+              boxShadow: AppShadows.floating,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -147,13 +142,7 @@ class _CreateButton extends StatelessWidget {
         decoration: const BoxDecoration(
           color: AppColors.surface,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 12,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: AppShadows.floating,
         ),
         child: const Icon(
           HugeIcons.strokeRoundedAdd01,
