@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -10,14 +11,12 @@ import '../../core/theme/app_text_styles.dart';
 
 class SlideToConfirm extends StatefulWidget {
   final String label;
-  final Color color;
   final VoidCallback onConfirmed;
 
   const SlideToConfirm({
     super.key,
     required this.label,
     required this.onConfirmed,
-    this.color = AppColors.primary,
   });
 
   @override
@@ -46,9 +45,9 @@ class _SlideToConfirmState extends State<SlideToConfirm>
     if (_confirmed) return;
     _x.stop();
     final next = _x.value + details.delta.dx;
-    // Past either end the thumb resists like a rubber band.
+    // Past the far end the thumb resists like a rubber band.
     _x.value = next < 0
-        ? next * 0.3
+        ? 0
         : next > _travel
         ? _travel + (next - _travel) * 0.3
         : next;
@@ -120,13 +119,14 @@ class _SlideToConfirmState extends State<SlideToConfirm>
 
   Widget _buildTrack() {
     final progress = _progress;
-    final fillWidth = _x.value.clamp(0.0, _travel + 1) + _thumb + _inset * 2;
+    // The return spring overshoots zero, and the thumb must not leave the track.
+    final position = _x.value.clamp(0.0, _travel + _inset);
     return Container(
       height: _height,
       decoration: BoxDecoration(
         color: Color.lerp(
           AppColors.chipBackground,
-          widget.color.withValues(alpha: 0.18),
+          AppColors.brandTint,
           progress,
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
@@ -134,42 +134,63 @@ class _SlideToConfirmState extends State<SlideToConfirm>
       child: Stack(
         alignment: Alignment.centerLeft,
         children: [
-          Container(
-            width: fillWidth,
-            decoration: BoxDecoration(
-              color: widget.color.withValues(alpha: 0.28 + progress * 0.3),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          Opacity(
+            opacity: (position / _thumb).clamp(0.0, 1.0),
+            child: Container(
+              width: position + _thumb + _inset * 2,
+              decoration: BoxDecoration(
+                color: AppColors.brand,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
             ),
           ),
           Center(
             child: Opacity(
               opacity: (1 - progress * 1.6).clamp(0.0, 1.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.label,
-                    style: AppTextStyles.labelMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  AppSpacing.horizontalGapSm,
-                  const Icon(
-                    HugeIcons.strokeRoundedArrowRightDouble,
-                    size: 16,
-                    color: AppColors.textTertiary,
-                  ),
-                ],
-              ),
+              child: _buildLabel(),
             ),
           ),
           Transform.translate(
-            offset: Offset(_inset + _x.value, 0),
+            offset: Offset(_inset + position, 0),
             child: _buildThumb(progress),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildLabel() {
+    final label = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          widget.label,
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        AppSpacing.horizontalGapSm,
+        const Icon(
+          HugeIcons.strokeRoundedArrowRightDouble,
+          size: 16,
+          color: AppColors.textPrimary,
+        ),
+      ],
+    );
+    if (MediaQuery.disableAnimationsOf(context)) return label;
+    return label
+        .animate(onPlay: (controller) => controller.repeat())
+        .shimmer(
+          delay: 300.ms,
+          duration: 1500.ms,
+          size: 0.8,
+          blendMode: BlendMode.srcIn,
+          colors: const [
+            AppColors.textPrimary,
+            AppColors.brand,
+            AppColors.textPrimary,
+          ],
+        );
   }
 
   Widget _buildThumb(double progress) {
@@ -179,11 +200,11 @@ class _SlideToConfirmState extends State<SlideToConfirm>
         width: _thumb,
         height: _thumb,
         decoration: BoxDecoration(
-          color: widget.color,
+          gradient: AppColors.navy,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: widget.color.withValues(alpha: 0.45),
+              color: AppColors.primary.withValues(alpha: 0.45),
               blurRadius: 12 + progress * 14,
               offset: const Offset(0, 4),
             ),
