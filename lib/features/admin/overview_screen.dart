@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -9,8 +7,6 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/accountability.dart';
 import '../../models/department.dart';
-import '../../models/report.dart';
-import '../../models/sla.dart';
 import '../../providers/clock_provider.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
@@ -19,17 +15,13 @@ import '../../widgets/app_logo.dart';
 import '../../widgets/admin/campus_pulse_card.dart';
 import '../../widgets/menu_row.dart';
 import '../../widgets/motion/pressable.dart';
-import '../../widgets/report_detail_sheet.dart';
 import '../../widgets/section_title.dart';
-import '../../widgets/sla_label.dart';
 import '../../widgets/tinted_icon.dart';
 import 'locations_sheet.dart';
 import 'team_sheet.dart';
 
 class OverviewScreen extends ConsumerWidget {
   const OverviewScreen({super.key});
-
-  static const _urgentShown = 3;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,9 +33,6 @@ class OverviewScreen extends ConsumerWidget {
     final unowned = reports
         .where((r) => r.isOpen && departments.ownerOf(r) == null)
         .length;
-    final urgent = reports.where((r) => r.isOpen).toList()
-      ..sort((a, b) => (a.deadline ?? now).compareTo(b.deadline ?? now));
-    urgent.length = math.min(urgent.length, _urgentShown);
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
@@ -68,14 +57,6 @@ class OverviewScreen extends ConsumerWidget {
                 ),
               ),
             ],
-            if (urgent.isNotEmpty) ...[
-              const SectionTitle('Most urgent'),
-              CardList(
-                children: [
-                  for (final report in urgent) _UrgentRow(report: report),
-                ],
-              ),
-            ],
             const SectionTitle('Teams'),
             CardList(
               children: [
@@ -98,39 +79,6 @@ class OverviewScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.navClearance),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _UrgentRow extends StatelessWidget {
-  final Report report;
-
-  const _UrgentRow({required this.report});
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: () => ReportDetailSheet.show(context, report),
-      scale: 0.98,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Row(
-          children: [
-            TintedIcon(icon: report.category.icon, size: 36),
-            AppSpacing.horizontalGapMd,
-            Expanded(
-              child: Text(
-                report.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.labelMedium,
-              ),
-            ),
-            AppSpacing.horizontalGapMd,
-            SlaLabel(report: report),
           ],
         ),
       ),
