@@ -96,6 +96,23 @@ abstract final class AppTextStyles {
     height: 1.3,
   );
 
+  static const display = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 44,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+    height: 1.1,
+  );
+
+  static const overline = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textTertiary,
+    height: 1.3,
+    letterSpacing: 1,
+  );
+
   // Greeting
   static const greeting = TextStyle(
     fontFamily: _fontFamily,

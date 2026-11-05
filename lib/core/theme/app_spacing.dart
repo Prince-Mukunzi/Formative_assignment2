@@ -24,7 +24,10 @@ abstract final class AppSpacing {
   static const double radiusMd = 12;
   static const double radiusLg = 16;
   static const double radiusXl = 20;
+  static const double radiusXxl = 28;
   static const double radiusFull = 100;
+
+  static const double navClearance = 130;
 
   // Gaps (for use in Row/Column)
   static const verticalGapXs = SizedBox(height: xs);

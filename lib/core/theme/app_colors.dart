@@ -39,6 +39,33 @@ abstract final class AppColors {
   static const error = Color(0xFFEF4444);
   static const errorLight = Color(0xFFFEE2E2);
 
+  static const reward = Color(0xFFF5B301);
+  static const rewardBright = Color(0xFFFFD84D);
+  static const rewardLight = Color(0xFFFFF6D6);
+  static const rewardDeep = Color(0xFFB87A00);
+  static const streak = Color(0xFFF97316);
+  static const streakLight = Color(0xFFFFEDD5);
+
+  static const overdue = Color(0xFFDC2626);
+  static const overdueLight = Color(0xFFFEE2E2);
+  static const overdueDark = Color(0xFF7F1D1D);
+
+  static const onPrimaryMuted = Color(0xB3FFFFFF);
+  static const onPrimaryFaint = Color(0x26FFFFFF);
+  static const scrim = Color(0xE6001D45);
+  static const heroOverlay = Color(0x66000000);
+  static const heroOverlayClear = Color(0x00000000);
+
+  static const confetti = [
+    reward,
+    accent,
+    resolved,
+    streak,
+    rewardBright,
+    surface,
+  ];
+  static const confettiOnLight = [reward, accent, resolved, streak, primary];
+
   static const shadow = Color(0x0A000000);
   static const shadowMedium = Color(0x14000000);
 }

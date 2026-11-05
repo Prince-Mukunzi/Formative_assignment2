@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
+import 'motion/pressable.dart';
 
 class AppButton extends StatelessWidget {
   final String label;
@@ -21,9 +22,8 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final foreground =
         isFilled ? AppColors.textOnPrimary : AppColors.textPrimary;
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(
