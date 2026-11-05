@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/department.dart';
@@ -12,6 +13,7 @@ import '../../widgets/app_card.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/report_detail_sheet.dart';
 import '../../widgets/sla_label.dart';
+import '../../widgets/status_mark.dart';
 import '../../widgets/tinted_icon.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
@@ -116,9 +118,23 @@ class _ReportRow extends StatelessWidget {
                     style: AppTextStyles.labelMedium,
                   ),
                   AppSpacing.verticalGapXs,
-                  Text(
-                    '$team  ·  ${report.status.label}',
-                    style: AppTextStyles.bodySmall,
+                  Row(
+                    children: [
+                      StatusMark(
+                        status: report.status,
+                        color: AppColors.textSecondary,
+                        size: 12,
+                      ),
+                      AppSpacing.horizontalGapXs,
+                      Flexible(
+                        child: Text(
+                          '${report.status.label}  ·  $team',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodySmall,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

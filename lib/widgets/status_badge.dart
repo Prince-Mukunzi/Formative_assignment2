@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
 import '../models/report_status.dart';
+import 'status_mark.dart';
 
 class StatusBadge extends StatelessWidget {
   final ReportStatus status;
@@ -23,7 +24,7 @@ class StatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(status.icon, size: 14, color: status.color),
+          StatusMark(status: status, color: status.color),
           AppSpacing.horizontalGapXs,
           Text(
             status.label,
