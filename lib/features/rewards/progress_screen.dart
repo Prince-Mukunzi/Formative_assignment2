@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import '../../core/mock_data.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
 import '../../providers/game_provider.dart';
 import '../../widgets/faculty/department_board.dart';
 import '../../widgets/game/badge_tile.dart';
-import '../../widgets/game/rank_emblem.dart';
-import '../../widgets/game/streak_chip.dart';
 import '../../widgets/game/xp_bar.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
-import '../../widgets/motion/spring_in.dart';
 import '../../widgets/spring_rank_list.dart';
 
 class ProgressScreen extends ConsumerWidget {
@@ -34,138 +31,138 @@ class ProgressScreen extends ConsumerWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        title: Text('Your progress', style: AppTextStyles.heading3),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: AppSpacing.screenPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppSpacing.verticalGapMd,
-            SpringIn(child: _RankHero(xp: xp, streak: stats.streak)),
-            AppSpacing.verticalGapXxl,
-            Text('Badges', style: AppTextStyles.heading3),
-            AppSpacing.verticalGapLg,
-            _BadgeGrid(stats: stats),
-            AppSpacing.verticalGapXxl,
-            Text('Top hunters', style: AppTextStyles.heading3),
-            AppSpacing.verticalGapMd,
+            _Hero(xp: xp, streak: stats.streak),
+            const SizedBox(height: AppSpacing.xxxl),
+            _Badges(stats: stats),
+            const SizedBox(height: AppSpacing.xxxl),
             _Leaderboard(xp: xp),
-            AppSpacing.verticalGapXxl,
-            Text('Who is fixing things', style: AppTextStyles.heading3),
-            AppSpacing.verticalGapXs,
-            Text(
-              'Departments lose points for every overdue report.',
-              style: AppTextStyles.subtitle,
+            const SizedBox(height: AppSpacing.xxl),
+            _LinkRow(
+              label: 'Campus board',
+              onTap: () => _showSheet(context, const DepartmentBoard()),
             ),
-            AppSpacing.verticalGapMd,
-            const DepartmentBoard(),
-            AppSpacing.verticalGapXl,
-            Text('How to earn', style: AppTextStyles.heading3),
-            AppSpacing.verticalGapMd,
-            const _EarnList(),
-            const SizedBox(height: AppSpacing.xxxl * 2),
+            _LinkRow(
+              label: 'How to earn',
+              onTap: () => _showSheet(context, const _EarnList()),
+            ),
+            const SizedBox(height: AppSpacing.xxxl),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showSheet(BuildContext context, Widget child) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: AppSpacing.screenAll,
+          child: SingleChildScrollView(child: child),
         ),
       ),
     );
   }
 }
 
-class _RankHero extends StatelessWidget {
+class _Hero extends StatelessWidget {
   final int xp;
   final int streak;
 
-  const _RankHero({required this.xp, required this.streak});
+  const _Hero({required this.xp, required this.streak});
 
   @override
   Widget build(BuildContext context) {
     final rank = Rank.forXp(xp);
     final next = rank.next;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xxl),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: AppShadows.floating,
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primaryDark, AppColors.primaryLight],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(rank.label, style: AppTextStyles.subtitle),
+        RollingNumber(value: xp, style: AppTextStyles.display),
+        AppSpacing.verticalGapLg,
+        XpBar(progress: rank.progressAt(xp), from: 0),
+        AppSpacing.verticalGapSm,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              next == null
+                  ? 'Top rank'
+                  : '${next.threshold - xp} to ${next.label}',
+              style: AppTextStyles.bodySmall,
+            ),
+            if (streak > 0)
+              Text('$streak day streak', style: AppTextStyles.bodySmall),
+          ],
         ),
-      ),
-      child: Column(
-        children: [
-          RankEmblem(rank: rank, size: 84),
-          AppSpacing.verticalGapMd,
-          Text(
-            rank.label,
-            style: AppTextStyles.heading2.copyWith(
-              color: AppColors.textOnPrimary,
-            ),
-          ),
-          AppSpacing.verticalGapXs,
-          RollingNumber(
-            value: xp,
-            suffix: ' XP',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.rewardBright,
-            ),
-          ),
-          AppSpacing.verticalGapLg,
-          XpBar(progress: rank.progressAt(xp), from: 0, height: 10),
-          AppSpacing.verticalGapSm,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              StreakChip(days: streak),
-              Text(
-                next == null
-                    ? 'Top rank reached'
-                    : '${next.threshold - xp} XP to ${next.label}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.onPrimaryMuted,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-class _BadgeGrid extends StatelessWidget {
+class _Badges extends StatefulWidget {
   final GameStats stats;
 
-  const _BadgeGrid({required this.stats});
+  const _Badges({required this.stats});
+
+  @override
+  State<_Badges> createState() => _BadgesState();
+}
+
+class _BadgesState extends State<_Badges> {
+  BadgeKind? _selected;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, constraints) {
-        final width = (constraints.maxWidth - AppSpacing.md * 2) / 3;
-        return Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.xl,
+    final selected = _selected;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Badges', style: AppTextStyles.labelLarge),
+        AppSpacing.verticalGapLg,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            for (var i = 0; i < BadgeKind.values.length; i++)
-              SizedBox(
-                width: width,
-                child: SpringIn(
-                  delay: Duration(milliseconds: 50 * i),
-                  fromScale: 0.7,
-                  offsetY: 0,
-                  child: BadgeTile(
-                    badge: BadgeKind.values[i],
-                    earned: BadgeKind.values[i].isEarned(stats),
-                  ),
+            for (final badge in BadgeKind.values)
+              Pressable(
+                onTap: () => setState(
+                  () => _selected = _selected == badge ? null : badge,
+                ),
+                scale: 0.9,
+                child: BadgeTile(
+                  badge: badge,
+                  earned: badge.isEarned(widget.stats),
+                  selected: badge == selected,
                 ),
               ),
           ],
-        );
-      },
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutQuart,
+          alignment: Alignment.topLeft,
+          child: selected == null
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.md),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      '${selected.label}. ${selected.hint}',
+                      style: AppTextStyles.bodySmall,
+                    ),
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }
@@ -175,28 +172,39 @@ class _Leaderboard extends StatelessWidget {
 
   const _Leaderboard({required this.xp});
 
-  static const _rowHeight = 60.0;
+  static const _rowHeight = 52.0;
+  static const _shown = 3;
   static const _you = 'You';
 
   @override
   Widget build(BuildContext context) {
-    final entries = [
-      ...MockData.leaderboardPeers,
-      (name: _you, xp: xp),
-    ]..sort((a, b) => b.xp.compareTo(a.xp));
-    return SpringRankList(
-      rowHeight: _rowHeight,
-      rows: [
-        for (var i = 0; i < entries.length; i++)
-          (
-            id: entries[i].name,
-            child: _LeaderRow(
-              place: i + 1,
-              name: entries[i].name,
-              xp: entries[i].xp,
-              isYou: entries[i].name == _you,
-            ),
-          ),
+    final entries = [...MockData.leaderboardPeers, (name: _you, xp: xp)]
+      ..sort((a, b) => b.xp.compareTo(a.xp));
+    final youAt = entries.indexWhere((e) => e.name == _you);
+    final visible = [
+      for (var i = 0; i < entries.length; i++)
+        if (i < _shown || i == youAt) i,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Top hunters', style: AppTextStyles.labelLarge),
+        AppSpacing.verticalGapSm,
+        SpringRankList(
+          rowHeight: _rowHeight,
+          rows: [
+            for (final i in visible)
+              (
+                id: entries[i].name,
+                child: _LeaderRow(
+                  place: i + 1,
+                  name: entries[i].name,
+                  xp: entries[i].xp,
+                  isYou: i == youAt,
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -217,25 +225,54 @@ class _LeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: isYou ? AppColors.rewardLight : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          boxShadow: AppShadows.card,
-        ),
+    final style = AppTextStyles.labelMedium.copyWith(
+      color: isYou ? AppColors.brand : AppColors.textPrimary,
+      fontWeight: isYou ? FontWeight.w600 : FontWeight.w500,
+    );
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$place',
+              style: style.copyWith(
+                color: isYou ? AppColors.brand : AppColors.textTertiary,
+              ),
+            ),
+          ),
+          Expanded(child: Text(name, style: style)),
+          Text('$xp', style: style),
+        ],
+      ),
+    );
+  }
+}
+
+class _LinkRow extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _LinkRow({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      scale: 0.98,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Row(
           children: [
-            SizedBox(
-              width: 28,
-              child: Text('$place', style: AppTextStyles.labelLarge),
+            Expanded(child: Text(label, style: AppTextStyles.labelMedium)),
+            const Icon(
+              HugeIcons.strokeRoundedArrowRight01,
+              size: 18,
+              color: AppColors.textTertiary,
             ),
-            RankEmblem(rank: Rank.forXp(xp), size: 30),
-            AppSpacing.horizontalGapMd,
-            Expanded(child: Text(name, style: AppTextStyles.labelMedium)),
-            Text('$xp XP', style: AppTextStyles.labelSmall),
           ],
         ),
       ),
@@ -258,13 +295,7 @@ class _EarnList extends StatelessWidget {
                 Expanded(
                   child: Text(reason.label, style: AppTextStyles.bodyMedium),
                 ),
-                Text(
-                  '+${reason.xp}',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.rewardDeep,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text('+${reason.xp}', style: AppTextStyles.labelMedium),
               ],
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
 import '../core/theme/app_spacing.dart';
@@ -31,15 +32,9 @@ class StatCard extends StatelessWidget {
           children: [
             Icon(icon, size: 20, color: iconColor),
             AppSpacing.verticalGapSm,
-            Text(
-              '$count',
-              style: AppTextStyles.statNumber,
-            ),
+            Text('$count', style: AppTextStyles.statNumber),
             AppSpacing.verticalGapXs,
-            Text(
-              label,
-              style: AppTextStyles.statLabel,
-            ),
+            Text(label, style: AppTextStyles.statLabel),
           ],
         ),
       ),

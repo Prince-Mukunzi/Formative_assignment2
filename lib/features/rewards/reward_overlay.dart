@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,7 +41,7 @@ class RewardOverlay extends StatefulWidget {
 
 class _RewardOverlayState extends State<RewardOverlay>
     with SingleTickerProviderStateMixin {
-  static const _emblemSize = 112.0;
+  static const _emblemSize = 88.0;
   static const _firstBeat = Duration(milliseconds: 260);
   static const _barFill = Duration(milliseconds: 650);
   static const _rankBeat = Duration(milliseconds: 1250);
@@ -113,80 +112,74 @@ class _RewardOverlayState extends State<RewardOverlay>
   @override
   Widget build(BuildContext context) {
     final moment = widget.moment;
-    final badgeOnly =
-        moment.badges.isNotEmpty &&
-        !moment.events.any((event) => event.reason.isMajor);
-    final headline = _rankedUp
-        ? 'RANK UP'
-        : badgeOnly
-        ? 'BADGE UNLOCKED'
-        : 'BOUNTY EARNED';
+    final next = _rank.next;
     return Material(
       color: AppColors.heroOverlayClear,
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: ColoredBox(
-            color: AppColors.scrim,
-            child: SafeArea(
-              child: Padding(
-                padding: AppSpacing.screenAll,
-                child: Column(
-                  children: [
-                    const Spacer(),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(gradient: AppColors.signature),
+          child: SafeArea(
+            child: Padding(
+              padding: AppSpacing.screenAll,
+              child: Column(
+                children: [
+                  const Spacer(),
+                  _buildEmblem(),
+                  AppSpacing.verticalGapXl,
+                  if (moment.gained > 0)
+                    RollingNumber(
+                      value: moment.gained,
+                      from: 0,
+                      delay: _firstBeat,
+                      prefix: '+',
+                      suffix: ' XP',
+                      style: AppTextStyles.display.copyWith(
+                        color: AppColors.textOnPrimary,
+                      ),
+                    ),
+                  AppSpacing.verticalGapSm,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: Text(
+                      _rankedUp ? 'Rank up: ${_rank.label}' : _rank.label,
+                      key: ValueKey(_rankedUp),
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.textOnPrimary,
+                      ),
+                    ),
+                  ),
+                  AppSpacing.verticalGapXl,
+                  // A new key snaps the fill to empty when the rank rolls over.
+                  XpBar(
+                    key: ValueKey(_rank),
+                    progress: _progress,
+                    from: _rankedUp ? 0 : null,
+                    trackColor: AppColors.onPrimaryFaint,
+                    fillColor: AppColors.textOnPrimary,
+                  ),
+                  AppSpacing.verticalGapSm,
+                  if (next != null)
                     Text(
-                      headline,
-                      style: AppTextStyles.overline.copyWith(
-                        color: AppColors.rewardBright,
-                        fontSize: 13,
-                        letterSpacing: 3,
+                      '${next.threshold - moment.xpAfter} to ${next.label}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.onPrimaryMuted,
                       ),
                     ),
-                    AppSpacing.verticalGapXxl,
-                    _buildEmblem(),
+                  if (moment.badges.isNotEmpty) ...[
                     AppSpacing.verticalGapXl,
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      child: Text(
-                        _rank.label,
-                        key: ValueKey(_rank),
-                        style: AppTextStyles.heading2.copyWith(
-                          color: AppColors.textOnPrimary,
-                        ),
-                      ),
-                    ),
-                    AppSpacing.verticalGapMd,
-                    if (moment.gained > 0)
-                      RollingNumber(
-                        value: moment.gained,
-                        from: 0,
-                        delay: _firstBeat,
-                        prefix: '+',
-                        suffix: ' XP',
-                        style: AppTextStyles.display.copyWith(
-                          color: AppColors.rewardBright,
-                        ),
-                      ),
-                    AppSpacing.verticalGapLg,
-                    _buildBar(),
-                    AppSpacing.verticalGapXxl,
-                    _buildBreakdown(),
-                    if (moment.badges.isNotEmpty) ...[
-                      AppSpacing.verticalGapLg,
-                      _buildBadges(),
-                    ],
-                    const Spacer(),
-                    SizedBox(
-                      width: double.infinity,
-                      child: AppButton(
-                        label: 'Keep hunting',
-                        isFilled: false,
-                        onTap: () => Navigator.of(context).pop(),
-                      ),
-                    ),
+                    _buildBadges(),
                   ],
-                ),
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Keep hunting',
+                      isInverse: true,
+                      onTap: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -216,111 +209,28 @@ class _RewardOverlayState extends State<RewardOverlay>
     );
   }
 
-  Widget _buildBar() {
-    final next = _rank.next;
-    final xp = widget.moment.xpAfter;
-    return Column(
-      children: [
-        // A new key snaps the fill to empty when the rank rolls over.
-        XpBar(
-          key: ValueKey(_rank),
-          progress: _progress,
-          from: _rankedUp ? 0 : null,
-          height: 10,
-        ),
-        AppSpacing.verticalGapSm,
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '$xp XP',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.onPrimaryMuted,
-              ),
-            ),
-            if (next != null)
-              Text(
-                '${next.threshold - xp} to ${next.label}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.onPrimaryMuted,
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBreakdown() {
-    final counts = <XpReason, int>{};
-    for (final event in widget.moment.events) {
-      counts[event.reason] = (counts[event.reason] ?? 0) + 1;
-    }
-    final entries = counts.entries.toList();
-    return Column(
-      children: [
-        for (var i = 0; i < entries.length; i++)
-          SpringIn(
-            delay: Duration(milliseconds: 500 + i * 90),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      entries[i].key.label,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.onPrimaryMuted,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '+${entries[i].key.xp * entries[i].value}',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.textOnPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   Widget _buildBadges() {
     final badges = widget.moment.badges;
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.md,
-      alignment: WrapAlignment.center,
+    return Column(
       children: [
         for (var i = 0; i < badges.length; i++)
           SpringIn(
             delay: Duration(milliseconds: 1400 + i * 140),
-            spring: AppSprings.slam,
-            fromScale: 0.3,
-            offsetY: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.rewardLight,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(badges[i].icon, size: 16, color: AppColors.rewardDeep),
+                  Icon(
+                    badges[i].icon,
+                    size: 16,
+                    color: AppColors.textOnPrimary,
+                  ),
                   AppSpacing.horizontalGapSm,
                   Text(
-                    'New badge: ${badges[i].label}',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.primaryDark,
-                      fontWeight: FontWeight.w600,
+                    badges[i].label,
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.textOnPrimary,
                     ),
                   ),
                 ],

@@ -1,71 +1,51 @@
 import 'package:flutter/material.dart';
 
+/// Four colours only: navy, crimson, black, white. Every other tone is one of
+/// those at an opacity, or a gradient between them.
 abstract final class AppColors {
   static const primary = Color(0xFF002E6D);
-  static const primaryLight = Color(0xFF1A4A8A);
   static const primaryDark = Color(0xFF001D45);
 
-  static const accent = Color(0xFF3B82F6);
-  static const accentLight = Color(0xFFDBEAFE);
+  // 5.5:1 on white but only 2.3:1 on navy, so text in this colour stays on
+  // white surfaces.
+  static const brand = Color(0xFFD00E2C);
+  static const brandTint = Color(0x14D00E2C);
 
-  static const active = Color(0xFF3B82F6);
-  static const resolved = Color(0xFF22C55E);
-  static const resolvedLight = Color(0xFFDCFCE7);
-  static const inProgress = Color(0xFFF59E0B);
-  static const inProgressLight = Color(0xFFFEF3C7);
-  static const awaitingApproval = Color(0xFF6B7280);
-  static const awaitingApprovalLight = Color(0xFFF3F4F6);
-
-  static const background = Color(0xFFFBFDFF);
+  static const background = Color(0xFFFFFFFF);
   static const surface = Color(0xFFFFFFFF);
-  static const cardBorder = Color(0xFFE5E7EB);
-  static const divider = Color(0xFFF1F3F5);
-  static const cardContentBg = Color(0xFFF5F5F5);
+  static const cardBorder = Color(0x14000000);
+  static const divider = Color(0x0D000000);
 
-  static const textPrimary = Color(0xFF1A1A2E);
-  static const textSecondary = Color(0xFF6B7280);
-  static const textTertiary = Color(0xFF9CA3AF);
+  static const textPrimary = Color(0xFF000000);
+  static const textSecondary = Color(0x8C000000);
+  static const textTertiary = Color(0x59000000);
   static const textOnPrimary = Color(0xFFFFFFFF);
 
-  static const chipBackground = Color(0xFFF1F5F9);
+  static const chipBackground = Color(0x0D002E6D);
   static const chipActiveBackground = primary;
-  static const chipActiveText = Color(0xFFFFFFFF);
-  static const chipInactiveText = Color(0xFF1A1A2E);
-
-  static const upvoteIcon = Color(0xFF3B82F6);
-  static const upvoteActiveIcon = Color(0xFF2563EB);
-  static const upvoteText = Color(0xFF6B7280);
-
-  static const error = Color(0xFFEF4444);
-  static const errorLight = Color(0xFFFEE2E2);
-
-  static const reward = Color(0xFFF5B301);
-  static const rewardBright = Color(0xFFFFD84D);
-  static const rewardLight = Color(0xFFFFF6D6);
-  static const rewardDeep = Color(0xFFB87A00);
-  static const streak = Color(0xFFF97316);
-  static const streakLight = Color(0xFFFFEDD5);
-
-  static const overdue = Color(0xFFDC2626);
-  static const overdueLight = Color(0xFFFEE2E2);
-  static const overdueDark = Color(0xFF7F1D1D);
+  static const chipActiveText = textOnPrimary;
+  static const chipInactiveText = textSecondary;
 
   static const onPrimaryMuted = Color(0xB3FFFFFF);
-  static const onPrimaryFaint = Color(0x26FFFFFF);
-  static const scrim = Color(0xE6001D45);
+  static const onPrimaryFaint = Color(0x33FFFFFF);
   static const heroOverlay = Color(0x66000000);
   static const heroOverlayClear = Color(0x00000000);
 
-  static const confetti = [
-    reward,
-    accent,
-    resolved,
-    streak,
-    rewardBright,
-    surface,
-  ];
-  static const confettiOnLight = [reward, accent, resolved, streak, primary];
+  static const confetti = [surface, onPrimaryMuted];
+  static const confettiOnLight = [brand, primary];
 
   static const shadow = Color(0x0A000000);
   static const shadowMedium = Color(0x14000000);
+
+  static const signature = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [brand, primaryDark],
+  );
+  static const navy = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primary, primaryDark],
+  );
+  static const progress = LinearGradient(colors: [primary, brand]);
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
@@ -16,7 +17,7 @@ class SlideToConfirm extends StatefulWidget {
     super.key,
     required this.label,
     required this.onConfirmed,
-    this.color = AppColors.resolved,
+    this.color = AppColors.primary,
   });
 
   @override
@@ -32,7 +33,9 @@ class _SlideToConfirmState extends State<SlideToConfirm>
   static const _flingVelocity = 900.0;
   static const _detents = 4;
 
-  late final AnimationController _x = AnimationController.unbounded(vsync: this);
+  late final AnimationController _x = AnimationController.unbounded(
+    vsync: this,
+  );
   double _travel = 1;
   int _lastDetent = 0;
   bool _confirmed = false;
@@ -47,8 +50,8 @@ class _SlideToConfirmState extends State<SlideToConfirm>
     _x.value = next < 0
         ? next * 0.3
         : next > _travel
-            ? _travel + (next - _travel) * 0.3
-            : next;
+        ? _travel + (next - _travel) * 0.3
+        : next;
     final detent = (_progress * _detents).floor();
     if (detent != _lastDetent) {
       _lastDetent = detent;
@@ -81,13 +84,15 @@ class _SlideToConfirmState extends State<SlideToConfirm>
     double velocity,
     SpringDescription spring,
   ) {
-    return _x.animateWith(SpringSimulation(
-      spring,
-      _x.value,
-      target,
-      velocity,
-      tolerance: AppSprings.pixelTolerance,
-    ));
+    return _x.animateWith(
+      SpringSimulation(
+        spring,
+        _x.value,
+        target,
+        velocity,
+        tolerance: AppSprings.pixelTolerance,
+      ),
+    );
   }
 
   @override

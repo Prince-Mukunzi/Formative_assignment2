@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+
 import '../../core/theme/app_motion.dart';
 
 /// Implicit spring animation. Retargeting keeps the current velocity, so
@@ -10,7 +11,7 @@ class SpringValue extends StatefulWidget {
   final SpringDescription spring;
   final Duration delay;
   final Widget Function(BuildContext context, double value, Widget? child)
-      builder;
+  builder;
   final Widget? child;
 
   const SpringValue({
@@ -56,13 +57,15 @@ class _SpringValueState extends State<SpringValue>
       _controller.value = widget.value;
       return;
     }
-    _controller.animateWith(SpringSimulation(
-      widget.spring,
-      _controller.value,
-      widget.value,
-      _controller.velocity,
-      tolerance: AppSprings.tolerance,
-    ));
+    _controller.animateWith(
+      SpringSimulation(
+        widget.spring,
+        _controller.value,
+        widget.value,
+        _controller.velocity,
+        tolerance: AppSprings.tolerance,
+      ),
+    );
   }
 
   @override

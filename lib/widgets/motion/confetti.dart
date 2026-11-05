@@ -1,11 +1,20 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
 import '../../core/theme/app_colors.dart';
 
 enum ConfettiStyle {
   /// Wide, gravity-driven celebration that drifts off screen.
-  party(count: 90, speed: 950, gravity: 1100, drag: 1.5, lifetime: 2.8, size: 9),
+  party(
+    count: 90,
+    speed: 950,
+    gravity: 1100,
+    drag: 1.5,
+    lifetime: 2.8,
+    size: 9,
+  ),
 
   /// Tight radial spark for small actions.
   spark(count: 14, speed: 300, gravity: 240, drag: 5, lifetime: 0.6, size: 4);

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
@@ -16,11 +16,8 @@ abstract final class XpPop {
     final overlay = Overlay.of(context, rootOverlay: true);
     late OverlayEntry entry;
     entry = OverlayEntry(
-      builder: (_) => _XpPopToken(
-        origin: origin,
-        xp: xp,
-        onDone: () => entry.remove(),
-      ),
+      builder: (_) =>
+          _XpPopToken(origin: origin, xp: xp, onDone: () => entry.remove()),
     );
     overlay.insert(entry);
   }
@@ -86,22 +83,16 @@ class _XpPopTokenState extends State<_XpPopToken> {
                   vertical: AppSpacing.xs + 1,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.reward,
+                  color: AppColors.brand,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      HugeIcons.strokeRoundedStar,
-                      size: 12,
-                      color: AppColors.primaryDark,
-                    ),
-                    AppSpacing.horizontalGapXs,
                     Text(
                       '+${widget.xp} XP',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.primaryDark,
+                        color: AppColors.textOnPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

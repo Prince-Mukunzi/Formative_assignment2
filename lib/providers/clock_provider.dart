@@ -9,8 +9,10 @@ final nowProvider = Provider<DateTime>(
 );
 
 final minuteProvider = Provider<DateTime>((ref) {
-  final minute = ref.watch(nowProvider.select(
-    (now) => DateTime(now.year, now.month, now.day, now.hour, now.minute),
-  ));
+  final minute = ref.watch(
+    nowProvider.select(
+      (now) => DateTime(now.year, now.month, now.day, now.hour, now.minute),
+    ),
+  );
   return minute;
 });

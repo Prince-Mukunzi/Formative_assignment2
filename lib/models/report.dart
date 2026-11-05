@@ -67,9 +67,9 @@ class Report {
   }
 
   Report upvoteToggled() => copyWith(
-        hasUpvoted: !hasUpvoted,
-        upvotes: upvotes + (hasUpvoted ? -1 : 1),
-      );
+    hasUpvoted: !hasUpvoted,
+    upvotes: upvotes + (hasUpvoted ? -1 : 1),
+  );
 
   Report nudged(DateTime now) =>
       copyWith(nudges: nudges + 1, lastNudgedAt: now);
@@ -86,12 +86,12 @@ class Report {
 
   // Restarts the clock from now on the shorter reopen window, see SlaPolicy.
   Report reopened(DateTime now) => copyWith(
-        status: ReportStatus.inProgress,
-        approvedAt: now,
-        resolvedAt: () => null,
-        verifiedAt: () => null,
-        reopenCount: reopenCount + 1,
-      );
+    status: ReportStatus.inProgress,
+    approvedAt: now,
+    resolvedAt: () => null,
+    verifiedAt: () => null,
+    reopenCount: reopenCount + 1,
+  );
 
   Report copyWith({
     ReportStatus? status,

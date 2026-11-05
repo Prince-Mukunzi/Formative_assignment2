@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../models/game.dart';
 import '../../providers/game_provider.dart';
 import 'reward_overlay.dart';

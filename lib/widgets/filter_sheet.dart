@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
@@ -92,7 +93,7 @@ class _FilterSheetState extends State<FilterSheet> {
                 child: Text(
                   'Reset',
                   style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.accent,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -149,7 +150,8 @@ class _FilterSheetState extends State<FilterSheet> {
             children: [
               for (final preset in DatePreset.values)
                 FilterPill(
-                  label: preset == DatePreset.custom &&
+                  label:
+                      preset == DatePreset.custom &&
                           _filter.datePreset == DatePreset.custom
                       ? (_filter.dateLabel ?? preset.label)
                       : preset.label,

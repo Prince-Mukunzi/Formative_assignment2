@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
@@ -9,13 +10,15 @@ class XpBar extends StatelessWidget {
   final double? from;
   final double height;
   final Color trackColor;
+  final Color? fillColor;
 
   const XpBar({
     super.key,
     required this.progress,
     this.from,
-    this.height = 8,
-    this.trackColor = AppColors.onPrimaryFaint,
+    this.height = 4,
+    this.trackColor = AppColors.chipBackground,
+    this.fillColor,
   });
 
   @override
@@ -34,13 +37,12 @@ class XpBar extends StatelessWidget {
             widthFactor: value.clamp(0.0, 1.0),
             child: child,
           ),
-          child: Container(
+          child: DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              gradient: const LinearGradient(
-                colors: [AppColors.reward, AppColors.rewardBright],
-              ),
+              color: fillColor,
+              gradient: fillColor == null ? AppColors.progress : null,
             ),
+            child: const SizedBox.expand(),
           ),
         ),
       ),

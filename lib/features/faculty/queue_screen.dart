@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/accountability.dart';
@@ -18,14 +16,13 @@ import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_card.dart';
 
 enum _QueueFilter {
-  urgent('Most urgent', HugeIcons.strokeRoundedAlarmClock),
-  fresh('New', HugeIcons.strokeRoundedClock01),
-  active('In progress', HugeIcons.strokeRoundedWrench01),
-  done('Resolved', HugeIcons.strokeRoundedCheckmarkCircle02);
+  urgent('Urgent'),
+  fresh('New'),
+  active('Active'),
+  done('Resolved');
 
-  const _QueueFilter(this.label, this.icon);
+  const _QueueFilter(this.label);
   final String label;
-  final IconData icon;
 
   bool matches(Report report) => switch (this) {
     urgent => report.isOpen,
@@ -84,19 +81,10 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AppSpacing.verticalGapLg,
-                  Text('Your queue', style: AppTextStyles.subtitle),
-                  Text(
-                    '${widget.department.label} team',
-                    style: AppTextStyles.heading1,
-                  ),
-                  AppSpacing.verticalGapLg,
-                  SpringIn(
-                    delay: const Duration(milliseconds: 100),
-                    child: PressureCard(
-                      reading: PressureReading.of(owned, now),
-                    ),
-                  ),
-                  AppSpacing.verticalGapLg,
+                  Text(widget.department.label, style: AppTextStyles.heading1),
+                  const SizedBox(height: AppSpacing.xxl),
+                  PressureCard(reading: PressureReading.of(owned, now)),
+                  AppSpacing.verticalGapXl,
                 ],
               ),
             ),
@@ -135,7 +123,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
 
   Widget _buildFilters() {
     return SizedBox(
-      height: 44,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: AppSpacing.screenPadding,
@@ -144,7 +132,6 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
         itemBuilder: (_, index) {
           final filter = _QueueFilter.values[index];
           return CategoryChip(
-            icon: filter.icon,
             label: filter.label,
             isSelected: filter == _filter,
             onTap: () => setState(() => _filter = filter),
@@ -157,19 +144,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
   Widget _buildEmpty() {
     return Padding(
       padding: AppSpacing.screenAll,
-      child: Column(
-        children: [
-          const Icon(
-            HugeIcons.strokeRoundedCheckmarkBadge01,
-            size: 40,
-            color: AppColors.resolved,
-          ),
-          AppSpacing.verticalGapMd,
-          Text('Nothing here right now', style: AppTextStyles.labelLarge),
-          AppSpacing.verticalGapXs,
-          Text('No reports match this view.', style: AppTextStyles.bodySmall),
-        ],
-      ),
+      child: Center(child: Text('Nothing here', style: AppTextStyles.subtitle)),
     );
   }
 }

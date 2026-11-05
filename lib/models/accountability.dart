@@ -83,11 +83,13 @@ class DepartmentScore {
 List<DepartmentScore> departmentBoard(Iterable<Report> reports, DateTime now) {
   final board = Department.values.map((department) {
     final owned = reports.where((r) => r.department == department);
-    final resolved =
-        owned.where((r) => r.status == ReportStatus.resolved).length;
+    final resolved = owned
+        .where((r) => r.status == ReportStatus.resolved)
+        .length;
     final open = owned.where((r) => r.isOpen).length;
-    final overdue =
-        owned.where((r) => r.slaStateAt(now) == SlaState.overdue).length;
+    final overdue = owned
+        .where((r) => r.slaStateAt(now) == SlaState.overdue)
+        .length;
     final reopened = owned.fold(0, (sum, r) => sum + r.reopenCount);
     return DepartmentScore(
       department: department,

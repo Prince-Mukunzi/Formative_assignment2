@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -33,8 +34,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ReportFilter _filter = const ReportFilter();
 
   List<Report> _feed(List<Report> reports) => _filter.apply(
-        reports.where((r) => r.status != ReportStatus.declined).toList(),
-      );
+    reports.where((r) => r.status != ReportStatus.declined).toList(),
+  );
 
   Future<void> _openFilters() async {
     final result = await FilterSheet.show(context, _filter);
@@ -68,24 +69,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   AppSpacing.verticalGapLg,
                   _buildGreeting(),
                   AppSpacing.verticalGapLg,
-                  SpringIn(
-                    delay: const Duration(milliseconds: 120),
-                    child: HunterCard(
-                      onTap: () => context.push(AppRoutes.progress),
-                    ),
-                  ),
+                  HunterCard(onTap: () => context.push(AppRoutes.progress)),
                   AppSpacing.verticalGapXl,
-                  _buildRecentHeader(),
-                  _buildActiveFilters(),
-                  AppSpacing.verticalGapSm,
                 ],
               ),
             ),
           ),
           SliverToBoxAdapter(child: _buildCategories()),
           SliverToBoxAdapter(
-            child: AppSpacing.verticalGapLg,
+            child: Padding(
+              padding: AppSpacing.screenPadding,
+              child: _buildActiveFilters(),
+            ),
           ),
+          SliverToBoxAdapter(child: AppSpacing.verticalGapLg),
           _buildReportsList(),
           const SliverToBoxAdapter(
             child: SizedBox(height: AppSpacing.navClearance),
@@ -97,48 +94,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildGreeting() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _greetingText,
-          style: AppTextStyles.subtitle,
-        ),
-        Text(
-          MockData.userName,
-          style: AppTextStyles.heading1,
-        ),
-      ],
-    )
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_greetingText, style: AppTextStyles.subtitle),
+            Text(MockData.userName, style: AppTextStyles.heading1),
+          ],
+        )
         .animate()
         .fadeIn(duration: 400.ms)
         .slideY(begin: -0.1, end: 0, duration: 400.ms);
-  }
-
-  Widget _buildRecentHeader() {
-    final count = _filter.advancedCount;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('Recent Reports', style: AppTextStyles.heading3),
-        GestureDetector(
-          onTap: _openFilters,
-          behavior: HitTestBehavior.opaque,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            child: Badge(
-              isLabelVisible: count > 0,
-              label: Text('$count'),
-              backgroundColor: AppColors.accent,
-              child: const Icon(
-                HugeIcons.strokeRoundedFilterHorizontal,
-                size: 22,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildActiveFilters() {
@@ -177,27 +141,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCategories() {
+    final count = _filter.advancedCount;
     return SizedBox(
-      height: 44,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: AppSpacing.screenPadding,
-        separatorBuilder: (_, _) => const SizedBox(width: 4),
-        itemCount: ReportCategory.values.length,
-        itemBuilder: (context, index) {
-          final category = ReportCategory.values[index];
-          return CategoryChip(
-            icon: category.icon,
-            label: category.label,
-            isSelected: _filter.category == category,
-            onTap: () =>
-                setState(() => _filter = _filter.copyWith(category: category)),
-          );
-        },
+      height: 40,
+      child: Row(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.only(left: AppSpacing.screenPadding.left),
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
+              itemCount: ReportCategory.values.length,
+              itemBuilder: (context, index) {
+                final category = ReportCategory.values[index];
+                return CategoryChip(
+                  label: category.label,
+                  isSelected: _filter.category == category,
+                  onTap: () => setState(
+                    () => _filter = _filter.copyWith(category: category),
+                  ),
+                );
+              },
+            ),
+          ),
+          GestureDetector(
+            onTap: _openFilters,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Badge(
+                isLabelVisible: count > 0,
+                label: Text('$count'),
+                backgroundColor: AppColors.brand,
+                child: const Icon(
+                  HugeIcons.strokeRoundedFilterHorizontal,
+                  size: 22,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms, delay: 300.ms);
+    );
   }
 
   Widget _buildReportsList() {
@@ -205,23 +191,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return SliverPadding(
       padding: AppSpacing.screenPadding,
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final report = reports[index];
-            return SpringIn(
-              key: ValueKey(report.id),
-              delay: Duration(milliseconds: 60 * index.clamp(0, 5)),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                child: ReportCard(
-                  report: report,
-                  onTap: () => widget.onReportTap?.call(report),
-                ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final report = reports[index];
+          return SpringIn(
+            key: ValueKey(report.id),
+            delay: Duration(milliseconds: 60 * index.clamp(0, 5)),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+              child: ReportCard(
+                report: report,
+                onTap: () => widget.onReportTap?.call(report),
               ),
-            );
-          },
-          childCount: reports.length,
-        ),
+            ),
+          );
+        }, childCount: reports.length),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+
 import '../../core/theme/app_motion.dart';
 
 /// A spring at rest that can be struck: [kick] adds velocity and the value
@@ -15,12 +16,14 @@ class KickController extends AnimationController {
   }) : super.unbounded(value: rest);
 
   void kick(double velocity) {
-    animateWith(SpringSimulation(
-      spring,
-      value,
-      rest,
-      this.velocity + velocity,
-      tolerance: AppSprings.tolerance,
-    ));
+    animateWith(
+      SpringSimulation(
+        spring,
+        value,
+        rest,
+        this.velocity + velocity,
+        tolerance: AppSprings.tolerance,
+      ),
+    );
   }
 }

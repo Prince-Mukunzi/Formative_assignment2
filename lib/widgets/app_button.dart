@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
@@ -9,6 +10,7 @@ class AppButton extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData? icon;
   final bool isFilled;
+  final bool isInverse;
 
   const AppButton({
     super.key,
@@ -16,12 +18,14 @@ class AppButton extends StatelessWidget {
     required this.onTap,
     this.icon,
     this.isFilled = true,
+    this.isInverse = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final foreground =
-        isFilled ? AppColors.textOnPrimary : AppColors.textPrimary;
+    final foreground = isFilled && !isInverse
+        ? AppColors.textOnPrimary
+        : AppColors.textPrimary;
     return Pressable(
       onTap: onTap,
       child: AnimatedContainer(
@@ -31,7 +35,12 @@ class AppButton extends StatelessWidget {
           vertical: AppSpacing.lg,
         ),
         decoration: BoxDecoration(
-          color: isFilled ? AppColors.primary : AppColors.chipBackground,
+          color: isInverse
+              ? AppColors.surface
+              : isFilled
+              ? null
+              : AppColors.chipBackground,
+          gradient: isFilled && !isInverse ? AppColors.navy : null,
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         ),
         child: Row(

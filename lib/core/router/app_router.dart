@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../features/faculty/faculty_shell.dart';
 import '../../features/faculty/triage_screen.dart';
 import '../../features/report/create_report_screen.dart';
@@ -21,11 +22,11 @@ abstract final class AppRoutes {
 }
 
 Page<void> _fadeIn(Widget child) => CustomTransitionPage(
-      child: child,
-      transitionDuration: const Duration(milliseconds: 260),
-      transitionsBuilder: (_, animation, _, child) =>
-          FadeTransition(opacity: animation, child: child),
-    );
+  child: child,
+  transitionDuration: const Duration(milliseconds: 260),
+  transitionsBuilder: (_, animation, _, child) =>
+      FadeTransition(opacity: animation, child: child),
+);
 
 final routerProvider = Provider<GoRouter>((ref) {
   final sessionChanges = ValueNotifier(0);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'report.dart';
 import 'report_category.dart';
 import 'report_status.dart';
@@ -62,19 +63,20 @@ class ReportFilter {
       DatePreset.any => null,
       DatePreset.today => DateTimeRange(start: startOfToday, end: endOfToday),
       DatePreset.week => DateTimeRange(
-          start: startOfToday.subtract(const Duration(days: 6)),
-          end: endOfToday,
-        ),
+        start: startOfToday.subtract(const Duration(days: 6)),
+        end: endOfToday,
+      ),
       DatePreset.month => DateTimeRange(
-          start: startOfToday.subtract(const Duration(days: 29)),
-          end: endOfToday,
-        ),
-      DatePreset.custom => customRange == null
-          ? null
-          : DateTimeRange(
-              start: customRange!.start,
-              end: customRange!.end.add(const Duration(days: 1)),
-            ),
+        start: startOfToday.subtract(const Duration(days: 29)),
+        end: endOfToday,
+      ),
+      DatePreset.custom =>
+        customRange == null
+            ? null
+            : DateTimeRange(
+                start: customRange!.start,
+                end: customRange!.end.add(const Duration(days: 1)),
+              ),
     };
   }
 

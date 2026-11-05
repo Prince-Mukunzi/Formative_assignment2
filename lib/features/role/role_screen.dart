@@ -1,8 +1,10 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
@@ -56,13 +58,7 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
 
   Widget _buildContent() {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primaryDark, AppColors.primaryLight],
-        ),
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.navy),
       child: SafeArea(
         child: SingleChildScrollView(
           padding: AppSpacing.screenAll,
@@ -80,20 +76,10 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
               SpringIn(
                 delay: const Duration(milliseconds: 120),
                 child: Text(
-                  'Who is on the\ncase today?',
+                  'Who are you?',
                   style: AppTextStyles.heading1.copyWith(
                     color: AppColors.textOnPrimary,
                     fontSize: 34,
-                  ),
-                ),
-              ),
-              AppSpacing.verticalGapSm,
-              SpringIn(
-                delay: const Duration(milliseconds: 180),
-                child: Text(
-                  'Pick your side. You can switch later from your profile.',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.onPrimaryMuted,
                   ),
                 ),
               ),
@@ -106,11 +92,8 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                   builder: (cardContext) => _RoleCard(
                     icon: HugeIcons.strokeRoundedMortarboard01,
                     title: 'Student',
-                    hook: 'Report issues, earn XP and climb the ranks.',
-                    onTap: () => _enter(
-                      const StudentSession(),
-                      _centerOf(cardContext),
-                    ),
+                    onTap: () =>
+                        _enter(const StudentSession(), _centerOf(cardContext)),
                   ),
                 ),
               ),
@@ -122,7 +105,6 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                 child: _RoleCard(
                   icon: HugeIcons.strokeRoundedTeacher,
                   title: 'Faculty',
-                  hook: 'Clear the queue before the clock runs out.',
                   isOpen: _facultyOpen,
                   onTap: () => setState(() => _facultyOpen = !_facultyOpen),
                   expansion: _DepartmentPicker(onPicked: _enter),
@@ -151,14 +133,12 @@ class _Logo extends StatelessWidget {
       height: 60,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [AppColors.rewardBright, AppColors.reward],
-        ),
+        color: AppColors.surface,
       ),
       child: const Icon(
         HugeIcons.strokeRoundedBug01,
         size: 30,
-        color: AppColors.primaryDark,
+        color: AppColors.brand,
       ),
     );
   }
@@ -167,7 +147,6 @@ class _Logo extends StatelessWidget {
 class _RoleCard extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String hook;
   final VoidCallback onTap;
   final bool isOpen;
   final Widget? expansion;
@@ -175,7 +154,6 @@ class _RoleCard extends StatelessWidget {
   const _RoleCard({
     required this.icon,
     required this.title,
-    required this.hook,
     required this.onTap,
     this.isOpen = false,
     this.expansion,
@@ -199,30 +177,16 @@ class _RoleCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      width: 56,
-                      height: 56,
+                      width: 44,
+                      height: 44,
                       decoration: const BoxDecoration(
-                        color: AppColors.accentLight,
+                        color: AppColors.chipBackground,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(icon, size: 28, color: AppColors.primary),
+                      child: Icon(icon, size: 22, color: AppColors.primary),
                     ),
                     AppSpacing.horizontalGapLg,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title, style: AppTextStyles.heading3),
-                          AppSpacing.verticalGapXs,
-                          Text(
-                            hook,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: Text(title, style: AppTextStyles.heading3)),
                     AppSpacing.horizontalGapSm,
                     SpringValue(
                       value: isOpen ? 1 : 0,
@@ -278,8 +242,6 @@ class _DepartmentPicker extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('YOUR DEPARTMENT', style: AppTextStyles.overline),
-          AppSpacing.verticalGapMd,
           Row(
             children: [
               for (final department in Department.values) ...[
@@ -302,8 +264,9 @@ class _DepartmentPicker extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.chipBackground,
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
+                          ),
                         ),
                         child: Column(
                           children: [

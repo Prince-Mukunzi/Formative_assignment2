@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
@@ -45,7 +46,12 @@ class _UpvoteButtonState extends ConsumerState<UpvoteButton>
     _scale.kick(11);
     HapticFeedback.mediumImpact();
     final origin = Confetti.centerOf(buttonContext);
-    Confetti.burst(buttonContext, origin: origin, style: ConfettiStyle.spark);
+    Confetti.burst(
+      buttonContext,
+      origin: origin,
+      style: ConfettiStyle.spark,
+      colors: AppColors.confettiOnLight,
+    );
     if (xp > 0) XpPop.show(buttonContext, origin: origin, xp: xp);
   }
 
@@ -85,17 +91,12 @@ class _UpvoteButtonState extends ConsumerState<UpvoteButton>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildIcon(
-              active ? AppColors.upvoteActiveIcon : AppColors.upvoteIcon,
-              18,
-            ),
+            _buildIcon(active ? AppColors.brand : AppColors.textSecondary, 18),
             AppSpacing.horizontalGapXs,
             RollingNumber(
               value: report.upvotes,
               style: AppTextStyles.labelMedium.copyWith(
-                color: active
-                    ? AppColors.upvoteActiveIcon
-                    : AppColors.textSecondary,
+                color: active ? AppColors.brand : AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -116,7 +117,7 @@ class _UpvoteButtonState extends ConsumerState<UpvoteButton>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: active ? AppColors.primary : AppColors.chipBackground,
+          color: active ? AppColors.brand : AppColors.chipBackground,
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         ),
         child: Row(
@@ -125,7 +126,7 @@ class _UpvoteButtonState extends ConsumerState<UpvoteButton>
             _buildIcon(foreground, 20),
             AppSpacing.horizontalGapSm,
             Text(
-              active ? 'Upvoted  ' : 'Upvote  ',
+              'Upvote  ',
               style: AppTextStyles.labelMedium.copyWith(
                 color: foreground,
                 fontWeight: FontWeight.w600,

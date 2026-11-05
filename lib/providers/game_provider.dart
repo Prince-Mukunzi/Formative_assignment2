@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../core/mock_data.dart';
 import '../models/game.dart';
 import '../services/game_service.dart';
@@ -15,11 +16,9 @@ class GameNotifier extends Notifier<GameState> {
 
   /// Returns the XP actually granted: 0 when this award was already claimed.
   int award(XpReason reason, String scope) {
-    final next = state.award(XpEvent(
-      key: '${reason.name}:$scope',
-      reason: reason,
-      at: DateTime.now(),
-    ));
+    final next = state.award(
+      XpEvent(key: '${reason.name}:$scope', reason: reason, at: DateTime.now()),
+    );
     if (identical(next, state)) return 0;
     _update(next);
     return reason.xp;
@@ -35,7 +34,9 @@ class GameNotifier extends Notifier<GameState> {
   }
 }
 
-final gameProvider = NotifierProvider<GameNotifier, GameState>(GameNotifier.new);
+final gameProvider = NotifierProvider<GameNotifier, GameState>(
+  GameNotifier.new,
+);
 
 final gameStatsProvider = Provider<GameStats>((ref) {
   return statsFor(

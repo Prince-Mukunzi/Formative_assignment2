@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import '../core/theme/app_colors.dart';
 
 enum ReportStatus {
-  awaitingApproval('Awaiting Approval'),
-  inProgress('In Progress'),
+  awaitingApproval('Pending'),
+  inProgress('Active'),
   resolved('Resolved'),
   declined('Declined');
 
@@ -14,23 +15,21 @@ enum ReportStatus {
   static const feedValues = [awaitingApproval, inProgress, resolved];
 
   Color get color => switch (this) {
-        awaitingApproval => AppColors.awaitingApproval,
-        inProgress => AppColors.inProgress,
-        resolved => AppColors.resolved,
-        declined => AppColors.error,
-      };
+    awaitingApproval => AppColors.textSecondary,
+    inProgress => AppColors.primary,
+    resolved => AppColors.textOnPrimary,
+    declined => AppColors.textTertiary,
+  };
 
   Color get backgroundColor => switch (this) {
-        awaitingApproval => AppColors.awaitingApprovalLight,
-        inProgress => AppColors.inProgressLight,
-        resolved => AppColors.resolvedLight,
-        declined => AppColors.errorLight,
-      };
+    resolved => AppColors.primary,
+    _ => AppColors.surface,
+  };
 
   IconData get icon => switch (this) {
-        awaitingApproval => HugeIcons.strokeRoundedClock01,
-        inProgress => HugeIcons.strokeRoundedLoading03,
-        resolved => HugeIcons.strokeRoundedCheckmarkCircle02,
-        declined => HugeIcons.strokeRoundedCancelCircle,
-      };
+    awaitingApproval => HugeIcons.strokeRoundedClock01,
+    inProgress => HugeIcons.strokeRoundedLoading03,
+    resolved => HugeIcons.strokeRoundedCheckmarkCircle02,
+    declined => HugeIcons.strokeRoundedCancelCircle,
+  };
 }

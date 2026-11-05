@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/accountability.dart';
@@ -16,7 +16,7 @@ class DepartmentBoard extends ConsumerWidget {
 
   const DepartmentBoard({super.key, this.highlight});
 
-  static const _rowHeight = 84.0;
+  static const _rowHeight = 60.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,72 +54,36 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final overdue = score.overdue > 0;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          boxShadow: AppShadows.card,
-          border: highlighted
-              ? Border.all(color: AppColors.primary, width: 1.5)
-              : null,
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 28,
-              child: Text('$place', style: AppTextStyles.heading3),
-            ),
-            Icon(score.department.icon, size: 22, color: AppColors.primary),
-            AppSpacing.horizontalGapMd,
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(score.department.label, style: AppTextStyles.labelLarge),
-                  Text(
-                    overdue
-                        ? '${score.overdue} overdue, ${score.open} open'
-                        : '${score.resolved} resolved, ${score.open} open',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: overdue
-                          ? AppColors.overdue
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _Points(points: score.points),
-          ],
-        ),
+    final weight = highlighted ? FontWeight.w700 : FontWeight.w500;
+    final style = AppTextStyles.labelLarge.copyWith(fontWeight: weight);
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
-    );
-  }
-}
-
-class _Points extends StatelessWidget {
-  final int points;
-
-  const _Points({required this.points});
-
-  @override
-  Widget build(BuildContext context) {
-    final style = AppTextStyles.labelLarge.copyWith(
-      color: points < 0 ? AppColors.overdue : AppColors.textPrimary,
-    );
-    return RollingNumber(
-      value: points.abs(),
-      prefix: points < 0 ? '-' : '',
-      suffix: ' pts',
-      style: style,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$place',
+              style: style.copyWith(color: AppColors.textTertiary),
+            ),
+          ),
+          Expanded(child: Text(score.department.label, style: style)),
+          if (score.overdue > 0) ...[
+            Text(
+              '${score.overdue} late',
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.brand),
+            ),
+            AppSpacing.horizontalGapLg,
+          ],
+          RollingNumber(
+            value: score.points.abs(),
+            prefix: score.points < 0 ? '-' : '',
+            style: style,
+          ),
+        ],
+      ),
     );
   }
 }

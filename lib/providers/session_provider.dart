@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/session.dart';
 import '../services/local_store.dart';
 import '../services/session_service.dart';
@@ -26,5 +27,6 @@ class SessionNotifier extends Notifier<Session?> {
   }
 }
 
-final sessionProvider =
-    NotifierProvider<SessionNotifier, Session?>(SessionNotifier.new);
+final sessionProvider = NotifierProvider<SessionNotifier, Session?>(
+  SessionNotifier.new,
+);

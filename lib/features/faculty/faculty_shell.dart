@@ -49,7 +49,7 @@ class _FacultyShellState extends ConsumerState<FacultyShell> {
           index: _currentIndex,
           children: [
             QueueScreen(department: department, onReportTap: _onReportTap),
-            BoardScreen(department: department, onReportTap: _onReportTap),
+            BoardScreen(department: department),
             const ProfileScreen(),
           ],
         ),

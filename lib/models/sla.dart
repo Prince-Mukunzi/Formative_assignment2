@@ -52,8 +52,7 @@ extension ReportSla on Report {
 
 String formatSlaDuration(Duration duration) {
   final d = duration.abs();
-  String two(int n) => n.toString().padLeft(2, '0');
-  if (d.inDays >= 1) return '${d.inDays}d ${d.inHours % 24}h';
-  if (d.inHours >= 1) return '${d.inHours}h ${two(d.inMinutes % 60)}m';
-  return '${two(d.inMinutes)}:${two(d.inSeconds % 60)}';
+  if (d.inDays >= 1) return '${d.inDays}d';
+  if (d.inHours >= 1) return '${d.inHours}h';
+  return '${d.inMinutes}m';
 }

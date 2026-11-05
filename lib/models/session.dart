@@ -9,8 +9,8 @@ sealed class Session {
     return switch (map['role']) {
       'student' => const StudentSession(),
       'faculty' => FacultySession(
-          Department.values.byName(map['department'] as String),
-        ),
+        Department.values.byName(map['department'] as String),
+      ),
       final role => throw FormatException('Unknown role: $role'),
     };
   }
@@ -30,7 +30,7 @@ final class FacultySession extends Session {
 
   @override
   Map<String, Object?> toMap() => {
-        'role': 'faculty',
-        'department': department.name,
-      };
+    'role': 'faculty',
+    'department': department.name,
+  };
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hugeicons/hugeicons.dart';
 
 import '../../core/mock_data.dart';
 import '../../core/theme/app_colors.dart';
@@ -50,10 +49,16 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AppSpacing.verticalGapLg,
-                  Text('My Reports', style: AppTextStyles.heading2),
+                  Text('My reports', style: AppTextStyles.heading1),
                   if (pendingXp > 0) ...[
-                    AppSpacing.verticalGapMd,
-                    _PendingXpBanner(xp: pendingXp),
+                    AppSpacing.verticalGapXs,
+                    RollingNumber(
+                      value: pendingXp,
+                      suffix: ' XP waiting',
+                      style: AppTextStyles.subtitle.copyWith(
+                        color: AppColors.brand,
+                      ),
+                    ),
                   ],
                   AppSpacing.verticalGapLg,
                   StatusFilterBar(
@@ -71,7 +76,7 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
               child: Padding(
                 padding: AppSpacing.screenPadding,
                 child: Text(
-                  'No reports with this status.',
+                  'Nothing here',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
@@ -101,50 +106,6 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
           ),
           const SliverToBoxAdapter(
             child: SizedBox(height: AppSpacing.navClearance),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PendingXpBanner extends StatelessWidget {
-  final int xp;
-
-  const _PendingXpBanner({required this.xp});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: AppSpacing.cardPaddingSmall,
-      decoration: BoxDecoration(
-        color: AppColors.rewardLight,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            HugeIcons.strokeRoundedStar,
-            size: 20,
-            color: AppColors.rewardDeep,
-          ),
-          AppSpacing.horizontalGapSm,
-          RollingNumber(
-            value: xp,
-            suffix: ' XP',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.rewardDeep,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          AppSpacing.horizontalGapXs,
-          Expanded(
-            child: Text(
-              'waiting on your open reports',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.rewardDeep,
-              ),
-            ),
           ),
         ],
       ),

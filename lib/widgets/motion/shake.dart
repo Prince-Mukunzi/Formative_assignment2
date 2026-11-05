@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import 'kick_controller.dart';
 
 /// Horizontal rejection shake. Each change of [trigger] strikes the spring.

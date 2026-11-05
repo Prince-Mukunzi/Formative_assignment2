@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_motion.dart';
 import '../core/theme/app_shadows.dart';
@@ -114,14 +115,10 @@ class _NavItem extends StatelessWidget {
           return Container(
             padding: EdgeInsets.symmetric(
               horizontal: 16 + 2 * clamped,
-              vertical: 14,
+              vertical: 18,
             ),
             decoration: BoxDecoration(
-              color: Color.lerp(
-                AppColors.surface,
-                AppColors.primary,
-                clamped,
-              ),
+              color: Color.lerp(AppColors.surface, AppColors.primary, clamped),
               borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
             ),
             child: Row(
@@ -181,7 +178,7 @@ class NavActionButton extends StatelessWidget {
       child: Badge(
         isLabelVisible: badge > 0,
         label: Text('$badge'),
-        backgroundColor: AppColors.overdue,
+        backgroundColor: AppColors.brand,
         child: Container(
           width: 52,
           height: 52,

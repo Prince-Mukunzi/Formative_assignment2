@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+
 import '../core/mock_data.dart';
 import '../models/game.dart';
 import '../models/report.dart';
@@ -103,8 +104,9 @@ class ReportsNotifier extends Notifier<List<Report>> {
   }
 }
 
-final reportsProvider =
-    NotifierProvider<ReportsNotifier, List<Report>>(ReportsNotifier.new);
+final reportsProvider = NotifierProvider<ReportsNotifier, List<Report>>(
+  ReportsNotifier.new,
+);
 
 final reportByIdProvider = Provider.family<Report, String>((ref, id) {
   return ref.watch(

@@ -20,7 +20,7 @@ import '../../widgets/motion/confetti.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/report_image.dart';
-import '../../widgets/sla_chip.dart';
+import '../../widgets/sla_label.dart';
 
 class TriageScreen extends ConsumerStatefulWidget {
   const TriageScreen({super.key});
@@ -168,7 +168,10 @@ class _TriageScreenState extends ConsumerState<TriageScreen>
             color: AppColors.textPrimary,
           ),
         ),
-        title: Text('Triage', style: AppTextStyles.heading3),
+        title: Text(
+          remaining == 0 ? '' : '$remaining left',
+          style: AppTextStyles.labelMedium,
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -176,11 +179,6 @@ class _TriageScreenState extends ConsumerState<TriageScreen>
             ? const _DeckCleared()
             : Column(
                 children: [
-                  Text(
-                    '$remaining waiting for a decision',
-                    style: AppTextStyles.subtitle,
-                  ),
-                  AppSpacing.verticalGapLg,
                   Expanded(child: _buildDeck()),
                   AppSpacing.verticalGapLg,
                   _buildButtons(),
@@ -243,15 +241,13 @@ class _TriageScreenState extends ConsumerState<TriageScreen>
       children: [
         _DecisionButton(
           icon: HugeIcons.strokeRoundedCancel01,
-          color: AppColors.error,
-          label: 'Decline',
+          color: AppColors.textSecondary,
           onTap: _flying ? null : () => _fly(-1, const Offset(-600, 80)),
         ),
-        const SizedBox(width: AppSpacing.xxxl * 2),
+        const SizedBox(width: AppSpacing.xxxl),
         _DecisionButton(
           icon: HugeIcons.strokeRoundedTick02,
-          color: AppColors.resolved,
-          label: 'Approve',
+          color: AppColors.primary,
           onTap: _flying ? null : () => _fly(1, const Offset(600, 80)),
         ),
       ],
@@ -293,40 +289,25 @@ class _TriageCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(report.title, style: AppTextStyles.heading2),
+                    AppSpacing.verticalGapXs,
+                    Text(report.location, style: AppTextStyles.bodySmall),
                     AppSpacing.verticalGapSm,
-                    Text(
-                      report.description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    AppSpacing.verticalGapMd,
-                    Text(
-                      '${report.location}, ${report.affectedLabel}',
-                      style: AppTextStyles.labelSmall,
-                    ),
+                    SlaLabel(report: report),
                   ],
                 ),
               ),
             ],
           ),
-          Positioned(
-            top: AppSpacing.lg,
-            right: AppSpacing.lg,
-            child: SlaChip(report: report),
-          ),
           _Stamp(
             label: 'APPROVE',
-            color: AppColors.resolved,
+            color: AppColors.primary,
             opacity: approveOpacity,
             alignment: Alignment.topLeft,
             angle: -0.2,
           ),
           _Stamp(
             label: 'DECLINE',
-            color: AppColors.error,
+            color: AppColors.brand,
             opacity: declineOpacity,
             alignment: Alignment.topRight,
             angle: 0.2,
@@ -391,13 +372,11 @@ class _Stamp extends StatelessWidget {
 class _DecisionButton extends StatelessWidget {
   final IconData icon;
   final Color color;
-  final String label;
   final VoidCallback? onTap;
 
   const _DecisionButton({
     required this.icon,
     required this.color,
-    required this.label,
     required this.onTap,
   });
 
@@ -406,22 +385,14 @@ class _DecisionButton extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       scale: 0.86,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
-              boxShadow: AppShadows.floating,
-            ),
-            child: Icon(icon, size: 28, color: color),
-          ),
-          AppSpacing.verticalGapSm,
-          Text(label, style: AppTextStyles.labelSmall),
-        ],
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: const BoxDecoration(
+          color: AppColors.chipBackground,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 28, color: color),
       ),
     );
   }
@@ -442,16 +413,11 @@ class _DeckCleared extends StatelessWidget {
           children: [
             const Icon(
               HugeIcons.strokeRoundedCheckmarkBadge01,
-              size: 64,
-              color: AppColors.resolved,
+              size: 48,
+              color: AppColors.primary,
             ),
             AppSpacing.verticalGapLg,
-            Text('Triage clear', style: AppTextStyles.heading2),
-            AppSpacing.verticalGapXs,
-            Text(
-              'Nothing is waiting on a decision.',
-              style: AppTextStyles.subtitle,
-            ),
+            Text('All clear', style: AppTextStyles.heading2),
           ],
         ),
       ),
