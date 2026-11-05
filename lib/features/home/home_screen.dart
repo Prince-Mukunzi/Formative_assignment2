@@ -14,6 +14,7 @@ import '../../models/report_status.dart';
 import '../../models/report_category.dart';
 import '../../models/report_filter.dart';
 import '../../providers/reports_provider.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/filter_sheet.dart';
 import '../../widgets/filter_tag.dart';
@@ -66,6 +67,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AppSpacing.verticalGapLg,
+                  const AppLogo(),
                   AppSpacing.verticalGapLg,
                   _buildGreeting(),
                   AppSpacing.verticalGapLg,

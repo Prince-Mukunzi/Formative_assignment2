@@ -14,6 +14,7 @@ import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/banner_stat.dart';
 import '../../widgets/gradient_banner.dart';
 import '../../widgets/menu_row.dart';
@@ -43,6 +44,8 @@ class OverviewScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            AppSpacing.verticalGapLg,
+            const AppLogo(),
             AppSpacing.verticalGapLg,
             Row(
               children: [

@@ -10,6 +10,7 @@ import '../../models/report_status.dart';
 import '../../models/sla.dart';
 import '../../providers/clock_provider.dart';
 import '../../providers/reports_provider.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/faculty/pressure_card.dart';
 import '../../widgets/motion/spring_in.dart';
@@ -77,6 +78,8 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AppSpacing.verticalGapLg,
+                  const AppLogo(),
                   AppSpacing.verticalGapLg,
                   Text(widget.department.label, style: AppTextStyles.heading1),
                   const SizedBox(height: AppSpacing.xxl),
