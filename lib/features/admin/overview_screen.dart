@@ -7,19 +7,14 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/accountability.dart';
 import '../../models/department.dart';
-import '../../models/report.dart';
-import '../../models/report_status.dart';
 import '../../providers/clock_provider.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
-import '../../providers/session_provider.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/app_logo.dart';
-import '../../widgets/banner_stat.dart';
-import '../../widgets/gradient_banner.dart';
+import '../../widgets/admin/campus_pulse_card.dart';
 import '../../widgets/menu_row.dart';
 import '../../widgets/motion/pressable.dart';
-import '../../widgets/progress_ring.dart';
 import '../../widgets/section_title.dart';
 import '../../widgets/tinted_icon.dart';
 import 'locations_sheet.dart';
@@ -34,6 +29,7 @@ class OverviewScreen extends ConsumerWidget {
     final now = ref.watch(minuteProvider);
     final departments = ref.watch(departmentsProvider);
     final locations = ref.watch(locationsProvider);
+    final teams = ref.watch(departmentBoardProvider);
     final unowned = reports
         .where((r) => r.isOpen && departments.ownerOf(r) == null)
         .length;
@@ -47,21 +43,14 @@ class OverviewScreen extends ConsumerWidget {
             AppSpacing.verticalGapLg,
             const AppLogo(),
             AppSpacing.verticalGapLg,
-            Row(
-              children: [
-                Expanded(child: Text('Admin', style: AppTextStyles.heading1)),
-                Pressable(
-                  onTap: () => ref.read(sessionProvider.notifier).signOut(),
-                  child: const Icon(
-                    HugeIcons.strokeRoundedLogout01,
-                    size: 22,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+            Text('Admin', style: AppTextStyles.heading1),
             AppSpacing.verticalGapLg,
-            _HealthBanner(reports: reports, now: now),
+            CampusPulseCard(
+              reports: reports,
+              teams: teams,
+              now: now,
+              onTeamTap: (team) => TeamSheet.show(context, team.department),
+            ),
             if (unowned > 0) ...[
               AppSpacing.verticalGapMd,
               AppCard(
@@ -76,7 +65,7 @@ class OverviewScreen extends ConsumerWidget {
             const SectionTitle('Teams'),
             CardList(
               children: [
-                for (final score in ref.watch(departmentBoardProvider))
+                for (final score in teams)
                   _TeamRow(
                     score: score,
                     onTap: () => TeamSheet.show(context, score.department),
@@ -97,87 +86,6 @@ class OverviewScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.navClearance),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _HealthBanner extends StatelessWidget {
-  final List<Report> reports;
-  final DateTime now;
-
-  const _HealthBanner({required this.reports, required this.now});
-
-  @override
-  Widget build(BuildContext context) {
-    final reading = PressureReading.of(reports, now);
-    final counted = reports.where((r) => r.status != ReportStatus.declined);
-    final resolved = counted
-        .where((r) => r.status == ReportStatus.resolved)
-        .length;
-    final total = counted.length;
-    return GradientBanner(
-      gradient: reading.overdue > 0 ? AppColors.signature : AppColors.navy,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              ProgressRing(progress: total == 0 ? 0 : resolved / total),
-              AppSpacing.horizontalGapLg,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Resolved',
-                      style: AppTextStyles.heading3.copyWith(
-                        color: AppColors.textOnPrimary,
-                      ),
-                    ),
-                    Text(
-                      '$resolved of $total reports',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.onPrimaryMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          AppSpacing.verticalGapLg,
-          const Divider(height: 1, color: AppColors.onPrimaryFaint),
-          AppSpacing.verticalGapLg,
-          Row(
-            children: [
-              BannerStat(
-                icon: HugeIcons.strokeRoundedTask01,
-                value: reports.where((r) => r.isOpen).length,
-                label: 'Open',
-              ),
-              BannerStat(
-                icon: HugeIcons.strokeRoundedAlert02,
-                value: reading.overdue,
-                label: 'Overdue',
-              ),
-            ],
-          ),
-          AppSpacing.verticalGapLg,
-          Row(
-            children: [
-              BannerStat(
-                icon: HugeIcons.strokeRoundedClock01,
-                value: reading.dueWithin24h,
-                label: 'Due today',
-              ),
-              BannerStat(
-                icon: HugeIcons.strokeRoundedUserGroup,
-                value: reading.waitingStudents,
-                label: 'Waiting',
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
