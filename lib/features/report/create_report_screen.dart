@@ -19,6 +19,7 @@ import '../../widgets/motion/kick_controller.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/shake.dart';
+import '../../widgets/wheel_picker.dart';
 import '../../core/utils/app_haptics.dart';
 
 class CreateReportScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,8 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
   @override
   void initState() {
     super.initState();
+    _presetLocation = ref.read(locationsProvider).firstOrNull;
+    _isOtherLocation = _presetLocation == null;
     _descriptionController.addListener(_refreshBounty);
   }
 
@@ -109,23 +112,18 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
     });
   }
 
-  void _pickLocation(String location) {
-    AppHaptics.selectionClick();
+  void _pickLocation(String? location) {
     setState(() {
       _presetLocation = location;
-      _isOtherLocation = false;
+      _isOtherLocation = location == null;
     });
-    Future.delayed(const Duration(milliseconds: 160), () {
-      if (mounted && _step == 2) _goTo(3);
-    });
-  }
-
-  void _pickOtherLocation() {
-    AppHaptics.selectionClick();
-    setState(() => _isOtherLocation = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _locationFocus.requestFocus();
-    });
+    if (location == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _locationFocus.requestFocus();
+      });
+    } else {
+      _locationFocus.unfocus();
+    }
   }
 
   void _next() {
@@ -230,10 +228,8 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
                     question: 'Where is it?',
                     child: _LocationList(
                       locations: ref.watch(locationsProvider),
-                      selected: _presetLocation,
-                      isOther: _isOtherLocation,
+                      selected: _isOtherLocation ? null : _presetLocation,
                       onPicked: _pickLocation,
-                      onOther: _pickOtherLocation,
                       otherField: Shake(
                         trigger: _step == 2 ? _shake : 0,
                         child: BareField(
@@ -467,17 +463,13 @@ class _CategoryTile extends StatelessWidget {
 class _LocationList extends StatelessWidget {
   final List<String> locations;
   final String? selected;
-  final bool isOther;
-  final ValueChanged<String> onPicked;
-  final VoidCallback onOther;
+  final ValueChanged<String?> onPicked;
   final Widget otherField;
 
   const _LocationList({
     required this.locations,
     required this.selected,
-    required this.isOther,
     required this.onPicked,
-    required this.onOther,
     required this.otherField,
   });
 
@@ -486,63 +478,26 @@ class _LocationList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
+        WheelPicker<String?>(
+          options: [
             for (final location in locations)
-              _LocationPill(
-                label: location,
-                selected: !isOther && location == selected,
-                onTap: () => onPicked(location),
-              ),
-            _LocationPill(label: 'Other', selected: isOther, onTap: onOther),
+              WheelOption(value: location, label: location),
+            const WheelOption(
+              value: null,
+              label: 'Other',
+              icon: HugeIcons.strokeRoundedPencilEdit02,
+            ),
           ],
+          selected: selected,
+          onChanged: onPicked,
         ),
-        if (isOther)
+        if (selected == null)
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xxl),
+            padding: const EdgeInsets.only(top: AppSpacing.xl),
             child: otherField,
           ),
         AppSpacing.verticalGapLg,
       ],
-    );
-  }
-}
-
-class _LocationPill extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _LocationPill({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      haptic: false,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(
-            color: selected ? AppColors.textOnPrimary : AppColors.textPrimary,
-          ),
-        ),
-      ),
     );
   }
 }

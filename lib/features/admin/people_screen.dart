@@ -11,6 +11,7 @@ import '../../providers/reports_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/category_chip.dart';
+import '../../widgets/team_wheel.dart';
 
 class PeopleScreen extends ConsumerStatefulWidget {
   const PeopleScreen({super.key});
@@ -162,21 +163,9 @@ class _PersonSheet extends ConsumerWidget {
             Text(person.name, style: AppTextStyles.heading1),
             AppSpacing.verticalGapXl,
             if (person.role == PersonRole.faculty) ...[
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  for (final team in ref.watch(departmentsProvider))
-                    SizedBox(
-                      height: 40,
-                      child: CategoryChip(
-                        label: team.label,
-                        isSelected: team.id == person.departmentId,
-                        onTap: () =>
-                            people.moveToDepartment(person.id, team.id),
-                      ),
-                    ),
-                ],
+              TeamWheel(
+                selectedId: person.departmentId,
+                onChanged: (id) => people.moveToDepartment(person.id, id),
               ),
               AppSpacing.verticalGapXl,
             ],

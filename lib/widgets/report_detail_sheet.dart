@@ -18,12 +18,12 @@ import '../providers/directory_provider.dart';
 import '../providers/reports_provider.dart';
 import '../providers/session_provider.dart';
 import 'app_button.dart';
-import 'category_chip.dart';
 import 'game/bounty_track.dart';
 import 'motion/confetti.dart';
 import 'motion/pressable.dart';
 import 'motion/slide_to_confirm.dart';
 import 'motion/xp_pop.dart';
+import 'reassign_sheet.dart';
 import 'report_image.dart';
 import 'sla_label.dart';
 import 'status_badge.dart';
@@ -242,40 +242,6 @@ class _AdminActions extends ConsumerWidget {
 
   const _AdminActions({required this.report});
 
-  void _reassign(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: AppSpacing.screenAll,
-          child: Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              for (final team in ref.read(departmentsProvider))
-                SizedBox(
-                  height: 40,
-                  child: CategoryChip(
-                    label: team.label,
-                    isSelected:
-                        ref.read(departmentsProvider).ownerOf(report)?.id ==
-                        team.id,
-                    onTap: () {
-                      ref
-                          .read(reportsProvider.notifier)
-                          .reassign(report.id, team.id);
-                      Navigator.of(sheetContext).pop();
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
@@ -361,7 +327,7 @@ class _AdminActions extends ConsumerWidget {
             _quiet(
               'Reassign',
               AppColors.textSecondary,
-              () => _reassign(context, ref),
+              () => ReassignSheet.show(context, report),
             ),
             _quiet('Delete', AppColors.brand, () => _delete(context, ref)),
           ],
