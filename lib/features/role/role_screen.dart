@@ -12,7 +12,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../models/session.dart';
 import '../../providers/directory_provider.dart';
 import '../../providers/session_provider.dart';
-import '../../widgets/menu_row.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/spring_in.dart';
 import '../../widgets/motion/spring_value.dart';
@@ -71,7 +71,7 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                 spring: AppSprings.slam,
                 fromScale: 0.4,
                 offsetY: 0,
-                child: _Logo(),
+                child: AppLogo(onDark: true, height: 44),
               ),
               AppSpacing.verticalGapXxl,
               SpringIn(
@@ -135,27 +135,6 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
   Offset _centerOf(BuildContext context) {
     final box = context.findRenderObject()! as RenderBox;
     return box.localToGlobal(box.size.center(Offset.zero));
-  }
-}
-
-class _Logo extends StatelessWidget {
-  const _Logo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppColors.surface,
-      ),
-      child: const Icon(
-        HugeIcons.strokeRoundedBug01,
-        size: 30,
-        color: AppColors.brand,
-      ),
-    );
   }
 }
 
@@ -241,6 +220,8 @@ class _RoleCard extends StatelessWidget {
 }
 
 class _DepartmentPicker extends ConsumerWidget {
+  static const _tileHeight = 56.0;
+
   final void Function(Session session, Offset origin) onPicked;
 
   const _DepartmentPicker({required this.onPicked});
@@ -248,32 +229,78 @@ class _DepartmentPicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final departments = ref.watch(departmentsProvider);
-    return Padding(
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
+        AppSpacing.lg,
         0,
-        AppSpacing.xl,
-        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg,
       ),
-      child: Column(
-        children: [
-          for (final department in departments) ...[
-            const Divider(height: 1, color: AppColors.divider),
-            Builder(
-              builder: (rowContext) => MenuRow(
-                icon: department.icon,
-                label: department.label,
-                onTap: () {
-                  final box = rowContext.findRenderObject()! as RenderBox;
-                  onPicked(
-                    FacultySession(department.id),
-                    box.localToGlobal(box.size.center(Offset.zero)),
-                  );
-                },
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisExtent: _tileHeight,
+        mainAxisSpacing: AppSpacing.sm,
+        crossAxisSpacing: AppSpacing.sm,
+      ),
+      itemCount: departments.length,
+      itemBuilder: (_, index) {
+        final department = departments[index];
+        return Builder(
+          builder: (tileContext) => _TeamTile(
+            icon: department.icon,
+            label: department.label,
+            onTap: () {
+              final box = tileContext.findRenderObject()! as RenderBox;
+              onPicked(
+                FacultySession(department.id),
+                box.localToGlobal(box.size.center(Offset.zero)),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TeamTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _TeamTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.chipBackground,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppColors.primary),
+            AppSpacing.horizontalGapSm,
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.labelMedium,
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
