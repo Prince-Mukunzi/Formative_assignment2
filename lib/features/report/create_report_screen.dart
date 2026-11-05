@@ -1,45 +1,55 @@
 import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_motion.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
 import '../../models/report_category.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/motion/kick_controller.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/shake.dart';
-import '../../widgets/motion/spring_value.dart';
 
 class CreateReportScreen extends ConsumerStatefulWidget {
   const CreateReportScreen({super.key});
 
   @override
-  ConsumerState<CreateReportScreen> createState() =>
-      _CreateReportScreenState();
+  ConsumerState<CreateReportScreen> createState() => _CreateReportScreenState();
 }
 
-class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
+class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
+    with SingleTickerProviderStateMixin {
+  static const _lastStep = 3;
+  static const _pageDuration = Duration(milliseconds: 420);
+
+  final _pages = PageController();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
-  ReportCategory _selectedCategory = ReportCategory.electricity;
+  final _titleFocus = FocusNode();
+  final _locationFocus = FocusNode();
+  late final _xpKick = KickController(vsync: this, rest: 1);
+
+  int _step = 0;
+  ReportCategory? _category;
   String _imagePath = '';
-  int _titleShake = 0;
-  int _locationShake = 0;
+  int _shake = 0;
+  late int _shownBounty = _bounty;
 
   bool get _hasImage => _imagePath.isNotEmpty;
 
   int get _bounty {
-    final detailed = _descriptionController.text.trim().length >=
+    final detailed =
+        _descriptionController.text.trim().length >=
         ReportsNotifier.minDetailLength;
     return XpReason.reportFiled.xp +
         (_hasImage ? XpReason.photoAdded.xp : 0) +
@@ -49,7 +59,79 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
   @override
   void initState() {
     super.initState();
-    _descriptionController.addListener(() => setState(() {}));
+    _descriptionController.addListener(_refreshBounty);
+  }
+
+  void _refreshBounty() {
+    final bounty = _bounty;
+    if (bounty == _shownBounty) return;
+    if (bounty > _shownBounty) {
+      HapticFeedback.mediumImpact();
+      _xpKick.kick(6);
+    }
+    setState(() => _shownBounty = bounty);
+  }
+
+  Future<void> _goTo(int step) async {
+    setState(() => _step = step);
+    if (step == 0 || step == _lastStep) FocusScope.of(context).unfocus();
+    await _pages.animateToPage(
+      step,
+      duration: _pageDuration,
+      curve: Curves.easeOutQuart,
+    );
+    if (!mounted || _step != step) return;
+    if (step == 1) _titleFocus.requestFocus();
+    if (step == 2) _locationFocus.requestFocus();
+  }
+
+  void _back() {
+    if (_step == 0) {
+      Navigator.of(context).pop();
+    } else {
+      _goTo(_step - 1);
+    }
+  }
+
+  void _pickCategory(ReportCategory category) {
+    HapticFeedback.selectionClick();
+    setState(() => _category = category);
+    Future.delayed(const Duration(milliseconds: 160), () {
+      if (mounted && _step == 0) _goTo(1);
+    });
+  }
+
+  void _next() {
+    final missing = switch (_step) {
+      1 => _titleController.text.trim().isEmpty,
+      2 => _locationController.text.trim().isEmpty,
+      _ => false,
+    };
+    if (missing) {
+      HapticFeedback.heavyImpact();
+      setState(() => _shake++);
+      return;
+    }
+    if (_step == _lastStep) {
+      _submit();
+    } else {
+      _goTo(_step + 1);
+    }
+  }
+
+  void _submit() {
+    final category = _category;
+    if (category == null) return;
+    Navigator.of(context).pop();
+    ref
+        .read(reportsProvider.notifier)
+        .create(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          location: _locationController.text.trim(),
+          category: category,
+          imageUrl: _imagePath,
+        );
   }
 
   Future<void> _pickImage() async {
@@ -78,35 +160,21 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
       imageQuality: 80,
       maxWidth: 1600,
     );
-    if (file != null && mounted) setState(() => _imagePath = file.path);
-  }
-
-  void _submit() {
-    final title = _titleController.text.trim();
-    final location = _locationController.text.trim();
-    if (title.isEmpty || location.isEmpty) {
-      HapticFeedback.heavyImpact();
-      setState(() {
-        if (title.isEmpty) _titleShake++;
-        if (location.isEmpty) _locationShake++;
-      });
-      return;
-    }
-    Navigator.of(context).pop();
-    ref.read(reportsProvider.notifier).create(
-          title: title,
-          description: _descriptionController.text.trim(),
-          location: location,
-          category: _selectedCategory,
-          imageUrl: _imagePath,
-        );
+    if (file == null || !mounted) return;
+    _imagePath = file.path;
+    _refreshBounty();
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _pages.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
+    _titleFocus.dispose();
+    _locationFocus.dispose();
+    _xpKick.dispose();
     super.dispose();
   }
 
@@ -114,167 +182,98 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        leading: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: const Icon(
-            HugeIcons.strokeRoundedArrowLeft01,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        title: Text('Report an Issue', style: AppTextStyles.heading3),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: AppSpacing.screenPadding,
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppSpacing.verticalGapLg,
-            _buildImagePicker(),
-            AppSpacing.verticalGapXl,
-            Shake(
-              trigger: _titleShake,
-              child: _buildField(
-                'Title',
-                'What is the issue?',
-                _titleController,
+            _buildHeader(),
+            Expanded(
+              child: PageView(
+                controller: _pages,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _Step(
+                    question: 'What kind of issue?',
+                    child: _CategoryGrid(
+                      selected: _category,
+                      onPicked: _pickCategory,
+                    ),
+                  ),
+                  _Step(question: 'What is wrong?', child: _buildDetails()),
+                  _Step(
+                    question: 'Where is it?',
+                    child: Shake(
+                      trigger: _step == 2 ? _shake : 0,
+                      child: _BareField(
+                        controller: _locationController,
+                        focusNode: _locationFocus,
+                        hint: 'Block A, Floor 2',
+                        style: AppTextStyles.heading2,
+                      ),
+                    ),
+                  ),
+                  _Step(
+                    question: 'Add a photo',
+                    child: _PhotoTile(path: _imagePath, onTap: _pickImage),
+                  ),
+                ],
               ),
             ),
-            AppSpacing.verticalGapLg,
-            _buildCategorySelector(),
-            AppSpacing.verticalGapLg,
-            Shake(
-              trigger: _locationShake,
-              child: _buildField(
-                'Location',
-                'e.g. Building A, Floor 2',
-                _locationController,
+            if (_step > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.sm,
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    label: _step == _lastStep ? 'Submit' : 'Next',
+                    onTap: _next,
+                  ),
+                ),
               ),
-            ),
-            AppSpacing.verticalGapLg,
-            _buildDescriptionField(),
-            AppSpacing.verticalGapXl,
-            _buildBountyMeter(),
-            AppSpacing.verticalGapLg,
-            _buildSubmitButton(),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImagePicker() {
-    return Pressable(
-      onTap: _pickImage,
-      scale: 0.98,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: 180,
-        width: double.infinity,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(
-            color: _hasImage ? AppColors.accent : AppColors.cardBorder,
-            width: _hasImage ? 1.5 : 1,
-          ),
-        ),
-        child: _hasImage
-            ? Image.file(File(_imagePath), fit: BoxFit.cover)
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: AppSpacing.cardPadding,
-                    decoration: BoxDecoration(
-                      color: AppColors.chipBackground,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                    child: const Icon(
-                      HugeIcons.strokeRoundedCamera01,
-                      size: 28,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  AppSpacing.verticalGapMd,
-                  Text(
-                    'Add a photo  +${XpReason.photoAdded.xp} XP',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  AppSpacing.verticalGapXs,
-                  Text(
-                    'Take a photo or choose from gallery',
-                    style: AppTextStyles.bodySmall,
-                  ),
-                ],
-              ),
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+        AppSpacing.xl,
       ),
-    )
-        .animate()
-        .fadeIn(duration: 300.ms)
-        .slideY(begin: 0.05, end: 0, duration: 300.ms);
-  }
-
-  Widget _buildBountyMeter() {
-    final maximum = XpReason.reportFiled.xp +
-        XpReason.photoAdded.xp +
-        XpReason.detailAdded.xp;
-    return Container(
-      padding: AppSpacing.cardPaddingSmall,
-      decoration: BoxDecoration(
-        color: AppColors.rewardLight,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Text(
-                'Filing bounty',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.rewardDeep,
-                ),
-              ),
-              const Spacer(),
-              RollingNumber(
-                value: _bounty,
-                prefix: '+',
-                suffix: ' XP',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.rewardDeep,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          AppSpacing.verticalGapSm,
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            child: SpringValue(
-              value: _bounty / maximum,
-              spring: AppSprings.bouncy,
-              builder: (_, value, _) => LinearProgressIndicator(
-                value: value.clamp(0.0, 1.0),
-                minHeight: 6,
-                backgroundColor: AppColors.surface,
-                color: AppColors.reward,
-              ),
+          Pressable(
+            onTap: _back,
+            child: const Icon(
+              HugeIcons.strokeRoundedArrowLeft01,
+              color: AppColors.textPrimary,
             ),
           ),
-          AppSpacing.verticalGapSm,
-          Text(
-            'Earns +${XpReason.reportApproved.xp} more when approved and '
-            '+${XpReason.reportResolved.xp} when fixed.',
-            style: AppTextStyles.bodySmall.copyWith(
-              fontSize: 11,
-              color: AppColors.rewardDeep,
+          AppSpacing.horizontalGapLg,
+          Expanded(
+            child: _StepBar(step: _step, count: _lastStep + 1),
+          ),
+          AppSpacing.horizontalGapLg,
+          AnimatedBuilder(
+            animation: _xpKick,
+            builder: (_, child) =>
+                Transform.scale(scale: _xpKick.value, child: child),
+            child: RollingNumber(
+              value: _shownBounty,
+              prefix: '+',
+              suffix: ' XP',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.brand,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -282,120 +281,235 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
     );
   }
 
-  Widget _buildField(
-    String label,
-    String hint,
-    TextEditingController controller,
-  ) {
+  Widget _buildDetails() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelMedium),
-        AppSpacing.verticalGapSm,
-        TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: hint),
+        Shake(
+          trigger: _step == 1 ? _shake : 0,
+          child: _BareField(
+            controller: _titleController,
+            focusNode: _titleFocus,
+            hint: 'Broken sink',
+            style: AppTextStyles.heading2,
+          ),
+        ),
+        AppSpacing.verticalGapLg,
+        _BareField(
+          controller: _descriptionController,
+          hint: 'More detail  +${XpReason.detailAdded.xp} XP',
           style: AppTextStyles.bodyLarge,
+          maxLines: 5,
         ),
       ],
-    )
-        .animate()
-        .fadeIn(duration: 300.ms, delay: 100.ms);
+    );
   }
+}
 
-  Widget _buildCategorySelector() {
+class _Step extends StatelessWidget {
+  final String question;
+  final Widget child;
+
+  const _Step({required this.question, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: AppSpacing.screenPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(question, style: AppTextStyles.heading1),
+          const SizedBox(height: AppSpacing.xxl),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _StepBar extends StatelessWidget {
+  final int step;
+  final int count;
+
+  const _StepBar({required this.step, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < count; i++) ...[
+          if (i > 0) AppSpacing.horizontalGapXs,
+          Expanded(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: 3,
+              decoration: BoxDecoration(
+                color: i <= step ? AppColors.brand : AppColors.cardBorder,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CategoryGrid extends StatelessWidget {
+  final ReportCategory? selected;
+  final ValueChanged<ReportCategory> onPicked;
+
+  const _CategoryGrid({required this.selected, required this.onPicked});
+
+  @override
+  Widget build(BuildContext context) {
     final categories = ReportCategory.values
         .where((c) => c != ReportCategory.all)
         .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
+      childAspectRatio: 1.3,
       children: [
-        Text('Category', style: AppTextStyles.labelMedium),
-        AppSpacing.verticalGapSm,
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: categories.map((category) {
-            final isSelected = _selectedCategory == category;
-            return Pressable(
-              onTap: () => setState(() => _selectedCategory = category),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.surface,
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusFull),
-                  border: isSelected
-                      ? null
-                      : Border.all(color: AppColors.cardBorder),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+        for (final category in categories)
+          _CategoryTile(
+            category: category,
+            selected: category == selected,
+            onTap: () => onPicked(category),
+          ),
+      ],
+    );
+  }
+}
+
+class _CategoryTile extends StatelessWidget {
+  final ReportCategory category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CategoryTile({
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = selected
+        ? AppColors.textOnPrimary
+        : AppColors.textPrimary;
+    return Pressable(
+      onTap: onTap,
+      haptic: false,
+      scale: 0.96,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.chipBackground,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(category.icon, size: 26, color: foreground),
+            Text(
+              category.label,
+              style: AppTextStyles.labelLarge.copyWith(color: foreground),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BareField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode? focusNode;
+  final String hint;
+  final TextStyle style;
+  final int maxLines;
+
+  const _BareField({
+    required this.controller,
+    required this.hint,
+    required this.style,
+    this.focusNode,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      maxLines: maxLines,
+      minLines: 1,
+      style: style,
+      cursorColor: AppColors.brand,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: style.copyWith(color: AppColors.textTertiary),
+        isCollapsed: true,
+        filled: false,
+        contentPadding: EdgeInsets.zero,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+      ),
+    );
+  }
+}
+
+class _PhotoTile extends StatelessWidget {
+  final String path;
+  final VoidCallback onTap;
+
+  const _PhotoTile({required this.path, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      scale: 0.98,
+      child: AspectRatio(
+        aspectRatio: 1.1,
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: AppColors.chipBackground,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          ),
+          child: path.isNotEmpty
+              ? Image.file(File(path), fit: BoxFit.cover)
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      category.icon,
-                      size: 16,
-                      color: isSelected
-                          ? AppColors.textOnPrimary
-                          : AppColors.textSecondary,
+                    const Icon(
+                      HugeIcons.strokeRoundedCamera01,
+                      size: 32,
+                      color: AppColors.textSecondary,
                     ),
-                    AppSpacing.horizontalGapSm,
+                    AppSpacing.verticalGapSm,
                     Text(
-                      category.label,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: isSelected
-                            ? AppColors.textOnPrimary
-                            : AppColors.textSecondary,
+                      '+${XpReason.photoAdded.xp} XP',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.brand,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
         ),
-      ],
-    )
-        .animate()
-        .fadeIn(duration: 300.ms, delay: 150.ms);
-  }
-
-  Widget _buildDescriptionField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Description', style: AppTextStyles.labelMedium),
-        AppSpacing.verticalGapSm,
-        TextField(
-          controller: _descriptionController,
-          maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'Describe the issue in detail...',
-            alignLabelWithHint: true,
-          ),
-          style: AppTextStyles.bodyLarge,
-        ),
-      ],
-    )
-        .animate()
-        .fadeIn(duration: 300.ms, delay: 200.ms);
-  }
-
-  Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: AppButton(
-        label: 'Submit Report',
-        onTap: _submit,
       ),
-    )
-        .animate()
-        .fadeIn(duration: 300.ms, delay: 300.ms)
-        .slideY(begin: 0.1, end: 0, duration: 300.ms);
+    );
   }
 }
