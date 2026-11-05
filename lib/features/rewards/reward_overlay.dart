@@ -166,9 +166,9 @@ class _RewardOverlayState extends State<RewardOverlay>
                         color: AppColors.onPrimaryMuted,
                       ),
                     ),
-                  if (moment.badges.isNotEmpty) ...[
+                  if (moment.badges.isNotEmpty || moment.prizes.isNotEmpty) ...[
                     AppSpacing.verticalGapXl,
-                    _buildBadges(),
+                    _buildUnlocks(),
                   ],
                   const Spacer(),
                   SizedBox(
@@ -209,11 +209,16 @@ class _RewardOverlayState extends State<RewardOverlay>
     );
   }
 
-  Widget _buildBadges() {
-    final badges = widget.moment.badges;
+  Widget _buildUnlocks() {
+    final moment = widget.moment;
+    final unlocks = [
+      for (final prize in moment.prizes)
+        (icon: prize.icon, label: 'Prize unlocked: ${prize.label}'),
+      for (final badge in moment.badges) (icon: badge.icon, label: badge.label),
+    ];
     return Column(
       children: [
-        for (var i = 0; i < badges.length; i++)
+        for (var i = 0; i < unlocks.length; i++)
           SpringIn(
             delay: Duration(milliseconds: 1400 + i * 140),
             child: Padding(
@@ -222,13 +227,13 @@ class _RewardOverlayState extends State<RewardOverlay>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    badges[i].icon,
+                    unlocks[i].icon,
                     size: 16,
                     color: AppColors.textOnPrimary,
                   ),
                   AppSpacing.horizontalGapSm,
                   Text(
-                    badges[i].label,
+                    unlocks[i].label,
                     style: AppTextStyles.labelMedium.copyWith(
                       color: AppColors.textOnPrimary,
                     ),

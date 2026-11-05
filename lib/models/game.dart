@@ -75,6 +75,30 @@ enum Rank {
   }
 }
 
+enum Prize {
+  cafeVoucher('Cafe voucher', 1000, HugeIcons.strokeRoundedCoffee02),
+  tShirt('ALU T-shirt', 2500, HugeIcons.strokeRoundedTShirt),
+  hoodie('ALU hoodie', 5000, HugeIcons.strokeRoundedHoodie),
+  headphones('Headphones', 10000, HugeIcons.strokeRoundedHeadphones),
+  tablet('Tablet', 25000, HugeIcons.strokeRoundedTablet01);
+
+  const Prize(this.label, this.xp, this.icon);
+  final String label;
+  final int xp;
+  final IconData icon;
+
+  bool unlockedAt(int total) => total >= xp;
+
+  double progressAt(int total) => (total / xp).clamp(0, 1);
+
+  static Prize? nextFor(int total) {
+    for (final prize in values) {
+      if (!prize.unlockedAt(total)) return prize;
+    }
+    return null;
+  }
+}
+
 class GameStats {
   final int filed;
   final int resolved;
@@ -229,8 +253,14 @@ class RewardMoment {
     return after == Rank.forXp(xpBefore) ? null : after;
   }
 
+  List<Prize> get prizes => [
+    for (final prize in Prize.values)
+      if (prize.unlockedAt(xpAfter) && !prize.unlockedAt(xpBefore)) prize,
+  ];
+
   bool get deservesCelebration =>
       rankUp != null ||
+      prizes.isNotEmpty ||
       badges.isNotEmpty ||
       events.any((event) => event.reason.isMajor);
 

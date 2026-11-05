@@ -215,6 +215,25 @@ void main() {
     });
   });
 
+  group('Prizes', () {
+    test('the next prize is the cheapest one still locked', () {
+      expect(Prize.nextFor(0), Prize.cafeVoucher);
+      expect(Prize.nextFor(1000), Prize.tShirt);
+      expect(Prize.nextFor(25000), isNull);
+    });
+
+    test('a reward lists only the prizes it crossed', () {
+      const moment = RewardMoment(
+        events: [],
+        xpBefore: 990,
+        xpAfter: 2500,
+        badges: [],
+      );
+      expect(moment.prizes, [Prize.cafeVoucher, Prize.tShirt]);
+      expect(moment.deservesCelebration, isTrue);
+    });
+  });
+
   group('Teams', () {
     const water = Department(
       id: 'w',
