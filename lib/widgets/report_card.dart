@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
 import '../core/theme/app_shadows.dart';
+import '../core/utils/time_format.dart';
 import '../core/theme/app_spacing.dart';
 import '../models/report.dart';
 import 'status_badge.dart';
@@ -159,7 +159,7 @@ class _ReportCardState extends State<ReportCard>
                       ),
                     ),
                     Text(
-                      timeago.format(widget.report.createdAt, locale: 'en_short'),
+                      shortTimeAgo(widget.report.createdAt),
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textTertiary,
                       ),
