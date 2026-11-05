@@ -8,7 +8,7 @@ import '../models/report_filter.dart';
 import '../models/report_status.dart';
 import 'app_button.dart';
 import 'app_sheet.dart';
-import 'filter_pill.dart';
+import 'category_chip.dart';
 
 class FilterSheet extends StatefulWidget {
   final ReportFilter initial;
@@ -106,7 +106,7 @@ class _FilterSheetState extends State<FilterSheet> {
             title: 'Sort by',
             children: [
               for (final sort in ReportSort.values)
-                FilterPill(
+                CategoryChip(
                   label: sort.label,
                   isSelected: _filter.sort == sort,
                   onTap: () =>
@@ -117,7 +117,7 @@ class _FilterSheetState extends State<FilterSheet> {
           _Section(
             title: 'Status',
             children: [
-              FilterPill(
+              CategoryChip(
                 label: 'Any',
                 isSelected: _filter.status == null,
                 onTap: () => setState(
@@ -125,7 +125,7 @@ class _FilterSheetState extends State<FilterSheet> {
                 ),
               ),
               for (final status in ReportStatus.feedValues)
-                FilterPill(
+                CategoryChip(
                   label: status.label,
                   isSelected: _filter.status == status,
                   onTap: () => setState(
@@ -138,7 +138,7 @@ class _FilterSheetState extends State<FilterSheet> {
             title: 'Category',
             children: [
               for (final category in ReportCategory.values)
-                FilterPill(
+                CategoryChip(
                   label: category.label,
                   isSelected: _filter.category == category,
                   onTap: () => setState(
@@ -151,7 +151,7 @@ class _FilterSheetState extends State<FilterSheet> {
             title: 'Date',
             children: [
               for (final preset in DatePreset.values)
-                FilterPill(
+                CategoryChip(
                   label:
                       preset == DatePreset.custom &&
                           _filter.datePreset == DatePreset.custom

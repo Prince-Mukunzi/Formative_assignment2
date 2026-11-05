@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_spacing.dart';
 import '../models/report_status.dart';
-import 'filter_pill.dart';
+import 'category_chip.dart';
 
 class StatusFilterBar extends StatelessWidget {
   final ReportStatus? selected;
@@ -20,14 +20,14 @@ class StatusFilterBar extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          FilterPill(
+          CategoryChip(
             label: 'All',
             isSelected: selected == null,
             onTap: () => onChanged(null),
           ),
           for (final status in ReportStatus.values) ...[
             AppSpacing.horizontalGapSm,
-            FilterPill(
+            CategoryChip(
               label: status.label,
               isSelected: selected == status,
               onTap: () => onChanged(status),
