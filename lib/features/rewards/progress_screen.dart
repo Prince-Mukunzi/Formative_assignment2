@@ -159,19 +159,20 @@ class _Badges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      clipBehavior: Clip.none,
-      padding: EdgeInsets.zero,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.md,
-      crossAxisSpacing: AppSpacing.md,
-      childAspectRatio: 0.95,
-      children: [
-        for (final badge in BadgeKind.values)
-          BadgeTile(badge: badge, earned: badge.isEarned(stats)),
-      ],
+    return AppCard(
+      child: GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: AppSpacing.lg,
+        crossAxisSpacing: AppSpacing.sm,
+        childAspectRatio: 1.05,
+        children: [
+          for (final badge in BadgeKind.values)
+            BadgeTile(badge: badge, earned: badge.isEarned(stats)),
+        ],
+      ),
     );
   }
 }

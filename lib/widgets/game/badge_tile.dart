@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/game.dart';
-import '../app_card.dart';
 import '../tinted_icon.dart';
 
 class BadgeTile extends StatelessWidget {
@@ -15,26 +14,20 @@ class BadgeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.lg,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TintedIcon(icon: badge.icon, accent: earned, muted: !earned),
-          AppSpacing.verticalGapSm,
-          Text(
-            badge.label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: earned ? AppColors.textPrimary : AppColors.textSecondary,
-            ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        TintedIcon(icon: badge.icon, accent: earned, muted: !earned),
+        AppSpacing.verticalGapSm,
+        Text(
+          badge.label,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: earned ? AppColors.textPrimary : AppColors.textSecondary,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
