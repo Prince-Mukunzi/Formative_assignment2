@@ -18,8 +18,8 @@ import '../../widgets/motion/kick_controller.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/rolling_number.dart';
 import '../../widgets/motion/shake.dart';
-import '../../widgets/report_image.dart';
 import '../../widgets/wheel_picker.dart';
+import 'photo_step.dart';
 import '../../core/utils/app_haptics.dart';
 
 class CreateReportScreen extends ConsumerStatefulWidget {
@@ -213,7 +213,10 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
         ),
       ),
     );
-    if (source == null) return;
+    if (source != null) await _pickFrom(source);
+  }
+
+  Future<void> _pickFrom(ImageSource source) async {
     final XFile? file = await ImagePicker().pickImage(
       source: source,
       imageQuality: 80,
@@ -277,10 +280,14 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
                   ),
                   _Step(
                     question: 'Add a photo',
-                    child: _PhotoTile(
+                    child: PhotoStep(
                       path: _imagePath,
-                      icon: _category?.icon ?? HugeIcons.strokeRoundedCamera01,
-                      onTap: _pickImage,
+                      category: _category ?? ReportCategory.facilities,
+                      title: _titleController.text.trim(),
+                      location: _location,
+                      onCamera: () => _pickFrom(ImageSource.camera),
+                      onLibrary: () => _pickFrom(ImageSource.gallery),
+                      onChange: _pickImage,
                     ),
                   ),
                 ],
@@ -542,56 +549,6 @@ class _LocationList extends StatelessWidget {
           ),
         AppSpacing.verticalGapLg,
       ],
-    );
-  }
-}
-
-class _PhotoTile extends StatelessWidget {
-  final String path;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _PhotoTile({
-    required this.path,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Pressable(
-      onTap: onTap,
-      scale: 0.98,
-      child: AspectRatio(
-        aspectRatio: 1.1,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          ),
-          child: path.isNotEmpty
-              ? ReportImage.path(path, icon: icon)
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      HugeIcons.strokeRoundedCamera01,
-                      size: 32,
-                      color: AppColors.textSecondary,
-                    ),
-                    AppSpacing.verticalGapSm,
-                    Text(
-                      '+${XpReason.photoAdded.xp} XP',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: AppColors.brand,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ),
     );
   }
 }
