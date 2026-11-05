@@ -6,7 +6,6 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/accountability.dart';
 import '../../models/department.dart';
-import '../../providers/clock_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../motion/rolling_number.dart';
 import '../spring_rank_list.dart';
@@ -20,20 +19,17 @@ class DepartmentBoard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final board = departmentBoard(
-      ref.watch(reportsProvider),
-      ref.watch(minuteProvider),
-    );
+    final board = ref.watch(departmentBoardProvider);
     return SpringRankList(
       rowHeight: _rowHeight,
       rows: [
         for (var i = 0; i < board.length; i++)
           (
-            id: board[i].department.name,
+            id: board[i].department.id,
             child: _Row(
               place: i + 1,
               score: board[i],
-              highlighted: board[i].department == highlight,
+              highlighted: board[i].department.id == highlight?.id,
             ),
           ),
       ],

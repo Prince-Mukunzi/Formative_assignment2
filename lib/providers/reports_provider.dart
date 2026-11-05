@@ -2,11 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/mock_data.dart';
+import '../models/accountability.dart';
+import '../models/department.dart';
 import '../models/game.dart';
 import '../models/report.dart';
 import '../models/report_category.dart';
 import '../models/report_status.dart';
 import '../services/report_service.dart';
+import 'clock_provider.dart';
+import 'directory_provider.dart';
 import 'game_provider.dart';
 import 'session_provider.dart';
 
@@ -98,6 +102,16 @@ class ReportsNotifier extends Notifier<List<Report>> {
     _creditReporter(report, XpReason.fixChecked);
   }
 
+  void reopen(String id) => _update(id, (r) => r.reopened(DateTime.now()));
+
+  void reassign(String id, String departmentId) =>
+      _update(id, (r) => r.copyWith(assignedDepartmentId: departmentId));
+
+  void delete(String id) => _set([
+    for (final report in state)
+      if (report.id != id) report,
+  ]);
+
   void reportStillBroken(String id) {
     final report = _update(id, (r) => r.reopened(DateTime.now()));
     _creditReporter(report, XpReason.fixChecked);
@@ -108,8 +122,29 @@ final reportsProvider = NotifierProvider<ReportsNotifier, List<Report>>(
   ReportsNotifier.new,
 );
 
-final reportByIdProvider = Provider.family<Report, String>((ref, id) {
+final reportByIdProvider = Provider.family<Report?, String>((ref, id) {
   return ref.watch(
-    reportsProvider.select((reports) => reports.firstWhere((r) => r.id == id)),
+    reportsProvider.select(
+      (reports) => reports.where((r) => r.id == id).firstOrNull,
+    ),
+  );
+});
+
+final departmentReportsProvider = Provider.family<List<Report>, String>((
+  ref,
+  departmentId,
+) {
+  final departments = ref.watch(departmentsProvider);
+  return ref
+      .watch(reportsProvider)
+      .where((r) => departments.ownerOf(r)?.id == departmentId)
+      .toList();
+});
+
+final departmentBoardProvider = Provider<List<DepartmentScore>>((ref) {
+  return departmentBoard(
+    ref.watch(reportsProvider),
+    ref.watch(minuteProvider),
+    ref.watch(departmentsProvider),
   );
 });

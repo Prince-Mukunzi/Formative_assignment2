@@ -65,10 +65,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
   @override
   Widget build(BuildContext context) {
     final now = ref.watch(minuteProvider);
-    final owned = ref
-        .watch(reportsProvider)
-        .where((r) => r.department == widget.department)
-        .toList();
+    final owned = ref.watch(departmentReportsProvider(widget.department.id));
     final reports = _visible(owned);
     return SafeArea(
       bottom: false,

@@ -1,3 +1,4 @@
+import 'package:alu_bug_bounty/core/mock_data.dart';
 import 'package:alu_bug_bounty/models/accountability.dart';
 import 'package:alu_bug_bounty/models/department.dart';
 import 'package:alu_bug_bounty/models/game.dart';
@@ -196,17 +197,56 @@ void main() {
     });
 
     test('overdue work sinks a department below one that delivers', () {
-      final board = departmentBoard([
-        _report(category: ReportCategory.water, age: const Duration(days: 3)),
-        _report(
-          category: ReportCategory.electricity,
-          status: ReportStatus.resolved,
-        ),
-      ], _now);
-      expect(board.first.department, Department.electrical);
+      final board = departmentBoard(
+        [
+          _report(category: ReportCategory.water, age: const Duration(days: 3)),
+          _report(
+            category: ReportCategory.electricity,
+            status: ReportStatus.resolved,
+          ),
+        ],
+        _now,
+        MockData.departments,
+      );
+      expect(board.first.department.id, 'electrical');
       expect(board.first.points, 10);
-      expect(board.last.department, Department.plumbing);
+      expect(board.last.department.id, 'plumbing');
       expect(board.last.points, -15);
+    });
+  });
+
+  group('Teams', () {
+    const water = Department(
+      id: 'w',
+      label: 'Water',
+      categories: {ReportCategory.water},
+    );
+    const power = Department(
+      id: 'p',
+      label: 'Power',
+      categories: {ReportCategory.electricity},
+    );
+
+    test('saving a team takes its categories from the others', () {
+      final teams = [water, power].withSaved(
+        const Department(
+          id: 'new',
+          label: 'Utilities',
+          categories: {ReportCategory.water, ReportCategory.electricity},
+        ),
+      );
+      expect(teams.byId('w')!.categories, isEmpty);
+      expect(teams.byId('p')!.categories, isEmpty);
+      expect(teams.ownerOf(_report())!.id, 'new');
+    });
+
+    test('a category nobody owns leaves the report with no team', () {
+      expect(<Department>[power].ownerOf(_report()), isNull);
+    });
+
+    test('an assignment overrides the category owner', () {
+      final moved = _report().copyWith(assignedDepartmentId: 'p');
+      expect([water, power].ownerOf(moved)!.id, 'p');
     });
   });
 }

@@ -68,11 +68,11 @@ class _UpvoteButtonState extends ConsumerState<UpvoteButton>
 
   @override
   Widget build(BuildContext context) {
-    final isFaculty = ref.watch(sessionProvider) is FacultySession;
+    final canVote = ref.watch(sessionProvider) is StudentSession;
     final report = widget.report;
     return Builder(
       builder: (buttonContext) {
-        final onTap = isFaculty ? null : () => _toggle(buttonContext);
+        final onTap = canVote ? () => _toggle(buttonContext) : null;
         return widget.expanded
             ? _buildExpanded(onTap)
             : _buildCompact(onTap, report);

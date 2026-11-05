@@ -7,9 +7,8 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../core/router/app_router.dart';
 import '../../models/report.dart';
 import '../../models/report_status.dart';
-import '../../models/session.dart';
+import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
-import '../../providers/session_provider.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/report_detail_sheet.dart';
 import '../profile/profile_screen.dart';
@@ -30,16 +29,11 @@ class _FacultyShellState extends ConsumerState<FacultyShell> {
 
   @override
   Widget build(BuildContext context) {
-    final session = ref.watch(sessionProvider);
-    if (session is! FacultySession) return const SizedBox.shrink();
-    final department = session.department;
+    final department = ref.watch(currentDepartmentProvider);
+    if (department == null) return const SizedBox.shrink();
     final untriaged = ref
-        .watch(reportsProvider)
-        .where(
-          (r) =>
-              r.department == department &&
-              r.status == ReportStatus.awaitingApproval,
-        )
+        .watch(departmentReportsProvider(department.id))
+        .where((r) => r.status == ReportStatus.awaitingApproval)
         .length;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,

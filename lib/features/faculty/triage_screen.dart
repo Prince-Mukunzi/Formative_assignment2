@@ -13,9 +13,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/report.dart';
 import '../../models/report_status.dart';
-import '../../models/session.dart';
+import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
-import '../../providers/session_provider.dart';
 import '../../widgets/motion/confetti.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/spring_in.dart';
@@ -54,15 +53,11 @@ class _TriageScreenState extends ConsumerState<TriageScreen>
   bool _pastThreshold = false;
 
   List<Report> _loadDeck() {
-    final session = ref.read(sessionProvider);
-    if (session is! FacultySession) return const [];
+    final department = ref.read(currentDepartmentProvider);
+    if (department == null) return const [];
     return ref
-        .read(reportsProvider)
-        .where(
-          (r) =>
-              r.department == session.department &&
-              r.status == ReportStatus.awaitingApproval,
-        )
+        .read(departmentReportsProvider(department.id))
+        .where((r) => r.status == ReportStatus.awaitingApproval)
         .toList();
   }
 

@@ -80,9 +80,15 @@ class DepartmentScore {
   });
 }
 
-List<DepartmentScore> departmentBoard(Iterable<Report> reports, DateTime now) {
-  final board = Department.values.map((department) {
-    final owned = reports.where((r) => r.department == department);
+List<DepartmentScore> departmentBoard(
+  Iterable<Report> reports,
+  DateTime now,
+  List<Department> departments,
+) {
+  final board = departments.map((department) {
+    final owned = reports.where(
+      (r) => departments.ownerOf(r)?.id == department.id,
+    );
     final resolved = owned
         .where((r) => r.status == ReportStatus.resolved)
         .length;

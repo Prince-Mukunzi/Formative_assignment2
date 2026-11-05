@@ -10,11 +10,10 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/department.dart';
 import '../../models/game.dart';
-import '../../models/report.dart';
 import '../../models/report_status.dart';
-import '../../models/session.dart';
 import '../../models/sla.dart';
 import '../../providers/clock_provider.dart';
+import '../../providers/directory_provider.dart';
 import '../../providers/game_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../providers/session_provider.dart';
@@ -26,8 +25,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(sessionProvider);
-    final department = session is FacultySession ? session.department : null;
+    final department = ref.watch(currentDepartmentProvider);
     final xp = ref.watch(gameProvider.select((game) => game.xp));
     return SafeArea(
       bottom: false,
@@ -97,9 +95,7 @@ class ProfileScreen extends ConsumerWidget {
       ];
     }
     final now = ref.watch(minuteProvider);
-    final List<Report> owned = reports
-        .where((r) => r.department == department)
-        .toList();
+    final owned = ref.watch(departmentReportsProvider(department.id));
     return [
       _StatTile(
         count: owned.where((r) => r.status == ReportStatus.resolved).length,

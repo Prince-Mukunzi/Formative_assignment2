@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+import '../../core/mock_data.dart';
 import '../../core/router/app_router.dart';
 import '../../models/report.dart';
+import '../../providers/directory_provider.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/report_detail_sheet.dart';
 import '../home/home_screen.dart';
 import '../report/reports_list_screen.dart';
 import '../profile/profile_screen.dart';
 import '../rewards/reward_director.dart';
+import 'suspended_screen.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> {
   int _currentIndex = 0;
 
   void _onReportTap(Report report) {
@@ -28,6 +32,13 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final suspended = ref.watch(
+      peopleProvider.select(
+        (people) =>
+            people.any((p) => p.id == MockData.currentStudentId && p.suspended),
+      ),
+    );
+    if (suspended) return const SuspendedScreen();
     return RewardDirector(
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,

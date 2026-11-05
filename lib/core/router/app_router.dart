@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/admin_shell.dart';
 import '../../features/faculty/faculty_shell.dart';
 import '../../features/faculty/triage_screen.dart';
 import '../../features/report/create_report_screen.dart';
@@ -19,6 +20,7 @@ abstract final class AppRoutes {
   static const progress = '/student/progress';
   static const faculty = '/faculty';
   static const triage = '/faculty/triage';
+  static const admin = '/admin';
 }
 
 Page<void> _fadeIn(Widget child) => CustomTransitionPage(
@@ -44,6 +46,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           location.startsWith(AppRoutes.student) ? null : AppRoutes.student,
         FacultySession() =>
           location.startsWith(AppRoutes.faculty) ? null : AppRoutes.faculty,
+        AdminSession() =>
+          location.startsWith(AppRoutes.admin) ? null : AppRoutes.admin,
       };
     },
     routes: [
@@ -65,6 +69,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (_, _) => const CupertinoPage(child: ProgressScreen()),
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.admin,
+        pageBuilder: (_, _) => _fadeIn(const AdminShell()),
       ),
       GoRoute(
         path: AppRoutes.faculty,

@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../models/accountability.dart';
 import '../../models/department.dart';
-import '../../providers/clock_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/faculty/department_board.dart';
 
@@ -16,11 +14,8 @@ class BoardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final board = departmentBoard(
-      ref.watch(reportsProvider),
-      ref.watch(minuteProvider),
-    );
-    final place = board.indexWhere((s) => s.department == department) + 1;
+    final board = ref.watch(departmentBoardProvider);
+    final place = board.indexWhere((s) => s.department.id == department.id) + 1;
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(

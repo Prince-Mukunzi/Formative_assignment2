@@ -1,4 +1,6 @@
+import '../models/department.dart';
 import '../models/game.dart';
+import '../models/person.dart';
 import '../models/report.dart';
 import '../models/report_status.dart';
 import '../models/report_category.dart';
@@ -181,6 +183,67 @@ abstract final class MockData {
       reportedBy: 'user10',
       reportedByName: 'Lina M.',
       createdAt: DateTime.now().subtract(const Duration(hours: 18)),
+    ),
+  ];
+
+  static const departments = [
+    Department(
+      id: 'electrical',
+      label: 'Electrical',
+      categories: {ReportCategory.electricity},
+    ),
+    Department(
+      id: 'plumbing',
+      label: 'Plumbing',
+      categories: {ReportCategory.water},
+    ),
+    Department(
+      id: 'facilities',
+      label: 'Facilities',
+      categories: {
+        ReportCategory.facilities,
+        ReportCategory.furniture,
+        ReportCategory.sanitation,
+        ReportCategory.safety,
+      },
+    ),
+  ];
+
+  static const locations = [
+    'Block A',
+    'Block B',
+    'Block C',
+    'Dorm A',
+    'Dorm B',
+    'Dorm C',
+    'East Wing',
+    'Library',
+    'Main Hall',
+    'Science Block',
+  ];
+
+  static final List<Person> people = [
+    for (final entry in {
+      for (final r in reports) r.reportedBy: r.reportedByName,
+    }.entries)
+      Person(id: entry.key, name: entry.value, role: PersonRole.student),
+    const Person(
+      id: 'staff1',
+      name: 'Daniel N.',
+      role: PersonRole.faculty,
+      departmentId: 'electrical',
+    ),
+    const Person(
+      id: 'staff2',
+      name: 'Esther U.',
+      role: PersonRole.faculty,
+      departmentId: 'plumbing',
+    ),
+    const Person(
+      id: 'staff3',
+      name: 'Joseph K.',
+      role: PersonRole.faculty,
+      departmentId: 'facilities',
     ),
   ];
 

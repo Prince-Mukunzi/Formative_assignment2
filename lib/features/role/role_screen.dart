@@ -9,8 +9,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../models/department.dart';
 import '../../models/session.dart';
+import '../../providers/directory_provider.dart';
 import '../../providers/session_provider.dart';
 import '../../widgets/motion/pressable.dart';
 import '../../widgets/motion/spring_in.dart';
@@ -108,6 +108,20 @@ class _RoleScreenState extends ConsumerState<RoleScreen> {
                   isOpen: _facultyOpen,
                   onTap: () => setState(() => _facultyOpen = !_facultyOpen),
                   expansion: _DepartmentPicker(onPicked: _enter),
+                ),
+              ),
+              AppSpacing.verticalGapLg,
+              SpringIn(
+                delay: const Duration(milliseconds: 420),
+                offsetY: 60,
+                spring: AppSprings.bouncy,
+                child: Builder(
+                  builder: (cardContext) => _RoleCard(
+                    icon: HugeIcons.strokeRoundedShield01,
+                    title: 'Admin',
+                    onTap: () =>
+                        _enter(const AdminSession(), _centerOf(cardContext)),
+                  ),
                 ),
               ),
             ],
@@ -225,13 +239,13 @@ class _RoleCard extends StatelessWidget {
   }
 }
 
-class _DepartmentPicker extends StatelessWidget {
+class _DepartmentPicker extends ConsumerWidget {
   final void Function(Session session, Offset origin) onPicked;
 
   const _DepartmentPicker({required this.onPicked});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -239,59 +253,42 @@ class _DepartmentPicker extends StatelessWidget {
         AppSpacing.xl,
         AppSpacing.xl,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              for (final department in Department.values) ...[
-                if (department != Department.values.first)
-                  AppSpacing.horizontalGapSm,
-                Expanded(
-                  child: Builder(
-                    builder: (tileContext) => Pressable(
-                      onTap: () {
-                        final box =
-                            tileContext.findRenderObject()! as RenderBox;
-                        onPicked(
-                          FacultySession(department),
-                          box.localToGlobal(box.size.center(Offset.zero)),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.md,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.chipBackground,
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusLg,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              department.icon,
-                              size: 22,
-                              color: AppColors.primary,
-                            ),
-                            AppSpacing.verticalGapXs,
-                            Text(
-                              department.label,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
+      child: SizedBox(
+        width: double.infinity,
+        child: Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            for (final department in ref.watch(departmentsProvider))
+              Builder(
+                builder: (tileContext) => Pressable(
+                  onTap: () {
+                    final box = tileContext.findRenderObject()! as RenderBox;
+                    onPicked(
+                      FacultySession(department.id),
+                      box.localToGlobal(box.size.center(Offset.zero)),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.chipBackground,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
                       ),
+                    ),
+                    child: Text(
+                      department.label,
+                      style: AppTextStyles.labelMedium,
                     ),
                   ),
                 ),
-              ],
-            ],
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }

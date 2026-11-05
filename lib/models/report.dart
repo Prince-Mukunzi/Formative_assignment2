@@ -1,4 +1,3 @@
-import 'department.dart';
 import 'report_status.dart';
 import 'report_category.dart';
 
@@ -23,6 +22,7 @@ class Report {
   final DateTime? lastNudgedAt;
   final int nudges;
   final int reopenCount;
+  final String? assignedDepartmentId;
 
   const Report({
     required this.id,
@@ -43,9 +43,8 @@ class Report {
     this.lastNudgedAt,
     this.nudges = 0,
     this.reopenCount = 0,
+    this.assignedDepartmentId,
   });
-
-  Department get department => Department.forCategory(category);
 
   // The reporter plus everyone who backed the report.
   int get affectedStudents => upvotes + 1;
@@ -103,6 +102,7 @@ class Report {
     DateTime? lastNudgedAt,
     int? nudges,
     int? reopenCount,
+    String? assignedDepartmentId,
   }) {
     return Report(
       id: id,
@@ -123,6 +123,7 @@ class Report {
       lastNudgedAt: lastNudgedAt ?? this.lastNudgedAt,
       nudges: nudges ?? this.nudges,
       reopenCount: reopenCount ?? this.reopenCount,
+      assignedDepartmentId: assignedDepartmentId ?? this.assignedDepartmentId,
     );
   }
 
@@ -146,6 +147,7 @@ class Report {
       'lastNudgedAt': lastNudgedAt?.millisecondsSinceEpoch,
       'nudges': nudges,
       'reopenCount': reopenCount,
+      'assignedDepartmentId': assignedDepartmentId,
     };
   }
 
@@ -174,6 +176,7 @@ class Report {
       lastNudgedAt: optionalDate('lastNudgedAt'),
       nudges: map['nudges'] as int,
       reopenCount: map['reopenCount'] as int,
+      assignedDepartmentId: map['assignedDepartmentId'] as String?,
     );
   }
 }

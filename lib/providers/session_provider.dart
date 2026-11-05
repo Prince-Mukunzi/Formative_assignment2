@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/department.dart';
 import '../models/session.dart';
 import '../services/local_store.dart';
 import '../services/session_service.dart';
+import 'directory_provider.dart';
 
 final localStoreProvider = Provider<LocalStore>(
   (ref) => throw StateError('localStoreProvider must be overridden in main'),
@@ -14,7 +16,15 @@ final sessionServiceProvider = Provider(
 
 class SessionNotifier extends Notifier<Session?> {
   @override
-  Session? build() => ref.watch(sessionServiceProvider).load();
+  Session? build() {
+    final service = ref.watch(sessionServiceProvider);
+    final session = service.load();
+    final removed =
+        session is FacultySession &&
+        ref.read(departmentsProvider).byId(session.departmentId) == null;
+    if (removed) service.clear();
+    return removed ? null : session;
+  }
 
   void signIn(Session session) {
     state = session;

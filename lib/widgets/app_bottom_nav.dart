@@ -42,6 +42,12 @@ class AppBottomNav extends StatelessWidget {
     AppNavItem(HugeIcons.strokeRoundedUserCircle, 'Profile'),
   ];
 
+  static const adminItems = [
+    AppNavItem(HugeIcons.strokeRoundedDashboardSquare01, 'Overview'),
+    AppNavItem(HugeIcons.strokeRoundedTask01, 'Reports'),
+    AppNavItem(HugeIcons.strokeRoundedUserGroup, 'People'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
