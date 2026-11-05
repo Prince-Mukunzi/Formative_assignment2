@@ -582,6 +582,7 @@ class _FacultyActions extends ConsumerWidget {
         children: [
           SlideToConfirm(
             label: 'Slide to approve',
+            tone: SlideTone.primary,
             onConfirmed: () {
               Navigator.of(context).pop();
               reports.approve(report.id);

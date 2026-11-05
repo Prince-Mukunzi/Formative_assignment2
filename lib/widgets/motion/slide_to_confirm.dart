@@ -9,14 +9,20 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/app_haptics.dart';
 
+/// [brand] fills crimson and is kept for finishing work; [primary] fills navy
+/// for routine go-aheads.
+enum SlideTone { brand, primary }
+
 class SlideToConfirm extends StatefulWidget {
   final String label;
   final VoidCallback onConfirmed;
+  final SlideTone tone;
 
   const SlideToConfirm({
     super.key,
     required this.label,
     required this.onConfirmed,
+    this.tone = SlideTone.brand,
   });
 
   @override
@@ -117,6 +123,9 @@ class _SlideToConfirmState extends State<SlideToConfirm>
     );
   }
 
+  Color get _fill =>
+      widget.tone == SlideTone.brand ? AppColors.brand : AppColors.primary;
+
   Widget _buildTrack() {
     final progress = _progress;
     // The return spring overshoots zero, and the thumb must not leave the track.
@@ -124,11 +133,9 @@ class _SlideToConfirmState extends State<SlideToConfirm>
     return Container(
       height: _height,
       decoration: BoxDecoration(
-        color: Color.lerp(
-          AppColors.chipBackground,
-          AppColors.brandTint,
-          progress,
-        ),
+        color: widget.tone == SlideTone.brand
+            ? Color.lerp(AppColors.chipBackground, AppColors.brandTint, progress)
+            : AppColors.chipBackground,
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),
       child: Stack(
@@ -139,7 +146,7 @@ class _SlideToConfirmState extends State<SlideToConfirm>
             child: Container(
               width: position + _thumb + _inset * 2,
               decoration: BoxDecoration(
-                color: AppColors.brand,
+                color: _fill,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
               ),
             ),
@@ -185,26 +192,25 @@ class _SlideToConfirmState extends State<SlideToConfirm>
           duration: 1500.ms,
           size: 0.8,
           blendMode: BlendMode.srcIn,
-          colors: const [
-            AppColors.textPrimary,
-            AppColors.brand,
-            AppColors.textPrimary,
-          ],
+          colors: [AppColors.textPrimary, _fill, AppColors.textPrimary],
         );
   }
 
   Widget _buildThumb(double progress) {
+    // A navy thumb would vanish into a navy fill, so it turns white.
+    final light = widget.tone == SlideTone.primary;
     return Transform.scale(
       scale: 1 + progress * 0.04,
       child: Container(
         width: _thumb,
         height: _thumb,
         decoration: BoxDecoration(
-          gradient: AppColors.navy,
+          gradient: light ? null : AppColors.navy,
+          color: light ? AppColors.surface : null,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.45),
+              color: AppColors.primary.withValues(alpha: light ? 0.25 : 0.45),
               blurRadius: 12 + progress * 14,
               offset: const Offset(0, 4),
             ),
@@ -218,7 +224,7 @@ class _SlideToConfirmState extends State<SlideToConfirm>
                 : HugeIcons.strokeRoundedArrowRight01,
             key: ValueKey(_confirmed),
             size: 24,
-            color: AppColors.textOnPrimary,
+            color: light ? AppColors.primary : AppColors.textOnPrimary,
           ),
         ),
       ),
