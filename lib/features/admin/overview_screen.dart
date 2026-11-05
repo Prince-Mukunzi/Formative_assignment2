@@ -45,18 +45,7 @@ class OverviewScreen extends ConsumerWidget {
             AppSpacing.verticalGapLg,
             Text('Admin', style: AppTextStyles.heading1),
             AppSpacing.verticalGapLg,
-            CampusPulseCard(reports: reports, now: now),
-            if (unowned > 0) ...[
-              AppSpacing.verticalGapMd,
-              AppCard(
-                child: Text(
-                  '$unowned with no team',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.brand,
-                  ),
-                ),
-              ),
-            ],
+            CampusPulseCard(reports: reports, now: now, unowned: unowned),
             const SectionTitle('Teams'),
             CardList(
               children: [
