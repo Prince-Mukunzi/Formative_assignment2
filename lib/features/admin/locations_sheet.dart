@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../providers/directory_provider.dart';
+import '../../widgets/app_sheet.dart';
 import '../../widgets/bare_field.dart';
 import '../../widgets/motion/pressable.dart';
 
@@ -15,6 +16,7 @@ class LocationsSheet extends ConsumerStatefulWidget {
   static void show(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: AppSheet.animation,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       builder: (_) => const LocationsSheet(),

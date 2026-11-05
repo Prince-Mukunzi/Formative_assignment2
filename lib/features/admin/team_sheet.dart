@@ -9,6 +9,7 @@ import '../../models/department.dart';
 import '../../models/report_category.dart';
 import '../../providers/directory_provider.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_sheet.dart';
 import '../../widgets/bare_field.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/motion/pressable.dart';
@@ -23,6 +24,7 @@ class TeamSheet extends ConsumerStatefulWidget {
   static void show(BuildContext context, [Department? team]) {
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: AppSheet.animation,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       builder: (_) => TeamSheet(team: team),

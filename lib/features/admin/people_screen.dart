@@ -11,6 +11,7 @@ import '../../providers/directory_provider.dart';
 import '../../providers/reports_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/app_sheet.dart';
 import '../../widgets/category_chip.dart';
 import '../../widgets/filled_field.dart';
 import '../../widgets/team_wheel.dart';
@@ -154,6 +155,7 @@ class _PersonSheet extends ConsumerWidget {
   static void show(BuildContext context, String personId) {
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: AppSheet.animation,
       backgroundColor: AppColors.surface,
       builder: (_) => _PersonSheet(personId: personId),
     );
@@ -205,6 +207,7 @@ class _InviteSheet extends ConsumerStatefulWidget {
   static void show(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: AppSheet.animation,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       builder: (_) => const _InviteSheet(),

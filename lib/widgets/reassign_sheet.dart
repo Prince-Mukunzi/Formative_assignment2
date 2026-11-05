@@ -9,6 +9,7 @@ import '../models/report.dart';
 import '../providers/directory_provider.dart';
 import '../providers/reports_provider.dart';
 import 'app_button.dart';
+import 'app_sheet.dart';
 import 'team_wheel.dart';
 
 class ReassignSheet extends ConsumerStatefulWidget {
@@ -19,6 +20,7 @@ class ReassignSheet extends ConsumerStatefulWidget {
   static void show(BuildContext context, Report report) {
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: AppSheet.animation,
       backgroundColor: AppColors.surface,
       builder: (_) => ReassignSheet(report: report),
     );

@@ -19,6 +19,7 @@ import '../providers/directory_provider.dart';
 import '../providers/reports_provider.dart';
 import '../providers/session_provider.dart';
 import 'app_button.dart';
+import 'app_sheet.dart';
 import 'game/bounty_track.dart';
 import 'motion/confetti.dart';
 import 'motion/pressable.dart';
@@ -41,11 +42,7 @@ class ReportDetailSheet extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.heroOverlayClear,
-      sheetAnimationStyle: const AnimationStyle(
-        duration: Duration(milliseconds: 420),
-        reverseDuration: Duration(milliseconds: 240),
-        curve: Curves.easeOutQuart,
-      ),
+      sheetAnimationStyle: AppSheet.animation,
       builder: (_) => ReportDetailSheet(reportId: report.id),
     );
   }

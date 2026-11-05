@@ -7,6 +7,7 @@ import '../models/report_category.dart';
 import '../models/report_filter.dart';
 import '../models/report_status.dart';
 import 'app_button.dart';
+import 'app_sheet.dart';
 import 'filter_pill.dart';
 
 class FilterSheet extends StatefulWidget {
@@ -20,6 +21,7 @@ class FilterSheet extends StatefulWidget {
   ) {
     return showModalBottomSheet<ReportFilter>(
       context: context,
+      sheetAnimationStyle: AppSheet.animation,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => FilterSheet(initial: initial),
