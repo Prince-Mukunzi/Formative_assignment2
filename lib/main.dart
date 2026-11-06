@@ -8,7 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'providers/session_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/sync_provider.dart';
-import 'services/firebase_setup.dart';
+import 'services/backend.dart';
 import 'services/local_store.dart';
 import 'widgets/notice_banner.dart';
 
@@ -20,7 +20,7 @@ Future<void> main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  await setUpFirebase();
+  await setUpBackend();
   final prefs = await SharedPreferences.getInstance();
   final store = LocalStore(prefs);
   await store.dropLegacyData();

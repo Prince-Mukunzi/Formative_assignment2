@@ -1,58 +1,44 @@
-import 'dart:developer' as developer;
-
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/person.dart';
+import 'backend.dart';
+import 'row_decoding.dart';
 
 class ProfileService {
-  final FirebaseFirestore _db;
+  final SupabaseClient _db;
 
-  ProfileService({FirebaseFirestore? db})
-    : _db = db ?? FirebaseFirestore.instance;
+  ProfileService({SupabaseClient? db}) : _db = db ?? backend;
 
-  CollectionReference<Map<String, dynamic>> get _users =>
-      _db.collection('users');
-
-  // A cached "missing" is not trusted: on a new device the profile exists
-  // on the server but not yet locally.
-  Stream<Person?> watch(String uid) => _users
-      .doc(uid)
-      .snapshots(includeMetadataChanges: true)
-      .where((doc) => doc.exists || !doc.metadata.isFromCache)
-      .map((doc) => doc.exists ? _decode(doc) : null);
-
-  Stream<List<Person>> watchAll() => _users.snapshots().map(
-    (snapshot) => [for (final doc in snapshot.docs) ?_decode(doc)],
-  );
-
-  Person? _decode(DocumentSnapshot<Map<String, dynamic>> doc) {
-    try {
-      return Person.fromMap(doc.id, doc.data()!);
-    } on Object catch (error) {
-      developer.log(
-        'Skipped malformed user ${doc.id}',
-        error: error,
-        level: 900,
+  Stream<Person?> watch(String uid) => _db
+      .from('profiles')
+      .stream(primaryKey: ['id'])
+      .eq('id', uid)
+      .map(
+        (rows) => rows.isEmpty ? null : decodeRow(rows.first, Person.fromRow),
       );
-      return null;
-    }
-  }
+
+  Stream<List<Person>> watchAll() => _db
+      .from('profiles')
+      .stream(primaryKey: ['id'])
+      .order('name', ascending: true)
+      .map((rows) => decodeRows(rows, Person.fromRow));
 
   Future<void> setSuspended(String uid, {required bool suspended}) =>
-      _users.doc(uid).update({'suspended': suspended});
+      _call('set_suspended', {'member': uid, 'is_suspended': suspended});
 
   Future<void> moveToDepartment(String uid, String departmentId) =>
-      _users.doc(uid).update({'departmentId': departmentId});
+      _call('move_to_department', {'member': uid, 'department': departmentId});
 
   Future<void> invite({
     required String email,
     required PersonRole role,
-    required String invitedBy,
     String? departmentId,
-  }) => _db.collection('invites').doc(email.trim().toLowerCase()).set({
-    'role': role.name,
-    'departmentId': ?departmentId,
-    'invitedBy': invitedBy,
-    'createdAt': FieldValue.serverTimestamp(),
+  }) => _call('invite_member', {
+    'invitee': email,
+    'member_role': role.name,
+    'department': departmentId,
   });
+
+  Future<void> _call(String function, Map<String, Object?> params) =>
+      _db.rpc<void>(function, params: params).timeout(backendTimeout);
 }

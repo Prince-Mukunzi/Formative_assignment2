@@ -1,138 +1,96 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/report.dart';
 import '../models/report_category.dart';
-import 'firestore_decoding.dart';
+import 'backend.dart';
+import 'row_decoding.dart';
 
+/// Reads stream from the reports table; every write is a database function
+/// that checks the caller's role and the report's state.
 class ReportService {
-  final FirebaseFirestore _db;
+  final SupabaseClient _db;
 
-  ReportService({FirebaseFirestore? db})
-    : _db = db ?? FirebaseFirestore.instance;
+  ReportService({SupabaseClient? db}) : _db = db ?? backend;
 
-  CollectionReference<Map<String, dynamic>> get _reports =>
-      _db.collection('reports');
+  String newId() => const Uuid().v4();
 
-  String newId() => _reports.doc().id;
-
-  Stream<List<Report>> watchAll() => _reports
-      .orderBy('createdAt', descending: true)
-      .snapshots()
-      .map(
-        (snapshot) => [
-          for (final doc in snapshot.docs) ?decodeOrSkip(doc, Report.fromMap),
-        ],
-      );
+  Stream<List<Report>> watchAll() => _db
+      .from('reports')
+      .stream(primaryKey: ['id'])
+      .order('created_at')
+      .map((rows) => decodeRows(rows, Report.fromRow));
 
   Stream<Set<String>> watchUpvotedBy(String uid) => _db
-      .collectionGroup('upvotes')
-      .where('uid', isEqualTo: uid)
-      .snapshots()
+      .from('upvotes')
+      .stream(primaryKey: ['report_id', 'uid'])
+      .eq('uid', uid)
       .map(
-        (snapshot) => {
-          for (final doc in snapshot.docs) ?doc.reference.parent.parent?.id,
+        (rows) => {
+          for (final row in rows)
+            if (row['report_id'] case final String id) id,
         },
       );
 
   Future<void> create({
     required String id,
-    required String uid,
-    required String name,
     required String title,
     required String description,
     required String location,
     required ReportCategory category,
     required String imageUrl,
-  }) => _reports.doc(id).set({
-    'title': title,
-    'description': description,
-    'imageUrl': imageUrl,
-    'status': 'awaitingApproval',
-    'category': category.name,
-    'upvotes': 0,
-    'location': location,
-    'reportedBy': uid,
-    'reportedByName': name,
-    'createdAt': FieldValue.serverTimestamp(),
-    'approvedAt': null,
-    'resolvedAt': null,
-    'verifiedAt': null,
-    'lastNudgedAt': null,
-    'nudges': 0,
-    'reopenCount': 0,
-    'assignedDepartmentId': null,
-    'updatedBy': uid,
+  }) => _call('file_report', {
+    'report_id': id,
+    ..._content(title, description, location, category, imageUrl),
   });
 
   Future<void> editContent(
     String id, {
-    required String uid,
     required String title,
     required String description,
     required String location,
     required ReportCategory category,
     required String imageUrl,
-  }) => _update(id, uid, {
+  }) => _call('edit_report', {
+    'report_id': id,
+    ..._content(title, description, location, category, imageUrl),
+  });
+
+  Map<String, Object?> _content(
+    String title,
+    String description,
+    String location,
+    ReportCategory category,
+    String imageUrl,
+  ) => {
     'title': title,
     'description': description,
     'location': location,
     'category': category.name,
-    'imageUrl': imageUrl,
-  });
+    'image_url': imageUrl,
+  };
 
-  Future<void> setUpvote(String id, String uid, {required bool on}) {
-    final batch = _db.batch();
-    final upvote = _reports.doc(id).collection('upvotes').doc(uid);
-    batch.update(_reports.doc(id), {
-      'upvotes': FieldValue.increment(on ? 1 : -1),
-      'updatedBy': uid,
-    });
-    if (on) {
-      batch.set(upvote, {
-        'uid': uid,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } else {
-      batch.delete(upvote);
-    }
-    return batch.commit();
-  }
+  Future<void> setUpvote(String id, {required bool on}) =>
+      _call('set_upvote', {'report_id': id, 'upvoted': on});
 
-  Future<void> nudge(String id, String uid) => _update(id, uid, {
-    'nudges': FieldValue.increment(1),
-    'lastNudgedAt': FieldValue.serverTimestamp(),
-  });
+  Future<void> nudge(String id) => _call('nudge_report', {'report_id': id});
 
-  Future<void> approve(String id, String uid) => _update(id, uid, {
-    'status': 'inProgress',
-    'approvedAt': FieldValue.serverTimestamp(),
-  });
+  Future<void> approve(String id) => _call('approve_report', {'report_id': id});
 
-  Future<void> decline(String id, String uid) =>
-      _update(id, uid, {'status': 'declined'});
+  Future<void> decline(String id) => _call('decline_report', {'report_id': id});
 
-  Future<void> resolve(String id, String uid) => _update(id, uid, {
-    'status': 'resolved',
-    'resolvedAt': FieldValue.serverTimestamp(),
-  });
+  Future<void> resolve(String id) => _call('resolve_report', {'report_id': id});
 
-  Future<void> confirmFix(String id, String uid) =>
-      _update(id, uid, {'verifiedAt': FieldValue.serverTimestamp()});
+  Future<void> confirmFix(String id) => _call('confirm_fix', {'report_id': id});
 
   // Restarts the clock on the shorter reopen window, see SlaPolicy.
-  Future<void> reopen(String id, String uid) => _update(id, uid, {
-    'status': 'inProgress',
-    'approvedAt': FieldValue.serverTimestamp(),
-    'resolvedAt': null,
-    'verifiedAt': null,
-    'reopenCount': FieldValue.increment(1),
-  });
+  Future<void> reopen(String id) => _call('reopen_report', {'report_id': id});
 
-  Future<void> reassign(String id, String uid, String departmentId) =>
-      _update(id, uid, {'assignedDepartmentId': departmentId});
+  Future<void> reassign(String id, String departmentId) =>
+      _call('reassign_report', {'report_id': id, 'department': departmentId});
 
-  Future<void> delete(String id) => _reports.doc(id).delete();
+  Future<void> delete(String id) => _call('delete_report', {'report_id': id});
 
-  Future<void> _update(String id, String uid, Map<String, Object?> fields) =>
-      _reports.doc(id).update({...fields, 'updatedBy': uid});
+  Future<void> _call(String function, Map<String, Object?> params) =>
+      _db.rpc<void>(function, params: params).timeout(backendTimeout);
 }

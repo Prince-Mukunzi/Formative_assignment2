@@ -186,7 +186,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen>
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('The photo did not upload. Check your connection.'),
+          content: Text('That did not save. Check your connection.'),
         ),
       );
     }

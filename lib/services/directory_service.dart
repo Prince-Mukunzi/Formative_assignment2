@@ -1,52 +1,48 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/department.dart';
-import 'firestore_decoding.dart';
+import 'backend.dart';
+import 'row_decoding.dart';
 
 class DirectoryService {
-  final FirebaseFirestore _db;
+  final SupabaseClient _db;
 
-  DirectoryService({FirebaseFirestore? db})
-    : _db = db ?? FirebaseFirestore.instance;
+  DirectoryService({SupabaseClient? db}) : _db = db ?? backend;
 
-  CollectionReference<Map<String, dynamic>> get _departments =>
-      _db.collection('departments');
+  Stream<List<Department>> watchDepartments() => _db
+      .from('departments')
+      .stream(primaryKey: ['id'])
+      .order('label', ascending: true)
+      .map((rows) => decodeRows(rows, Department.fromRow));
 
-  DocumentReference<Map<String, dynamic>> get _locations =>
-      _db.doc('config/locations');
+  /// The server also takes the saved team's categories from the others.
+  Future<void> saveDepartment(Department department) =>
+      _call('save_department', {
+        'department': department.id,
+        'department_label': department.label,
+        'owned': [for (final category in department.categories) category.name],
+      });
 
-  Stream<List<Department>> watchDepartments() => _departments
-      .orderBy('label')
-      .snapshots()
+  Future<void> removeDepartment(String id) =>
+      _call('remove_department', {'department': id});
+
+  Stream<List<String>> watchLocations() => _db
+      .from('locations')
+      .stream(primaryKey: ['name'])
+      .order('name', ascending: true)
       .map(
-        (snapshot) => [
-          for (final doc in snapshot.docs)
-            ?decodeOrSkip(doc, Department.fromMap),
+        (rows) => [
+          for (final row in rows)
+            if (row['name'] case final String name) name,
         ],
       );
 
-  Future<void> saveDepartments(List<Department> departments) {
-    final batch = _db.batch();
-    for (final department in departments) {
-      batch.set(_departments.doc(department.id), department.toMap());
-    }
-    return batch.commit();
-  }
+  Future<void> addLocation(String location) =>
+      _call('add_location', {'location': location});
 
-  Future<void> removeDepartment(String id) => _departments.doc(id).delete();
+  Future<void> removeLocation(String location) =>
+      _call('remove_location', {'location': location});
 
-  Stream<List<String>> watchLocations() => _locations.snapshots().map(
-    (doc) => [
-      for (final item in doc.data()?['items'] as List<dynamic>? ?? const [])
-        if (item is String) item,
-    ],
-  );
-
-  Future<void> addLocation(String location) => _locations.set({
-    'items': FieldValue.arrayUnion([location]),
-  }, SetOptions(merge: true));
-
-  Future<void> removeLocation(String location) => _locations.update({
-    'items': FieldValue.arrayRemove([location]),
-  });
+  Future<void> _call(String function, Map<String, Object?> params) =>
+      _db.rpc<void>(function, params: params).timeout(backendTimeout);
 }

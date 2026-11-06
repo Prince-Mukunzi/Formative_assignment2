@@ -6,10 +6,12 @@
 - **Platform priority:** iOS first — test on iOS simulator before Android
 
 ## Backend / Services
-- **Auth:** Firebase Authentication — email/password and Google Sign-In
-- **Database:** Cloud Firestore — all reads/writes go through service classes in `lib/services/`, never direct Firestore calls from widgets
-- **Storage:** Firebase Storage — used for image uploads (bug report photos). Upload via `StorageService`, store the download URL in Firestore
-- **Providers:** Expose auth state, Firestore queries, and storage operations as Riverpod providers. Keep Firebase imports out of UI code
+- **Backend:** Supabase. Schema, row level security, write functions and XP triggers live in `supabase/migrations/`; database tests in `supabase/tests/`
+- **Auth:** Supabase Auth — email/password with a 6-digit email code, and Google Sign-In
+- **Database:** Postgres — all reads/writes go through service classes in `lib/services/`, never direct Supabase calls from widgets. Clients only read tables; every write is a database function that checks role and state
+- **Storage:** Supabase Storage bucket `report-photos` — upload via `StorageService`, store the public URL on the report
+- **Providers:** Expose auth state, live queries, and storage operations as Riverpod providers. Keep Supabase imports out of UI code
+- **Local dev:** `supabase start`, then `flutter run --dart-define-from-file=env/local.json`
 
 ## UI / Design System
 - **Icons:** HugeIcons (`hugeicons` package) — never use Material Icons or Cupertino Icons

@@ -24,12 +24,12 @@ class Person {
     this.suspended = false,
   });
 
-  factory Person.fromMap(String id, Map<String, dynamic> map) => Person(
-    id: id,
-    name: map['name'] as String,
-    email: map['email'] as String,
-    role: PersonRole.values.byName(map['role'] as String),
-    departmentId: map['departmentId'] as String?,
-    suspended: map['suspended'] as bool,
+  factory Person.fromRow(Map<String, dynamic> row) => Person(
+    id: row['id'] as String,
+    name: row['name'] as String,
+    email: row['email'] as String,
+    role: PersonRole.values.byName(row['role'] as String),
+    departmentId: row['department_id'] as String?,
+    suspended: row['suspended'] as bool,
   );
 }

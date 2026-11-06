@@ -60,7 +60,7 @@ class GameNotifier extends Notifier<GameState> {
         if (!event.seen && _seenKeys.contains(event.key)) event.key,
     ];
     if (uid == null || stale.isEmpty) return;
-    send(ref, ref.read(gameServiceProvider).markSeen(uid, stale));
+    send(ref, ref.read(gameServiceProvider).markSeen(stale));
   }
 
   /// Returns the XP expected: 0 when this award was already claimed.

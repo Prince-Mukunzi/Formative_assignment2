@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+import '../core/utils/row_time.dart';
 import 'report.dart';
 import 'report_status.dart';
 
@@ -35,11 +36,11 @@ class XpEvent {
 
   XpEvent markSeen() => XpEvent(key: key, reason: reason, at: at, seen: true);
 
-  factory XpEvent.fromMap(String key, Map<String, dynamic> map) => XpEvent(
-    key: key,
-    reason: XpReason.values.byName(map['reason'] as String),
-    at: map['at'] as DateTime,
-    seen: map['seen'] as bool,
+  factory XpEvent.fromRow(Map<String, dynamic> row) => XpEvent(
+    key: row['key'] as String,
+    reason: XpReason.values.byName(row['reason'] as String),
+    at: readTime(row['at']),
+    seen: row['seen'] as bool,
   );
 }
 

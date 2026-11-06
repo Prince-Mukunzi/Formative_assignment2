@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Real project keys stay on the machine that builds releases
+env/*.json
+!env/local.json

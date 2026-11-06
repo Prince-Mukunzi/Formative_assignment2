@@ -64,10 +64,22 @@ class AuthGateNotifier extends Notifier<AuthGate> {
     _stopWatching();
     _watchedUid = user.uid;
     if (_entry == null) state = const AuthLoading();
+    _watchProfile(user.uid);
+  }
+
+  void _watchProfile(String uid) {
+    _profileChanges?.cancel();
     _profileChanges = ref
         .read(profileServiceProvider)
-        .watch(user.uid)
-        .listen(_onProfile, onError: (Object _) => _refuse(_connectionNotice));
+        .watch(uid)
+        .listen(_onProfile, onError: _onProfileError);
+  }
+
+  // Once someone is in, a dropped live connection is not a reason to sign
+  // them out; the feed reconnects on its own.
+  void _onProfileError(Object error) {
+    if (state is Ready) return;
+    _refuse(_connectionNotice);
   }
 
   void _stopWatching() {
@@ -101,6 +113,10 @@ class AuthGateNotifier extends Notifier<AuthGate> {
     try {
       await _auth.provision(name: _pendingName);
       _pendingName = null;
+      // The new row can be written before the live feed has joined, in
+      // which case its insert event never arrives. Read it afresh.
+      final uid = _watchedUid;
+      if (uid != null) _watchProfile(uid);
     } on AuthFailure catch (failure) {
       await _refuse(failure.message);
     } finally {
@@ -164,9 +180,20 @@ class AuthGateNotifier extends Notifier<AuthGate> {
     if (state case SignedOut(notice: _?)) state = const SignedOut();
   }
 
-  Future<void> checkVerification() => _auth.refresh();
+  String? get _codeEmail => switch (state) {
+    NeedsVerification(:final email) => email,
+    _ => null,
+  };
 
-  Future<void> resendVerification() => _auth.resendVerification();
+  Future<void> verify(String code) async {
+    final email = _codeEmail;
+    if (email != null) await _auth.verifyCode(email, code);
+  }
+
+  Future<void> resendCode() async {
+    final email = _codeEmail;
+    if (email != null) await _auth.resendCode(email);
+  }
 
   Future<void> signOut() => _auth.signOut();
 }

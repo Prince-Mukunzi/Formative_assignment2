@@ -26,9 +26,8 @@ class DepartmentsNotifier extends Notifier<List<Department>> {
   }
 
   void save(Department department) {
-    final next = state.withSaved(department);
-    state = next;
-    send(ref, _directory(ref).saveDepartments(next));
+    state = state.withSaved(department);
+    send(ref, _directory(ref).saveDepartment(department));
   }
 
   void remove(String id) {
@@ -84,12 +83,7 @@ class PeopleNotifier extends Notifier<List<Person>> {
     if (uid == null) return;
     await ref
         .read(profileServiceProvider)
-        .invite(
-          email: email,
-          role: role,
-          invitedBy: uid,
-          departmentId: departmentId,
-        );
+        .invite(email: email, role: role, departmentId: departmentId);
   }
 }
 

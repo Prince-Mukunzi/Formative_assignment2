@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
@@ -13,6 +14,7 @@ class FilledField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final ValueChanged<String>? onSubmitted;
+  final List<TextInputFormatter>? inputFormatters;
 
   const FilledField({
     super.key,
@@ -24,6 +26,7 @@ class FilledField extends StatelessWidget {
     this.textInputAction,
     this.autofillHints,
     this.onSubmitted,
+    this.inputFormatters,
   });
 
   @override
@@ -49,6 +52,7 @@ class FilledField extends StatelessWidget {
               textInputAction: textInputAction,
               autofillHints: autofillHints,
               onSubmitted: onSubmitted,
+              inputFormatters: inputFormatters,
               autocorrect: false,
               style: AppTextStyles.bodyLarge,
               cursorColor: AppColors.brand,

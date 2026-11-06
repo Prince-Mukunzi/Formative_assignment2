@@ -18,16 +18,11 @@ class Department {
   IconData get icon =>
       categories.firstOrNull?.icon ?? HugeIcons.strokeRoundedUserGroup;
 
-  Map<String, Object?> toMap() => {
-    'label': label,
-    'categories': [for (final category in categories) category.name],
-  };
-
-  factory Department.fromMap(String id, Map<String, dynamic> map) => Department(
-    id: id,
-    label: map['label'] as String,
+  factory Department.fromRow(Map<String, dynamic> row) => Department(
+    id: row['id'] as String,
+    label: row['label'] as String,
     categories: {
-      for (final name in map['categories'] as List<dynamic>)
+      for (final name in row['categories'] as List<dynamic>)
         ReportCategory.values.byName(name as String),
     },
   );

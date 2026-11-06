@@ -95,7 +95,7 @@ class _SignInSheetState extends ConsumerState<SignInSheet> {
     final password = _password.text;
     return _run(
       (auth) => _creating
-          ? auth.signUp(email, password)
+          ? auth.signUp(email, password, name: _name.text.trim())
           : auth.signIn(email, password),
       name: _creating ? _name.text.trim() : null,
     );

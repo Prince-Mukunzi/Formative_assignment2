@@ -1,3 +1,4 @@
+import '../core/utils/row_time.dart';
 import 'report_status.dart';
 import 'report_category.dart';
 
@@ -23,6 +24,7 @@ class Report {
   final int nudges;
   final int reopenCount;
   final String? assignedDepartmentId;
+  final DateTime? updatedAt;
 
   const Report({
     required this.id,
@@ -44,6 +46,7 @@ class Report {
     this.nudges = 0,
     this.reopenCount = 0,
     this.assignedDepartmentId,
+    this.updatedAt,
   });
 
   // The reporter plus everyone who backed the report.
@@ -105,29 +108,31 @@ class Report {
       nudges: nudges ?? this.nudges,
       reopenCount: reopenCount ?? this.reopenCount,
       assignedDepartmentId: assignedDepartmentId ?? this.assignedDepartmentId,
+      updatedAt: updatedAt,
     );
   }
 
-  factory Report.fromMap(String id, Map<String, dynamic> map) {
+  factory Report.fromRow(Map<String, dynamic> row) {
     return Report(
-      id: id,
-      title: map['title'] as String,
-      description: map['description'] as String,
-      imageUrl: map['imageUrl'] as String,
-      status: ReportStatus.values.byName(map['status'] as String),
-      category: ReportCategory.values.byName(map['category'] as String),
-      upvotes: map['upvotes'] as int,
-      location: map['location'] as String,
-      reportedBy: map['reportedBy'] as String,
-      reportedByName: map['reportedByName'] as String,
-      createdAt: map['createdAt'] as DateTime,
-      approvedAt: map['approvedAt'] as DateTime?,
-      resolvedAt: map['resolvedAt'] as DateTime?,
-      verifiedAt: map['verifiedAt'] as DateTime?,
-      lastNudgedAt: map['lastNudgedAt'] as DateTime?,
-      nudges: map['nudges'] as int,
-      reopenCount: map['reopenCount'] as int,
-      assignedDepartmentId: map['assignedDepartmentId'] as String?,
+      id: row['id'] as String,
+      title: row['title'] as String,
+      description: row['description'] as String,
+      imageUrl: row['image_url'] as String,
+      status: ReportStatus.values.byName(row['status'] as String),
+      category: ReportCategory.values.byName(row['category'] as String),
+      upvotes: row['upvotes'] as int,
+      location: row['location'] as String,
+      reportedBy: row['reported_by'] as String,
+      reportedByName: row['reported_by_name'] as String,
+      createdAt: readTime(row['created_at']),
+      approvedAt: readOptionalTime(row['approved_at']),
+      resolvedAt: readOptionalTime(row['resolved_at']),
+      verifiedAt: readOptionalTime(row['verified_at']),
+      lastNudgedAt: readOptionalTime(row['last_nudged_at']),
+      nudges: row['nudges'] as int,
+      reopenCount: row['reopen_count'] as int,
+      assignedDepartmentId: row['assigned_department_id'] as String?,
+      updatedAt: readOptionalTime(row['updated_at']),
     );
   }
 }
