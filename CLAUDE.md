@@ -7,7 +7,7 @@
 
 ## Backend / Services
 - **Backend:** Supabase. Schema, row level security, write functions and XP triggers live in `supabase/migrations/`; database tests in `supabase/tests/`
-- **Auth:** Supabase Auth — email/password with a 6-digit email code, and Google Sign-In
+- **Auth:** Supabase Auth — email/password with a 6-digit email code
 - **Database:** Postgres — all reads/writes go through service classes in `lib/services/`, never direct Supabase calls from widgets. Clients only read tables; every write is a database function that checks role and state
 - **Storage:** Supabase Storage bucket `report-photos` — upload via `StorageService`, store the public URL on the report
 - **Providers:** Expose auth state, live queries, and storage operations as Riverpod providers. Keep Supabase imports out of UI code

@@ -18,7 +18,3 @@ class AuthFailure implements Exception {
   @override
   String toString() => message;
 }
-
-class AuthCancelled implements Exception {
-  const AuthCancelled();
-}

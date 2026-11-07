@@ -6,12 +6,6 @@ abstract final class BackendConfig {
   static const publishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
   );
-  static const googleIosClientId = String.fromEnvironment(
-    'GOOGLE_IOS_CLIENT_ID',
-  );
-  static const googleWebClientId = String.fromEnvironment(
-    'GOOGLE_WEB_CLIENT_ID',
-  );
 }
 
 const photoBucket = 'report-photos';

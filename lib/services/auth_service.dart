@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
 import '../models/auth_user.dart';
@@ -10,7 +9,6 @@ import 'backend.dart';
 class AuthService {
   final SupabaseClient _client;
   final _awaitingCode = StreamController<AuthUser?>.broadcast();
-  Future<void>? _googleReady;
 
   AuthService({SupabaseClient? client}) : _client = client ?? backend;
 
@@ -75,38 +73,6 @@ class AuthService {
   Future<void> resendCode(String email) =>
       _guard(() => _auth.resend(type: OtpType.signup, email: email));
 
-  // The native iOS SDK aborts the whole app when it has no client ID, so
-  // refuse here instead of letting the tap crash.
-  Future<void> signInWithGoogle() => _guard(() async {
-    const iosClientId = BackendConfig.googleIosClientId;
-    const webClientId = BackendConfig.googleWebClientId;
-    if (webClientId.isEmpty || (Platform.isIOS && iosClientId.isEmpty)) {
-      throw const AuthFailure('Google sign-in is not set up yet.');
-    }
-    final google = GoogleSignIn.instance;
-    await (_googleReady ??= google.initialize(
-      clientId: Platform.isIOS ? iosClientId : null,
-      serverClientId: webClientId,
-    ));
-    final GoogleSignInAccount account;
-    try {
-      account = await google.authenticate();
-    } on GoogleSignInException catch (error) {
-      if (error.code == GoogleSignInExceptionCode.canceled) {
-        throw const AuthCancelled();
-      }
-      throw const AuthFailure('Google sign-in did not finish. Try again.');
-    }
-    final idToken = account.authentication.idToken;
-    if (idToken == null) {
-      throw const AuthFailure('Google sign-in did not finish. Try again.');
-    }
-    await _auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-    );
-  });
-
   Future<void> sendPasswordReset(String email) =>
       _guard(() => _auth.resetPasswordForEmail(email));
 
@@ -116,7 +82,6 @@ class AuthService {
   );
 
   Future<void> signOut() async {
-    if (_googleReady != null) await GoogleSignIn.instance.signOut();
     await _auth.signOut();
     _awaitingCode.add(null);
   }

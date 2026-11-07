@@ -121,8 +121,6 @@ class _SignInSheetState extends ConsumerState<SignInSheet> {
       } else {
         Navigator.of(context).pop(result);
       }
-    } on AuthCancelled {
-      // The user closed the Google prompt; nothing to report.
     } on AuthFailure catch (failure) {
       if (mounted) _fail(failure.message);
     } finally {
@@ -223,15 +221,6 @@ class _SignInSheetState extends ConsumerState<SignInSheet> {
                   ? 'Create account'
                   : 'Sign in',
               onTap: _busy ? null : _submitPassword,
-            ),
-            AppSpacing.verticalGapSm,
-            AppButton(
-              label: 'Continue with Google',
-              icon: HugeIcons.strokeRoundedGoogle,
-              isFilled: false,
-              onTap: _busy
-                  ? null
-                  : () => _run((auth) => auth.signInWithGoogle()),
             ),
             AppSpacing.verticalGapLg,
             Row(
